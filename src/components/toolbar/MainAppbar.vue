@@ -1,97 +1,65 @@
-<!--
-* @Component:
-* @Maintainer: J.K. Yang
-* @Description:
--->
-<script setup lang="ts">
-//Token
-
-import { useDisplay } from "vuetify";
-import { useCustomizeThemeStore } from "@/stores/customizeTheme";
-import ToolbarNotifications from "./ToolbarNotifications.vue";
-import ToolbarUser from "./ToolbarUser.vue";
-import ThemeToggle from "./ThemeToggle.vue";
-//search
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useFixCardStore } from '@/stores/fixCardStore' // 新增：引入fixCardStore
-
-const fixCardStore = useFixCardStore() // 新增：创建fixCardStore实例
-
-// 新增：toggleFixCard函数，用于切换固定卡片状态
-const toggleFixCard = () => {
-  fixCardStore.toggleFixCard()
-}
-
-const searchQuery = ref(''); // 定义搜索查询变量
-const router = useRouter(); // 使用 Vue Router
-
-const searchProduct = () => {
-  if (searchQuery.value.trim()) {
-    router.push({ path: '/product', query: { search: searchQuery.value } });
-  }
-};
-const { mdAndUp } = useDisplay();
-const customizeTheme = useCustomizeThemeStore();
-
-// 新增：fix-btn相关状态（如果需要）
-const variants = ['tonal']
-const color = ref('indigo')
-
-</script>
-
 <template>
-  <!-- ---------------------------------------------- -->
-  <!--App Bar -->
-  <!-- ---------------------------------------------- -->
-  <v-app-bar :density="mdAndUp ? 'default' : 'compact'">
-    <!-- ---------------------------------------------- -->
-    <!-- search input mobil -->
-    <!-- ---------------------------------------------- -->
+  <v-app-bar
+    app
+    elevation="1"
+    :color="isDark ? 'grey-darken-4' : 'white'"
+  >
+    <v-app-bar-nav-icon @click="toggleSidebar" />
 
-    <div class="px-2 d-flex align-center justify-space-between w-100">
-      <!-- ---------------------------------------------- -->
-      <!-- NavIcon -->
-      <!-- ---------------------------------------------- -->
-      <v-app-bar-nav-icon
-        @click="customizeTheme.mainSidebar = !customizeTheme.mainSidebar"
-      ></v-app-bar-nav-icon>
-      <div>
-        <v-text-field
-          v-if="mdAndUp"
-          class="ml-2"
-          style="width: 400px"
-          color="primary"
-          variant="solo"
-          density="compact"
-          prepend-inner-icon="mdi-magnify"
-          hide-details
-          placeholder="Search"
-          v-model="searchQuery"
-          @keyup.enter="searchProduct"
-        ></v-text-field>
-      </div>
-      <v-spacer></v-spacer>
+    <v-spacer />
 
-      <!-- 新增：扳手按钮 
+    <!-- 语言切换器 -->
+    <LanguageSwitcher />
+
+    <!-- 主题切换器 -->
+    <ThemeToggle />
+
+    <!-- 通知菜单 -->
+    <ToolbarNotifications />
+
+    <!-- 【关键修改】: 根据登录状态显示不同内容 -->
+    <div
+      v-if="!tokenStore.isLoggedIn"
+      class="d-flex align-center"
+    >
+      <!-- 如果未登录，显示登录和注册按钮 -->
       <v-btn
-        class="ma-2"
-        color="grey"
-        icon="mdi-wrench"
-        @click="toggleFixCard"
-      ></v-btn>-->
-
-      <ToolbarNotifications />
-      <v-btn icon @click="customizeTheme.themeDrawer = !customizeTheme.themeDrawer">
-        <v-icon>mdi-cart</v-icon>
-      </v-btn>
-
-      <div class="d-flex">
-        <ThemeToggle />
-        <ToolbarUser />
-      </div>
+        to="/auth/signin"
+        variant="outlined"
+        color="primary"
+        class="mx-2"
+        >登录</v-btn
+      >
+      <v-btn
+        to="/auth/signup"
+        color="primary"
+        >注册</v-btn
+      >
+    </div>
+    <div
+      v-else
+      class="d-flex align-center"
+    >
+      <!-- 如果已登录，显示用户头像和菜单 -->
+      <ToolbarUser />
     </div>
   </v-app-bar>
 </template>
 
-<style scoped lang="scss"></style>
+<script setup lang="ts">
+import { useTheme } from "vuetify";
+import { useLayoutStore } from "@/stores/layoutStore";
+import { useTokenStore } from "@/stores/tokenStore"; // 1. 导入 tokenStore
+import LanguageSwitcher from "./LanguageSwitcher.vue";
+import ThemeToggle from "./ThemeToggle.vue";
+import ToolbarNotifications from "./ToolbarNotifications.vue";
+import ToolbarUser from "./ToolbarUser.vue";
+
+const { isDark } = useTheme();
+const layoutStore = useLayoutStore();
+const tokenStore = useTokenStore(); // 2. 创建 tokenStore 实例
+
+const toggleSidebar = () => {
+  layoutStore.toggleSidebar();
+};
+</script>

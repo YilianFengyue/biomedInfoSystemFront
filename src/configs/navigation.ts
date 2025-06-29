@@ -1,97 +1,56 @@
-
-import menuLanding from "./menus/landing.menu";
-import menuUI from "./menus/ui.menu";
-import menuPages from "./menus/pages.menu";
-import { text } from "stream/consumers";
-
 export default {
   menu: [
     {
-      text: "",
+      text: "核心功能",
       items: [
         {
-          text: "主页",
+          text: "数据中心",
           link: "/dashboard",
           icon: "mdi-view-dashboard-outline",
         },
+        // --- 新增的导航项 ---
         {
-          text: "搜索列表",
-          link: "/houseList",
-          icon: "mdi-format-list-bulleted",
+          text: "药材检索",
+          link: "/herb-search",
+          icon: "mdi-magnify",
         },
         {
-          text: "商品类型",
-          link: "/house",
-          icon: "mdi-view-dashboard-outline",
+          text: "数据采集",
+          link: "/data-collection",
+          icon: "mdi-database-plus-outline",
         },
         {
-          text: "管理员界面",
+          text: "在线教育",
+          link: "/education",
+          icon: "mdi-school-outline",
+        },
+        {
+          text: "业绩认定",
+          link: "/evaluation",
+          icon: "mdi-clipboard-check-outline",
+        },
+         {
+          text: "后台管理",
           link: "/admin",
-          icon: "mdi-android-studio",
+          icon: "mdi-tune",
         },
         {
-          text: "房源管理",
-          link: "/landlord",
-          icon: "mdi-home-outline",
-        },
-        {
-          text: "房源上传",
-          link: "/landlordUpload",
-          icon: "mdi-home-outline",
-        },
-        {
-          text: "新闻管理",
-          link: "/news",
-          icon: "mdi-newspaper",
-        },
-        {
-          text: "新闻编辑",
-          link: "/newsEditor",
-          icon: "mdi-file-document-edit-outline",
-        },
-        {
-          text: "测试页面",
-          link: "/testIndexPage1",
-          icon: "mdi-newspaper",
-        },
-        {
-          text: "测试管理页面2",
-          link: "/testManagePage",
-          icon: "mdi-newspaper",
-        },
-        {
-          text: "测试管理页面3",
-          link: "/testManagePage2",
-          icon: "mdi-newspaper",
-        },
-        {
-          icon: "mdi-robot-excited-outline",
-          text: "AI选购顾问",
-          link: "/ai/chatbot_v1",
-        },
-        {
-          icon: "mdi-robot-outline",
-          text: "Image Bot",
-          link: "/image-bot",
+          text: "个人中心",
+          link: "/profile",
+          icon: "mdi-account-circle-outline",
         },
       ],
     },
-
-    // {
-    //   text: "Landing",
-    //   items: [
-    //     ...menuLanding,
-
-    //   ],
-    // },
-    // {
-    //   text: "UI - Theme Preview",
-    //   items: menuUI,
-    // },
-    // {
-    //   text: "Pages",
-    //   items: menuPages,
-    // },
-
+     {
+      text: "AI 助手",
+      items: [
+        {
+            icon: "mdi-robot-excited-outline",
+            text: "AI 顾问",
+            link: "/ai/chatbot_v1",
+        },
+      ]
+     }
   ],
 };
+

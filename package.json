@@ -10,6 +10,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
     "@element-plus/icons-vue": "^2.3.1",
     "@formkit/auto-animate": "^0.7.0",
     "@mdi/font": "7.2.96",
@@ -32,11 +33,13 @@
     "focus-trap": "^7.4.0",
     "happy-dom": "^9.6.1",
     "live2d-render": "^0.0.6",
+    "lodash-es": "^4.17.21",
     "md-editor-v3": "^5.4.5",
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",
     "moment": "^2.29.4",
     "openai": "^3.2.1",
     "pinia": "^2.0.34",
+    "pinia-persistedstate-plugin": "^0.1.0",
     "pinia-plugin-persist": "^1.0.0",
     "pinia-plugin-persistedstate": "^4.3.0",
     "plantuml-encoder": "^1.4.0",

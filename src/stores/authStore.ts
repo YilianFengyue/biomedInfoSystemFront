@@ -1,197 +1,82 @@
 import { defineStore } from "pinia";
-import axios from "axios";
-
 import router from "@/router";
-
-//snackBar
 import { useSnackbarStore } from "@/stores/snackbarStore";
-
-//存储token
-import {userTokenStore} from "@/stores/token";
+import { useTokenStore } from "@/stores/tokenStore";
 import { useProfileStore } from "@/stores/profileStore";
-// const tokenStore = userTokenStore();
-
-interface Profile {
-  id: string;
-  name: string;
-  avatar: string;
-  created: boolean;
-}
+import { nextTick } from 'vue';
+import { loginApi, registerApi, type LoginPayload, type RegisterPayload } from '@/api/userApi';
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    isLoggedIn: false,
-    user: null,
-    profile: null as Profile | null,
+    isLoading: false,
   }),
 
-  persist: {
-    enabled: true,
-    strategies: [
-      { storage: localStorage, paths: ["isLoggedIn"] },
-      // { storage: sessionStorage, paths: ["profile"] }
-    ],
-  },
-
-  getters: {},
-
   actions: {
-    setLoggedIn(payload: boolean) {
-      this.isLoggedIn = payload;
-    },
-    //注册方法
+    async loginWithUsernameAndPassword(username: string, password: string) {
+      this.isLoading = true;
+      const snackbarStore = useSnackbarStore();
+      const tokenStore = useTokenStore();
+      const profileStore = useProfileStore();
 
-    async registerWithUsernameAndPassword(phone: string, password: string, email: string) {
       try {
+        const payload: LoginPayload = {
+            username: username,
+            passwordHash: password
+        };
+        const response = await loginApi(payload);
 
-        const response = await axios.post(
-          //跨域仍存在问题
-          "http://localhost:5000/user/register",
-          new URLSearchParams({
-            phone,
-            password,
-            email,
-          }),
-          {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          }
-        );
-        if (response.data.code === 201) {
-          // 注册成功后，直接跳转到登录页面
+        // 【关键修改】从登录响应中同时获取 JWT 和 CSRF Token
+        const jwt = response.data.data.token;
+        const csrf = response.data.data.csrf_token;
 
-          router.push("/auth/signin");
+        if (jwt && csrf) {
+          // 调用 tokenStore 中新的 action 来同时设置两个 Token
+          tokenStore.setTokens(jwt, csrf);
+
+          await nextTick();
+          await profileStore.fetchUserProfile();
+          snackbarStore.showSuccessMessage(response.data.msg || "登录成功！");
+          router.push("/dashboard");
         } else {
-          console.error("注册失败：", response.data.message);
+          throw new Error("登录失败：未能从服务器获取有效的凭证 (JWT or CSRF Token is missing)。");
         }
+
       } catch (error: any) {
-        console.error("请求异常：", error?.response?.data?.message || error.message);
+        throw error;
+      } finally {
+        this.isLoading = false;
       }
     },
-    registerWithEmailAndPassword(email: string, password: string) {
-      router.push("/");
-    },
-    //登录方法
-    async loginWithUsernameAndPassword(phone: string, password: string) {
-      try {
-        const response = await axios.post(
-          "http://localhost:5000/user/login",
-          new URLSearchParams({
-            phone,
-            password,
-          }),
-          {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          }
-        );
 
-        if (response.data.code === 201) {
-          this.setLoggedIn(true);
-          this.user = response.data.data;
-          //存储token到pinia
-          // console.log( response.data.msg);
-          const tokenStore = userTokenStore();
-          tokenStore.setToken(response.data.msg);
-          console.log("tokenStore", tokenStore.token);
-          //存储用户信息到profilestore
-                // 2. 设置 token 到全局 axios headers
-            // axios.defaults.headers.common["Authorization"] = response.data.token;
-            console.log("完整登录响应数据：", response.data);
-            console.log("拼接出的 Authorization:", `Bearer ${response.data.data.token}`);
-           
-            const profileRes = await axios.get("http://localhost:5000/user/userinfo", {
-              headers: {
-                Authorization: `${response.data.data.token}`,
-              },
-            });
-            if (profileRes.data.code === 200) {
-              const ProfileStore = useProfileStore();
-              console.log(profileRes.data.data)
-              // ProfileStore.setProfileFromVO(profileRes.data.data)
-              ProfileStore.setUser(profileRes.data.data);
-               // 输出 store 中的 user 结构，验证是否设置成功
-              console.log("更新后 Pinia 中的 user 信息:", ProfileStore.user);
-           
-            } else {
-              console.error("获取用户信息失败：", profileRes.data.message);
-            }
-           //router.push("/dashboard");
-           window.location.href = "/dashboard";//转变跳转方式解决登录bug
-        } else {
-          
-          const snackbarStore = useSnackbarStore();
-          snackbarStore.showErrorMessage("密码错误！");
-          console.error("登录失败：", response.data.message);
-          throw new Error(response.data.message || "登录失败，密码或用户名错误");//抛出错误，显示错误信息
-        }
-      } catch (error: any) {
-        const errorMsg = error?.response?.data?.message || error.message;
-        console.error("请求异常：", error?.response?.data?.message || error.message);
-         throw new Error(errorMsg); // 新增这行
-      }
-    },
-    async loginWithEmailAndPassword(email: string, password: string) {
+    async registerWithUsernameAndPassword(username: string, password: string) {
+      const snackbarStore = useSnackbarStore();
+      this.isLoading = true;
       try {
-        const response = await axios.post(
-          "http://localhost:5000/user/email-login",
-          new URLSearchParams({
-            email,
-            password,
-          }),
-          {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          }
-        );
-
-        if (response.data.code === 201) {
-          this.setLoggedIn(true);
-          this.user = response.data.data;
-          
-          // 存储token到pinia
-          const tokenStore = userTokenStore();
-          tokenStore.setToken(response.data.msg);
-          console.log("tokenStore", tokenStore.token);
-          
-          // 存储用户信息到profilestore
-          console.log("完整邮箱登录响应数据：", response.data);
-          console.log("拼接出的 Authorization:", `Bearer ${response.data.data.token}`);
-           
-          const profileRes = await axios.get("http://localhost:5000/user/userinfo", {
-            headers: {
-              Authorization: `${response.data.data.token}`,
-            },
-          });
-          
-          if (profileRes.data.code === 200) {
-            const ProfileStore = useProfileStore();
-            console.log(profileRes.data.data)
-            ProfileStore.setUser(profileRes.data.data);
-            console.log("更新后 Pinia 中的 user 信息:", ProfileStore.user);
-          } else {
-            console.error("获取用户信息失败：", profileRes.data.message);
-          }
-          
-          window.location.href = "/dashboard";
-        } else {
-          const snackbarStore = useSnackbarStore();
-          snackbarStore.showErrorMessage("邮箱或密码错误！");
-          console.error("邮箱登录失败：", response.data.message);
-          throw new Error(response.data.message || "邮箱登录失败，密码或邮箱错误");
-        }
+        const payload: RegisterPayload = {
+          username: username,
+          passwordHash: password
+        };
+        const response = await registerApi(payload);
+        snackbarStore.showSuccessMessage(response.data.msg || "注册成功！");
+        return true;
       } catch (error: any) {
-        const errorMsg = error?.response?.data?.message || error.message;
-        console.error("邮箱登录请求异常：", error?.response?.data?.message || error.message);
-        throw new Error(errorMsg);
+        throw error;
+      } finally {
+        this.isLoading = false;
       }
     },
 
     logout() {
-      router.push({ name: "auth-signin" });
-    }
+      const tokenStore = useTokenStore();
+      const profileStore = useProfileStore();
+      const snackbarStore = useSnackbarStore();
+
+      // 调用移除所有凭证的方法
+      tokenStore.removeTokens();
+      profileStore.clearProfile();
+
+      snackbarStore.showInfoMessage("您已成功登出。");
+      router.push("/auth/signin");
+    },
   },
 });

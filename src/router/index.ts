@@ -1,160 +1,88 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useTokenStore } from "@/stores/tokenStore";
+import UILayout from "@/layouts/UILayout.vue";
+import DefaultLayout from "@/layouts/DefaultLayout.vue";
+import AuthLayout from "@/layouts/AuthLayout.vue";
 
-import LandingRoutes from "./landing.routes";
-import AuthRoutes from "./auth.routes";
-
-export const routes = [
+const routes = [
   {
     path: "/",
     redirect: "/dashboard",
-    meta: {},
-  } as any,
+  },
   {
     path: "/dashboard",
+    component: () => import("@/views/pages/biomedicine/DataCenter.vue"),
     meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/DashBoard.vue"),
-  },
-  
-  //管理员
-  {
-    path: "/admin",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/Admin/AdministratorPanel.vue"),
-  },
-  //富文本编辑器
-  {
-    path: "/newsEditor",
-    component: () => import("@/views/pages/News/editor/RichTextEditorPage.vue"),
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-      category: "Data",
-      title: "RichTextEditor",
-    },
-  },
-  //新闻列表
-  {
-    path: "/newsList",
-    component: () => import("@/views/pages/News/editor/NewsListPage.vue"),
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-      category: "Data",
-      title: "NewsList",
-    },
-  },
-  //新闻详情页
-  {
-    path: "/newsDetail/:id",
-    component: () => import("@/views/pages/News/editor/NewsDetailPage.vue"),
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-      category: "Data",
-      title: "NewsDetail",
-    },
-  },
-  {
-    path: "/myHouse",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/landlord/MyHouse.vue"),
-  },
-
-  {
-    path: "/userManage",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/Admin/UserManagePage.vue"),
-  },
-  {
-    path: "/ai/chatbot_v1",
-    component: () => import("@/views/chatgpt/ChatBotV1.vue"),
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-      // category: "AI",
-      title: "ChatBotV1",
-    },
-  },
-  // image bot
-  {
-    path: "/image-bot",
-    component: () => import("~/src/views/pages/ImageBot.vue"),
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-      // category: "AI",
-      // title: "ImageBot",
-    },
-  },
-
-  {
-    path: "/profile",
-    name: "profile",
-    component: () =>
-      import(/* webpackChunkName: "profile" */ "@/views/pages/ProfilePage.vue"),
-    meta: {
-      requiresAuth: true,
       layout: "ui",
-      title: "Profile",
-      category: "Config",
+      title: "数据中心与可视化",
+      requiresAuth: true, // 需要登录
+    },
+  },
+  // 新增的路由配置
+  {
+    path: "/herb-search",
+    name: "herb-search",
+    component: () => import("@/views/pages/biomedicine/HerbSearchPage.vue"),
+    meta: {
+      layout: "ui",
+      title: "药材检索",
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/data-collection",
+    component: () => import("@/views/pages/biomedicine/DataCollection.vue"),
+    meta: {
+      layout: "ui",
+      title: "数据采集",
+      requiresAuth: true, // 需要登录
+    },
+  },
+  // ... 其他需要登录的路由也要加上 meta: { requiresAuth: true }
+  {
+    path: "/auth/signin",
+    name: "auth-signin",
+    component: () => import("@/views/auth/SigninPage.vue"),
+    meta: {
+      layout: "auth",
+      title: "登录",
+    },
+  },
+  {
+    path: "/auth/signup",
+    name: "auth-signup",
+    component: () => import("@/views/auth/SignupPage.vue"),
+    meta: {
+      layout: "auth",
+      title: "注册",
     },
   },
   {
     path: "/:pathMatch(.*)*",
-    name: "error",
-    component: () =>
-      import(/* webpackChunkName: "error" */ "@/views/errors/NotFoundPage.vue"),
-  },
-  // lottie Animation
-  {
-    path: "/ui/lottie-animation",
-    name: "ui-lottie-animation",
-    component: () =>
-      import(
-        /* webpackChunkName: "ui-lottie-animation" */ "@/views/ui/LottieAnimationPage.vue"
-      ),
+    component: () => import("@/views/errors/NotFoundPage.vue"),
     meta: {
-      requiresAuth: true,
-      layout: "ui",
-      category: "UI",
-      title: "LottieAnimation",
+      layout: "default",
     },
-
   },
-  ...LandingRoutes,
-  ...AuthRoutes,
-
-
 ];
-
-
-export const dynamicRoutes = [];
 
 const router = createRouter({
   history: createWebHistory(),
-  // hash模式：createWebHashHistory，history模式：createWebHistory
-  // process.env.NODE_ENV === "production"
-
   routes: routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition;
-    } else {
-      return { top: 0 };
-    }
-  },
+});
+
+// 添加全局前置守卫
+router.beforeEach((to, from, next) => {
+  const tokenStore = useTokenStore();
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+
+  if (requiresAuth && !tokenStore.isLoggedIn) {
+    // 如果目标路由需要认证但用户未登录，则重定向到登录页
+    next({ name: 'auth-signin' });
+  } else {
+    // 否则，正常进入
+    next();
+  }
 });
 
 export default router;
