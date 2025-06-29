@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-
-
 // 其它组件导入
 import CategoryCard from "@/components/dashboard/CategoryCard.vue";
 import BannerPage from "@/components/dashboard/BannerPage.vue";
 import Footer1 from "@/components/footer/Footer1.vue";
-import HouseCard from "~/src/components/dashboard/HouseCard.vue";
-import CityCard from "~/src/components/dashboard/CityCard.vue";
-import SecondHandHouse from "~/src/components/dashboard/SecondHandHouse.vue";
-import NewHouseList from "~/src/components/dashboard/NewHouseList.vue";
-
 // 导入fixCardStore
 import { useFixCardStore } from '@/stores/fixCardStore'
 
@@ -33,23 +26,7 @@ onMounted(() => {
       <v-col cols="12" xl="4" class="full-width-banner">
         <BannerPage></BannerPage>
       </v-col>
-    </v-row>
-    
-   
-    
-    <v-row class="flex-0" dense>
-      <v-col cols="12" xl="4">
-        <SecondHandHouse></SecondHandHouse>
-      </v-col>
-    </v-row>
-    
-    <v-row class="flex-0" dense>
-      <v-col cols="12" xl="4">
-        <NewHouseList></NewHouseList>
-      </v-col>
-      
-    </v-row>
-    
+    </v-row>  
     <v-row class="flex-0" dense>
       <v-col cols="12" xl="4">
         <Footer1></Footer1>

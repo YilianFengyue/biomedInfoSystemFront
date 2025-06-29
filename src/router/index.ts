@@ -17,40 +17,7 @@ export const routes = [
     },
     component: () => import("@/views/pages/DashBoard.vue"),
   },
-  {
-    path: "/houseList",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/HouseListPage.vue"),
-  },
   
-  {
-    path: "/testManagePage",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/TestManagePage.vue"),
-  },
-  {
-    path: "/testManagePage2",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/TestManagePage2.vue"),
-  },
-  
-  {
-    path: "/house",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/ProcuctPage.vue"),
-  },
   //管理员
   {
     path: "/admin",
@@ -71,6 +38,7 @@ export const routes = [
       title: "RichTextEditor",
     },
   },
+  //新闻列表
   {
     path: "/newsList",
     component: () => import("@/views/pages/News/editor/NewsListPage.vue"),
@@ -92,24 +60,6 @@ export const routes = [
       title: "NewsDetail",
     },
   },
-  //房东发布房源界面：
-  {
-    path: "/landlordUpload",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/landlord/uploadHousePage.vue"),
-  },
-  {
-    path: "/landlordUpdate/:id",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/landlord/updateHousePage.vue"),
-  },
-  //房东的房源
   {
     path: "/myHouse",
     meta: {
@@ -118,22 +68,7 @@ export const routes = [
     },
     component: () => import("@/views/pages/landlord/MyHouse.vue"),
   },
-  {
-    path: "/house/:id",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/ProcuctPage.vue"),
-  },
-    {
-    path: "/landlord",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/LandlordProperties.vue"),
-  },
+
   {
     path: "/userManage",
     meta: {
@@ -141,14 +76,6 @@ export const routes = [
       layout: "landing",
     },
     component: () => import("@/views/pages/Admin/UserManagePage.vue"),
-  },
-    {
-    path: "/news",
-    meta: {
-      requiresAuth: true,
-      layout: "landing",
-    },
-    component: () => import("@/views/pages/NewsPage.vue"),
   },
   {
     path: "/ai/chatbot_v1",
@@ -205,47 +132,7 @@ export const routes = [
       title: "LottieAnimation",
     },
 
-  },{
-      path: "/chat",
-      meta: {
-        requiresAuth: true,
-        layout: "landing",
-      },
-      component: () => import("@/views/pages/chatpage.vue"),
-    },
-    {
-      path: "/payPay",
-      meta: {
-        requiresAuth: true,
-        layout: "landing",
-      },
-      component: () => import("@/views/pages/PricingPage.vue"),
-    },
-    {
-      path: "/contract",
-      meta: {
-        requiresAuth: true,
-        layout: "landing",
-      },
-      component: () => import("@/views/pages/contractpage.vue"),
-    },
-    {
-      path: "/RentHouse",
-      meta: {
-        requiresAuth: true,
-        layout: "landing",
-      },
-      component: () => import("@/views/pages/AccountRentHouse.vue"),
-    },
-    {
-      path: "/setpassword",
-      meta: {
-        requiresAuth: true,
-        layout: "landing",
-      },
-      component: () => import("@/views/pages/ResetPassword.vue"),
-    },
-
+  },
   ...LandingRoutes,
   ...AuthRoutes,
 

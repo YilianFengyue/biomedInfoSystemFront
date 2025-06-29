@@ -8,7 +8,6 @@ import TicketsCard from "@/components/dashboard/TicketsCard.vue";
 import TodoCard from "@/components/Administrator/TodoCard.vue";
 import TaskCard from "@/components/Administrator/ChartCard.vue";
 import UserManagePage from "./UserManagePage.vue";
-import TestManagePage2 from "../TestManagePage2.vue";
 
 //路由
 import { useRouter } from 'vue-router';
@@ -37,18 +36,13 @@ const goTestManage2 = () => router.push('/testManagePage2');
           ></sales-card>
         </v-card>
       </v-col>
-      <v-col cols="12" md="6" xl="4">
+      <v-col cols="12" md="12" xl="4">
         <!-- Activity Card -->
         <v-card class="card-shadow" height="420">
           <activity-card></activity-card>
         </v-card>
       </v-col>
-      <v-col cols="12" md="6" xl="4">
-        <!-- Trafiic Card-->
-        <v-card class="card-shadow h-full" height="420">
-          <sources-card></sources-card>
-        </v-card>
-      </v-col>
+      
     </v-row>
     <!-- ---------------------------------------------- -->
     <!---Second Row -->
@@ -61,13 +55,6 @@ const goTestManage2 = () => router.push('/testManagePage2');
           
           <!-- <table-card></table-card> -->
            <User-manage-page/>
-        </v-card>
-      </v-col>
-      <v-col cols="12" xl="6">
-        <!-- Task Card-->
-        <v-card class="card-shadow" height="420">
-          
-          <TestManagePage2/>
         </v-card>
       </v-col>
     </v-row>
