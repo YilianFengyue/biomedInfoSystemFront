@@ -7,7 +7,7 @@
 import { img2imgApi } from "@/api/stableDiffusionApi";
 import { useStableDiffusionStore } from "@/stores/stableDiffusionStore";
 import { submitImagine } from "@/api/midJourneyApi";
-const token = "sk-peE5Ux1D4w9lahUYB71c145bD2874226Ae7eF696B3De1930"; // 请替换成你自己的 token
+const token = "sk-VPp3fFVlc2FPlBJ6D98eB15f353c4014Af263621D4409fF9"; // 请替换成你自己的 token
 
 
 const sdStore = useStableDiffusionStore();

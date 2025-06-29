@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-// 导入News组件
-import News from "@/components/houseDetail/News.vue";
+
 
 // 其它组件导入
 import CategoryCard from "@/components/dashboard/CategoryCard.vue";
@@ -36,14 +35,7 @@ onMounted(() => {
       </v-col>
     </v-row>
     
-    <v-row class="flex-0" dense>
-      <v-col cols="12" xl="4">
-        <CityCard></CityCard>
-      </v-col>
-      <v-col cols="12" xl="4">
-       <News/>
-      </v-col>
-    </v-row>
+   
     
     <v-row class="flex-0" dense>
       <v-col cols="12" xl="4">

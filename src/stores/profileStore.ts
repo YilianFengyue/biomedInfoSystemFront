@@ -24,7 +24,7 @@ export const useProfileStore = defineStore({
       name: "Ylfmoonn",
       phone: "19511053623",
       seen_id: "1",
-      userType: 1,
+      userType: 0,
       avatarUrl:"https://avatars.githubusercontent.com/u/181093978?v=4",
       
     },

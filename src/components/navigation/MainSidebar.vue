@@ -82,8 +82,8 @@ const scrollToBottom = () => {
       >
         <h1 class="logo-text h-full">
           <!-- <Icon class="mr-2" width="40" icon="solar:plain-bold-duotone" /> -->
-          <img src="@/assets/logo-house.svg" alt="Logo" width="20" height="20" style="margin-right:10px" />
-          <span> 好客租房</span>
+          <img src="@/assets/logo.png" alt="Logo" width="30" height="30" style="margin-right:10px" />
+          <span>维诺思</span>
         </h1>
       </v-card>
     </template>

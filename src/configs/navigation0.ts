@@ -47,11 +47,7 @@ export default {
           link: "/newsEditor",
           icon: "mdi-file-document-edit-outline",
         },
-        {
-          text: "测试页面",
-          link: "/testIndexPage1",
-          icon: "mdi-newspaper",
-        },
+        
         {
           text: "测试管理页面2",
           link: "/testManagePage",
