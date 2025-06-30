@@ -125,7 +125,7 @@ const navs = [
             <img
               class="my-2"
               width="150"
-              src="@/assets/logo2.png"
+              src="@/assets/logo.png"
               alt=""
             />
             <p class="my-4">2000+ Our clients are subscribe Around the World</p>

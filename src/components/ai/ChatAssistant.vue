@@ -191,7 +191,7 @@ const { xs } = useDisplay();
               />
             </v-avatar>
 
-            智能顾问
+            OpenAi Chat
           </span>
 
           <v-spacer></v-spacer>
@@ -271,10 +271,10 @@ const { xs } = useDisplay();
             <v-tooltip
               activator="parent"
               location="top"
-              text="AI Config"
+              text="ChatGPT Config"
             ></v-tooltip>
           </v-btn>
-          
+
           <v-textarea
             class="mx-2"
             color="primary"

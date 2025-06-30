@@ -4,7 +4,6 @@ import { onMounted, ref } from "vue";
 // 其它组件导入
 import CategoryCard from "@/components/dashboard/CategoryCard.vue";
 import BannerPage from "@/components/dashboard/BannerPage.vue";
-import SalesCard from "~/src/components/Administrator/SalesCard.vue";
 import Footer1 from "@/components/footer/Footer1.vue";
 // 导入fixCardStore
 import { useFixCardStore } from '@/stores/fixCardStore'
@@ -26,14 +25,8 @@ onMounted(() => {
     <v-row class="flex-0" dense>
       <v-col cols="12" xl="4" class="full-width-banner">
         <BannerPage></BannerPage>
-        
       </v-col>
     </v-row>  
-    <v-row class="flex-0" dense>
-      <v-col cols="12" xl="4">
-        <SalesCard/>
-      </v-col>
-    </v-row>
     <v-row class="flex-0" dense>
       <v-col cols="12" xl="4">
         <Footer1></Footer1>

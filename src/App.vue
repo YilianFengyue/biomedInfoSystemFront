@@ -19,7 +19,6 @@ import UILayout from "@/layouts/UILayout.vue";
 import LandingLayout from "@/layouts/LandingLayout.vue";
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
 import AuthLayout from "@/layouts/AuthLayout.vue";
-import CustomizationMenu from "@/components/CustomizationMenu.vue";
 import { useCustomizeThemeStore } from "@/stores/customizeTheme";
 import BackToTop from "@/components/common/BackToTop.vue";
 import Snackbar from "@/components/common/Snackbar.vue";
@@ -29,8 +28,7 @@ const theme = useTheme();
 import { useAppStore } from "@/stores/appStore";
 const appStore = useAppStore();
 // live2d
-import Live2d from "@/components/Live2d.vue";
-import RepaireCard from "./components/RepaireCard.vue";
+// import Live2d from "@/components/Live2d.vue";
 const customizeTheme = useCustomizeThemeStore();
 const route = useRoute();
 
@@ -71,3 +69,4 @@ onMounted(() => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 </style>
+

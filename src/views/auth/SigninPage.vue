@@ -1,174 +1,85 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
 
+const router = useRouter();
 const authStore = useAuthStore();
+
+const form = ref({
+  username: "luyue", // 默认填充用户名
+  password: "123456", // 填充您的 admin 密码
+});
+
 const isLoading = ref(false);
-const isSignInDisabled = ref(false);
-
-const refLoginForm = ref();
-const email = ref("vuetify3-visitor@gmail.com");
-const password = ref("sfm12345");
-const isFormValid = ref(true);
-
-// show password field
+const errorMessage = ref("");
 const showPassword = ref(false);
 
 const handleLogin = async () => {
-  const { valid } = await refLoginForm.value.validate();
-  if (valid) {
-    isLoading.value = true;
-    isSignInDisabled.value = true;
-    authStore.loginWithEmailAndPassword(email.value, password.value);
-  } else {
-    console.log("no");
+  isLoading.value = true;
+  errorMessage.value = "";
+  try {
+    await authStore.loginWithUsernameAndPassword(form.value.username, form.value.password);
+    // 登录成功后，authStore 内部会处理重定向
+  } catch (error: any) {
+    errorMessage.value = error.message || "登录时发生未知错误。";
+  } finally {
+    isLoading.value = false;
   }
 };
-
-const signInWithGoolgle = () => {
-  authStore.loginWithGoogle();
-};
-
-// Error Check
-const emailRules = ref([
-  (v: string) => !!v || "E-mail is required",
-  (v: string) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-]);
-
-const passwordRules = ref([
-  (v: string) => !!v || "Password is required",
-  (v: string) =>
-    (v && v.length <= 10) || "Password must be less than 10 characters",
-]);
-
-// error provider
-const errorProvider = ref(false);
-const errorProviderMessages = ref("");
-
-const error = ref(false);
-const errorMessages = ref("");
-const resetErrors = () => {
-  error.value = false;
-  errorMessages.value = "";
-};
-
-const signInWithFacebook = () => {
-  alert(authStore.isLoggedIn);
-};
 </script>
+
 <template>
   <v-card color="white" class="pa-3 ma-3" elevation="3">
-    <v-card-title class="my-4 text-h4">
-      <span class="flex-fill font-weight-bold"> 欢迎 </span>
+    <v-card-title primary-title class="my-4 text-h4">
+      <span class="flex-fill">登录 - 生物医药数字信息系统</span>
     </v-card-title>
-    <v-card-subtitle>登录您的账户</v-card-subtitle>
-    <!-- sign in form -->
+    <v-card-subtitle>请输入您的凭据以继续</v-card-subtitle>
 
     <v-card-text>
-      <v-form
-        ref="refLoginForm"
-        class="text-left"
-        v-model="isFormValid"
-        lazy-validation
-      >
+      <v-alert v-if="errorMessage" type="error" class="mb-4" dense>
+        {{ errorMessage }}
+      </v-alert>
+      <v-form @submit.prevent="handleLogin">
         <v-text-field
-          ref="refEmail"
-          v-model="email"
+          v-model="form.username"
+          label="用户名"
+          prepend-inner-icon="mdi-account-outline"
+          variant="outlined"
           required
-          :error="error"
-          :label="$t('login.email')"
-          density="default"
-          variant="underlined"
-          color="primary"
-          bg-color="#fff"
-          :rules="emailRules"
-          name="email"
-          outlined
-          validateOn="blur"
-          placeholder="403474473@qq.com"
-          @keyup.enter="handleLogin"
-          @change="resetErrors"
+          class="mb-4"
         ></v-text-field>
+
         <v-text-field
-          ref="refPassword"
-          v-model="password"
-          :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          v-model="form.password"
+          label="密码"
+          prepend-inner-icon="mdi-lock-outline"
           :type="showPassword ? 'text' : 'password'"
-          :error="error"
-          :error-messages="errorMessages"
-          :label="$t('login.password')"
-          placeholder="sfm12345"
-          density="default"
-          variant="underlined"
-          color="primary"
-          bg-color="#fff"
-          :rules="passwordRules"
-          name="password"
-          outlined
-          validateOn="blur"
-          @change="resetErrors"
-          @keyup.enter="handleLogin"
+          :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
           @click:append-inner="showPassword = !showPassword"
+          variant="outlined"
+          required
+          class="mb-4"
         ></v-text-field>
+
         <v-btn
           :loading="isLoading"
-          :disabled="isSignInDisabled"
+          :disabled="isLoading"
           block
           size="x-large"
           color="primary"
-          @click="handleLogin"
+          type="submit"
           class="mt-2"
-          >{{ $t("login.button") }}</v-btn
         >
-
-        <div
-          class="text-grey text-center text-caption font-weight-bold text-uppercase my-5"
-        >
-          {{ $t("login.orsign") }}
-        </div>
-
-        <!-- external providers list -->
-        <v-btn
-          class="mb-2 text-capitalize"
-          color="white"
-          elevation="1"
-          block
-          size="x-large"
-          @click="signInWithGoolgle"
-          :disabled="isSignInDisabled"
-        >
-          <Icon icon="logos:google-icon" class="mr-3 my-2" />
-          Google
+          登录
         </v-btn>
-        <v-btn
-          class="mb-2 lighten-2 text-capitalize"
-          elevation="1"
-          color="white"
-          block
-          size="x-large"
-          :disabled="isSignInDisabled"
-          @click="signInWithFacebook"
-        >
-          <Icon icon="logos:facebook" class="mr-3" />
-          Facebook
-        </v-btn>
-
-        <div v-if="errorProvider" class="error--text my-2">
-          {{ errorProviderMessages }}
-        </div>
-
-        <div class="mt-5 text-center">
-          <router-link class="text-primary" to="/auth/forgot-password">
-            {{ $t("login.forgot") }}
-          </router-link>
-        </div>
-      </v-form></v-card-text
-    >
+      </v-form>
+    </v-card-text>
+     <div class="text-center mt-6">
+      还没有账号？
+      <router-link to="/auth/signup" class="text-primary font-weight-bold">
+        立即注册
+      </router-link>
+    </div>
   </v-card>
-  <div class="text-center mt-6">
-    {{ $t("login.noaccount") }}
-    <router-link to="/auth/signup" class="text-primary font-weight-bold">
-      {{ $t("login.create") }}
-    </router-link>
-  </div>
 </template>

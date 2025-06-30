@@ -1,56 +1,87 @@
 <script setup lang="ts">
-import Breadcrumb from "@/components/Breadcrumb.vue";
-import PageTitle from "@/components/PageTitle.vue";
-import MainSidevar from "@/components/navigation/MainSidebar.vue";
-import MainAppbar from "@/components/toolbar/MainAppbar.vue";
-import ToolBox from "@/components/Toolbox.vue";
-import { useCustomizeThemeStore } from "@/stores/customizeTheme";
-const customizeTheme = useCustomizeThemeStore();
+import { ref } from "vue";
+import { useTheme } from "vuetify";
+import { useAuthStore } from "@/stores/authStore"; // 引入用户状态管理
+import VerticalNav from "@/components/app/VerticalNav.vue";
+import UserProfile from "@/components/app/UserProfile.vue";
 
-// import GlobalLoading from "@/components/GlobalLoading.vue";
+const drawer = ref(true);
+const theme = useTheme();
+const authStore = useAuthStore(); // 初始化用户状态
+
+function toggleTheme() {
+  theme.global.name.value = theme.global.current.value.dark
+    ? "light"
+    : "dark";
+}
 </script>
 
 <template>
-  <!-- ---------------------------------------------- -->
-  <!---Main Sidebar -->
-  <!-- ---------------------------------------------- -->
-  <MainSidevar />
-  <!-- ---------------------------------------------- -->
-  <!---Top AppBar -->
-  <!-- ---------------------------------------------- -->
-  <MainAppbar />
-  <!-- ---------------------------------------------- -->
-  <!---MainArea -->
-  <!-- ---------------------------------------------- -->
-  <v-main
-    v-touch="{
-      left: () => (customizeTheme.mainSidebar = false),
-      right: () => (customizeTheme.mainSidebar = true),
-    }"
-    class="main-container"
+  <v-app
+    :theme="theme.global.name.value"
+    class="main-app"
+    :class="theme.global.name.value"
   >
-    <!-- <GlobalLoading /> -->
+    <v-navigation-drawer
+      v-model="drawer"
+      width="260"
+      elevation="1"
+      app
+      class="main-nav"
+    >
+      <div class="pa-4">
+        <div class="d-flex align-center">
+          <v-icon color="primary" size="32" class="mr-2">mdi-leaf-heart</v-icon>
+          <span class="text-h6">生物医药系统</span>
+        </div>
+      </div>
+      <vertical-nav />
+    </v-navigation-drawer>
 
-    <div class="d-none d-sm-block px-3">
-      <PageTitle></PageTitle>
-      <Breadcrumb></Breadcrumb>
-    </div>
+    <v-app-bar app elevation="1">
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
 
-    <div class="flex-fill">
-      <slot></slot>
-    </div>
-    <ToolBox />
-  </v-main>
+      <v-toolbar-title>生物医药数字信息系统</v-toolbar-title>
+
+      <v-spacer></v-spacer>
+
+      <div class="d-flex align-center px-4">
+        <template v-if="!authStore.user">
+          <v-btn
+            to="/auth/signin"
+            variant="outlined"
+            color="primary"
+            class="mr-2"
+          >
+            登录
+          </v-btn>
+          <v-btn to="/auth/signup" color="primary">
+            注册
+          </v-btn>
+        </template>
+
+        <template v-else>
+          <UserProfile />
+        </template>
+      </div>
+
+       <v-btn icon @click="toggleTheme">
+        <v-icon>mdi-theme-light-dark</v-icon>
+      </v-btn>
+    </v-app-bar>
+
+    <v-main>
+      <div class="pa-5">
+        <slot>
+          <router-view />
+        </slot>
+      </div>
+    </v-main>
+  </v-app>
 </template>
 
 <style scoped>
-.scrollnav {
-  height: calc(100vh - 326px);
-}
-
-.main-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.main-app {
+  background-color: rgb(var(--v-theme-background-color), 0.5) !important;
 }
 </style>

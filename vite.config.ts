@@ -36,12 +36,17 @@ export default defineConfig({
     extensions: [".js", ".json", ".jsx", ".mjs", ".ts", ".tsx", ".vue"],
   },
   server: {
-    port: 4399,
+    port: 4173,
     proxy: {
-      "/sdApi": {
-        target: "http://localhost:81",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/sdApi/, ""),
+      // 关键配置项
+      '/api': {
+        // 当前端请求路径以 /api 开头时，会触发此代理
+        target: 'http://localhost:81', // 目标后端服务器地址
+        changeOrigin: true, // 必须设置为 true，表示允许跨域
+        
+        // 路径重写：因为我们的后端接口实际路径没有 /api 前缀
+        // (例如 /users/login), 所以需要将请求路径中的 /api 去掉。
+        //rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

@@ -9,7 +9,6 @@ import { useLocale } from "vuetify";
 import promptsZh from "@/data/ai/prompts-zh.json";
 import promptsEn from "@/data/ai/prompts-en.json";
 import promptsJa from "@/data/ai/prompts-ja.json";
-import { Icon } from "@iconify/vue";
 const { current } = useLocale();
 const chatGPTStore = useChatGPTStore();
 
@@ -28,7 +27,7 @@ const promptList = computed(() => {
   <v-dialog v-model="chatGPTStore.configDialog" width="600">
     <v-card>
       <v-card-title class="font-weight-bold pa-5">
-        智能助理配置</v-card-title
+        Chatgpt配置</v-card-title
       >
       <v-divider />
       <v-card-text>
@@ -77,45 +76,27 @@ const promptList = computed(() => {
         <v-label class="font-weight-medium mb-2 ml-2 mt-5">{{
           $t("chatgpt.config.model")
         }}</v-label>
-        <v-card variant="outlined" class="pa-2">
-  <v-row dense>
-    <v-col>
-      <v-btn
-        :variant="chatGPTStore.model === 'gpt-4o' ? 'flat' : 'text'"
-        color="primary"
-        size="large"
-        @click="chatGPTStore.updateModel('gpt-4o')"
-        block 
-      >
-        <Icon icon="hugeicons:chat-gpt" class="mr-1" />GPT-4o
-      </v-btn>
-    </v-col>
+        <v-card variant="outlined" style="width: 430px" class="flex ml-2 pa-2">
+          <v-btn
+            :variant="chatGPTStore.model === 'gpt-4o' ? 'flat' : 'text'"
+            color="primary"
+            class="flex-fill mr-3"
+            @click="chatGPTStore.updateModel('gpt-4o')"
+            width="200"
+            >GPT-4o</v-btn
+          >
+          <v-btn
+            :variant="
+              chatGPTStore.model === 'gpt-4-turbo-2024-04-09' ? 'flat' : 'text'
+            "
+            color="primary"
+            class="flex-fill"
+            width="200"
+            @click="chatGPTStore.updateModel('gpt-4-turbo-2024-04-09')"
+            >GPT-4 turbo</v-btn
+          >
+        </v-card>
 
-    <v-col>
-      <v-btn
-        :variant="chatGPTStore.model === 'deepseek-v3' ? 'flat' : 'text'"
-        color="primary"
-        size="large"
-        @click="chatGPTStore.updateModel('deepseek-v3')"
-        block
-      >
-        <Icon icon="arcticons:deepseek" class="mr-1" />deepseek-v3
-      </v-btn>
-    </v-col>
-
-    <v-col>
-      <v-btn
-        :variant="chatGPTStore.model === 'gemini-2.5-pro' ? 'flat' : 'text'"
-        color="primary"
-        size="large"
-        @click="chatGPTStore.updateModel('gemini-2.5-pro')"
-        block
-      >
-        <Icon icon="material-icon-theme:gemini-ai" class="mr-1" />Gemini2.5pro
-      </v-btn>
-    </v-col>
-  </v-row>
-</v-card>
         <!-- ---------------------------------------------- -->
         <!-- Language -->
         <!-- ---------------------------------------------- -->
