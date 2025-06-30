@@ -35,6 +35,10 @@ export const useAuthStore = defineStore("auth", {
 
           await nextTick();
           await profileStore.fetchUserProfile();
+
+          // --- 在这里添加日志 ---
+          console.log('[AuthStore] Profile fetched. User role is:', profileStore.user?.role);
+          
           snackbarStore.showSuccessMessage(response.data.msg || "登录成功！");
           router.push("/dashboard");
         } else {

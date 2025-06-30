@@ -29,7 +29,7 @@ export default {
           link: "/evaluation",
           icon: "mdi-clipboard-check-outline",
         },
-         {
+        {
           text: "后台管理",
           link: "/admin",
           icon: "mdi-tune",
@@ -41,16 +41,21 @@ export default {
         },
       ],
     },
-     {
+    {
       text: "AI 助手",
       items: [
         {
-            icon: "mdi-robot-excited-outline",
-            text: "AI 顾问",
-            link: "/ai/chatbot_v1",
+          icon: "mdi-robot-excited-outline",
+          text: "AI 顾问",
+          link: "/ai/chatbot_v1",
+        },
+        {
+          text: "AI植物识别",
+          link: "/plant-recognition",
+          icon: "mdi-camera-iris",
         },
       ]
-     }
+    }
   ],
 };
 

@@ -58,6 +58,16 @@ const routes = [
     },
   },
   {
+    path: "/plant-recognition",
+    name: "plant-recognition",
+    component: () => import("@/views/pages/recognition/PlantRecognitionPage.vue"),
+    meta: {
+      layout: "ui", // 假设你使用 ui 布局
+      title: "植物识别",
+      requiresAuth: true,
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     component: () => import("@/views/errors/NotFoundPage.vue"),
     meta: {

@@ -1,56 +1,45 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from "vue";
+import { computed } from "vue";
 import MainMenu from "@/components/navigation/MainMenu.vue";
 import { useCustomizeThemeStore } from "@/stores/customizeTheme";
 import { Icon } from "@iconify/vue";
 import { useProfileStore } from "@/stores/profileStore";
 
-// 导入所有角色的导航配置
-import navigationAdmin from "@/configs/navigation0";      // 管理员 (role: 0)
-import navigationStudent from "@/configs/navigation1";    // 学生 (role: 1)
-import navigationTeacher from "@/configs/navigation2";    // 教师 (role: 2)
+// 导入所有可能的导航配置
+import navigationAdmin from "@/configs/navigation0";
+import navigationStudent from "@/configs/navigation1";
+import navigationTeacher from "@/configs/navigation2";
 
 const customizeTheme = useCustomizeThemeStore();
 const profileStore = useProfileStore();
 
-// 计算属性，用于获取当前用户的角色
-const userType = computed(() => profileStore.user?.role);
-
-// 根据用户角色动态选择并返回对应的导航配置
+// 【核心修改】
+// 这个 computed 属性会创建一个对 `profileStore.user` 的响应式依赖。
+// 当 `profileStore.user` 从 null 变为一个包含角色信息的对象时，
+// `navigation` 会自动重新计算，从而返回正确的菜单配置。
 const navigation = computed(() => {
-  console.log("Current User Role:", userType.value);
-  switch (userType.value) {
+  const role = profileStore.user?.role;
+  console.log(`[MainSidebar] 正在为角色计算导航: ${role}`);
+
+  switch (role) {
     case 0:
+      console.log("[MainSidebar] 加载管理员导航 (role 0).");
       return navigationAdmin;
     case 1:
+      console.log("[MainSidebar] 加载学生导航 (role 1).");
       return navigationStudent;
     case 2:
+      console.log("[MainSidebar] 加载教师导航 (role 2).");
       return navigationTeacher;
     default:
-      // 如果用户未登录或角色未知，可以返回一个默认的导航（例如学生导航）
+      console.log(`[MainSidebar] 角色为 ${role}, 使用默认导航.`);
+      // 在用户未登录或角色未知时，返回一个默认导航以避免错误
       return navigationStudent;
   }
 });
 
 const openGithubSite = () => {
-  window.open("https://github.com/", "_blank");
-};
-
-onMounted(() => {
-  scrollToBottom();
-});
-
-const scrollToBottom = () => {
-  const contentArea = document.querySelector(".v-navigation-drawer__content");
-  const activeItem = document.querySelector(
-    ".v-list-item--active"
-  ) as HTMLElement;
-
-  setTimeout(() => {
-    contentArea?.scrollTo({
-      top: activeItem?.offsetTop,
-    });
-  }, 100);
+  window.open("https://github.com/yangjiakai", "_blank");
 };
 </script>
 
@@ -75,10 +64,10 @@ const scrollToBottom = () => {
       </v-card>
     </template>
 
-    <main-menu :menu="navigation.menu"></main-menu>
+    <main-menu :menu="navigation.menu" />
 
     <template v-if="!customizeTheme.miniSidebar" v-slot:append>
-      <v-card
+       <v-card
         theme="dark"
         height="225"
         class="pa-3"
@@ -105,7 +94,7 @@ const scrollToBottom = () => {
           <v-card-subtitle> </v-card-subtitle>
           <v-card-text>
             <div><b>Github:</b></div>
-            <div>github.com</div>
+            <div>github.com/yangjiakai</div>
           </v-card-text>
           <v-card-actions>
             <v-btn
@@ -124,9 +113,8 @@ const scrollToBottom = () => {
   </v-navigation-drawer>
 </template>
 
-<style  lang="scss">
+<style lang="scss">
 .gradient-card {
-
   background: linear-gradient(
     270deg,
     rgba(var(--v-theme-primary), 0.7) 0,
