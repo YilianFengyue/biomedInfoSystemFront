@@ -25,7 +25,7 @@ export const useProfileStore = defineStore("profile", {
       if (!tokenStore.isLoggedIn) return;
 
       try {
-        const response = await http.get("/users/userInfo");
+        const response = await http.get(`/users/userInfo?_t=${new Date().getTime()}`);
         this.user = response.data.data;
       } catch (error) {
         console.error("获取用户信息失败:", error);
