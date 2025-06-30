@@ -57,6 +57,16 @@ export interface OssPolicy {
   expire: string;
 }
 
+// 在文件顶部或其他类型定义区域，新增 HerbCreatePayload 类型
+export interface HerbCreatePayload {
+  name: string;
+  scientificName?: string;
+  familyName?: string;
+  resourceType: string;
+  lifeForm?: string;
+  description?: string;
+}
+
 // --- API 函数 ---
 
 /**
@@ -105,4 +115,11 @@ export const uploadFileToOSS = async (file: File, policyData: OssPolicy): Promis
         throw new Error(`文件上传到OSS失败，状态码: ${response.status}`);
     }
     return `${policyData.host}/${objectKey}`;
+};
+
+/**
+ * [新增] 创建一个新的药材条目
+ */
+export const createHerbApi = (data: HerbCreatePayload) => {
+    return http.post<{ data: Herb }>('/herb/herbs', data);
 };

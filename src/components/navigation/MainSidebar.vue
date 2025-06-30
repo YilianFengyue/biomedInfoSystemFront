@@ -1,43 +1,35 @@
-<!--
-* @Component:
-* @Maintainer: J.K. Yang
-* @Description:
--->
 <script setup lang="ts">
-import configs from "@/configs";
+import { ref, watch, computed, onMounted } from "vue";
 import MainMenu from "@/components/navigation/MainMenu.vue";
 import { useCustomizeThemeStore } from "@/stores/customizeTheme";
 import { Icon } from "@iconify/vue";
 import { useProfileStore } from "@/stores/profileStore";
-import { onMounted, ref, watch } from 'vue';
 
-// 引入不同用户类型的导航配置
-import navigationUserType0 from "@/configs/navigation0";
-import navigationUserType1 from "@/configs/navigation1";
-import navigationUserType2 from "@/configs/navigation2";
+// 导入所有角色的导航配置
+import navigationAdmin from "@/configs/navigation0";      // 管理员 (role: 0)
+import navigationStudent from "@/configs/navigation1";    // 学生 (role: 1)
+import navigationTeacher from "@/configs/navigation2";    // 教师 (role: 2)
 
 const customizeTheme = useCustomizeThemeStore();
 const profileStore = useProfileStore();
-const userType = ref(profileStore.user.userType);
 
-// 根据用户类型选择导航配置
-const getNavigationConfig = () => {
+// 计算属性，用于获取当前用户的角色
+const userType = computed(() => profileStore.user?.role);
+
+// 根据用户角色动态选择并返回对应的导航配置
+const navigation = computed(() => {
+  console.log("Current User Role:", userType.value);
   switch (userType.value) {
     case 0:
-      return navigationUserType0;
+      return navigationAdmin;
     case 1:
-      return navigationUserType1;
+      return navigationStudent;
     case 2:
-      return navigationUserType2;
+      return navigationTeacher;
     default:
-      return {};
+      // 如果用户未登录或角色未知，可以返回一个默认的导航（例如学生导航）
+      return navigationStudent;
   }
-};
-
-const navigation = ref(getNavigationConfig());
-
-watch(() => userType.value, () => {
-  navigation.value = getNavigationConfig();
 });
 
 const openGithubSite = () => {
@@ -45,7 +37,6 @@ const openGithubSite = () => {
 };
 
 onMounted(() => {
-  console.log('User Type:', userType.value);
   scrollToBottom();
 });
 
@@ -71,9 +62,6 @@ const scrollToBottom = () => {
     temporary
     id="mainMenu"
   >
-    <!-- ---------------------------------------------- -->
-    <!---Top Area -->
-    <!-- ---------------------------------------------- -->
     <template v-if="!customizeTheme.miniSidebar" v-slot:prepend>
       <v-card
         style="box-shadow: rgba(0, 0, 0, 0.05) 0px 25px 15px -20px"
@@ -81,22 +69,14 @@ const scrollToBottom = () => {
         class="logo-card"
       >
         <h1 class="logo-text h-full">
-          <!-- <Icon class="mr-2" width="40" icon="solar:plain-bold-duotone" /> -->
           <img src="@/assets/logo.png" alt="Logo" width="30" height="30" style="margin-right:10px" />
           <span>维诺思</span>
         </h1>
       </v-card>
     </template>
 
-    <!-- ---------------------------------------------- -->
-    <!---Nav List -->
-    <!-- ---------------------------------------------- -->
-
     <main-menu :menu="navigation.menu"></main-menu>
 
-    <!-- ---------------------------------------------- -->
-    <!---Bottom Area -->
-    <!-- ---------------------------------------------- -->
     <template v-if="!customizeTheme.miniSidebar" v-slot:append>
       <v-card
         theme="dark"

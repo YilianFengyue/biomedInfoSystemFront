@@ -41,7 +41,7 @@ export default defineConfig({
       // 关键配置项
       '/api': {
         // 当前端请求路径以 /api 开头时，会触发此代理
-        target: 'http://localhost:5000', // 目标后端服务器地址
+        target: 'http://localhost:81', // 目标后端服务器地址
         changeOrigin: true, // 必须设置为 true，表示允许跨域
         
         // 路径重写：因为我们的后端接口实际路径没有 /api 前缀
