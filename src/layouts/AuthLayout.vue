@@ -5,7 +5,7 @@
     >
       <div class="mt-3 mt-md-10 pa-2">
         <div class="text-primary text-h4 font-weight-bold">
-          MyPetStore
+          维诺思医药
         </div>
         <div class="title my-2">
           Welcome! Let's shopping amazing things together.

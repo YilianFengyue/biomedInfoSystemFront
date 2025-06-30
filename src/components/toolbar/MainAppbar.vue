@@ -80,7 +80,12 @@ const color = ref('indigo')
         icon="mdi-wrench"
         @click="toggleFixCard"
       ></v-btn>-->
-
+      <!-- <v-btn v-if="mdAndUp" icon to="/apps/todo">
+          <v-badge :content="`${todoStore.getTodoList.length} +`" color="error">
+            <v-icon>mdi-calendar-check</v-icon>
+          </v-badge>
+        </v-btn> -->
+        <v-divider vertical thickness="2" inset class="ml-5 mr-1"></v-divider>
       <ToolbarNotifications />
       <v-btn icon @click="customizeTheme.themeDrawer = !customizeTheme.themeDrawer">
         <v-icon>mdi-cart</v-icon>

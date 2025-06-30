@@ -54,63 +54,24 @@ const scrollToTop = () => {
 
 <template>
   <v-card class="my-5" rounded="lg" flat>
-    <v-parallax src="https://d214hhm15p4t1d.cloudfront.net/nzr/53a4e4fe9010d5483dc376d42b350ceab3334cf7/img/homepage-desktop.1a4dc43e.svg" height="800" class="mb-5">
+    <v-parallax src="/public/bg1.jpg" height="800" class="mb-5">
       <div class="d-flex flex-column fill-height justify-center align-center source-han">
         <div class="text-center pa-5">
           <v-responsive class="mx-auto" max-width="850px"> 
             <h1 class="text-h3 black text-sm-h2 text-md-h1 font-weight-bold mb-5 text-primary">
-              发现您的理想之家
+              生物医药信息系统
             </h1>
             <p
               class="text-h6 text-sm-h5 mb-8 text-primary font-weight-bold source-han"
               style="opacity: 0.85;" 
             >
-              轻松搜索、比较并租赁最适合您的房源
+              搜索医药
             </p>
-            <v-sheet
-              color="rgba(255, 255, 255, 0.92)" 
-              class="pa-6 pa-md-8 rounded-md"
-              elevation="6" 
-            >
-              <v-row align="center" justify="center" dense>
-                <v-col cols="12" md="6" sm="12">
-                  <v-text-field
-                    v-model="searchLocation"
-                    label="输入区域、街道或小区开始搜索"
-                    variant="solo"
-                    prepend-inner-icon="mdi-map-marker-outline" 
-                    hide-details
-                    clearable
-                    density="comfortable"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="3" sm="6">
-                  <v-select
-                    v-model="searchType"
-                    :items="searchTypeItems"
-                    label="房屋类型"
-                    variant="solo"
-                    hide-details
-                    clearable
-                    density="comfortable"
-                    prepend-inner-icon="mdi-home-city-outline" 
-                  ></v-select>
-                </v-col>
-                <v-col cols="12" md="3" sm="6">
-                  <v-btn
-                    color="primary"
-                    block
-                    size="large"
-                    @click="performSearch"
-                    prepend-icon="mdi-magnify" 
-                    class="search-button"
-                    height="56px" 
-                  >
-                    搜索房源
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-sheet>
+            <div class="text-center">
+          <v-btn size="x-large" class="text-white" color="primary"
+            >Get Stack</v-btn
+          >
+        </div>
           </v-responsive>
         </div>
       </div>

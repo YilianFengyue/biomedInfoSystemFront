@@ -191,7 +191,7 @@ const { xs } = useDisplay();
               />
             </v-avatar>
 
-            OpenAi Chat
+            智能顾问
           </span>
 
           <v-spacer></v-spacer>
