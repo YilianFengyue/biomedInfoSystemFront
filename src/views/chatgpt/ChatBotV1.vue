@@ -23,10 +23,19 @@ import "md-editor-v3/lib/preview.css";
 import ApiKeyDialog from "@/components/ApiKeyDialog.vue";
 const snackbarStore = useSnackbarStore();
 const chatGPTStore = useChatGPTStore();
+//多模态支持改动前
+// interface Message {
+//   content: string;
+//   role: "user" | "assistant" | "system";
+// }
+type MessagePart = 
+  | { type: 'text', text: string }
+  | { type: 'file_url', file_url: { url: string } };
 
 interface Message {
-  content: string;
   role: "user" | "assistant" | "system";
+  // content 现在是一个由 Part 组成的数组
+  content: MessagePart[]; 
 }
 // User Input Message
 const userMessage = ref("");
@@ -127,29 +136,29 @@ const createCompletion = async () => {
   }
 };
 
-watch(
-  () => messages.value,
-  (val) => {
-    if (val) {
-      scrollToBottom(document.querySelector(".message-container"));
-      // 找到最后一条消息
-      const last = val[val.length - 1];
-      // 如果是 AI 回复
-      if (last?.role === "assistant" && last.content) {
-        try {
-          // 提取第一句话（或最多50个字）
-          const firstSentence = last.content.split(/(?<=[。！？\n.?!])\s*/)[0] || last.content.slice(0, 50);
-          live2d.setMessageBox(firstSentence, 4000);
-        } catch (error) {
-          console.warn('Live2D message display failed:', error);
-        }
-      }
-    }
-  },
-  {
-    deep: true,
-  }
-);
+// watch(
+//   () => messages.value,
+//   (val) => {
+//     if (val) {
+//       scrollToBottom(document.querySelector(".message-container"));
+//       // 找到最后一条消息
+//       const last = val[val.length - 1];
+//       // 如果是 AI 回复
+//       if (last?.role === "assistant" && last.content) {
+//         try {
+//           // 提取第一句话（或最多50个字）
+//           const firstSentence = last.content.split(/(?<=[。！？\n.?!])\s*/)[0] || last.content.slice(0, 50);
+//           live2d.setMessageBox(firstSentence, 4000);
+//         } catch (error) {
+//           console.warn('Live2D message display failed:', error);
+//         }
+//       }
+//     }
+//   },
+//   {
+//     deep: true,
+//   }
+// );
 
 const displayMessages = computed(() => {
   const messagesCopy = messages.value.slice(); // 创建原始数组的副本
@@ -176,14 +185,7 @@ const handleKeydown = (e) => {
 
 const inputRow = ref(1);
 onMounted(() => {
-  try {
-    // 添加延迟确保 DOM 完全渲染
-    setTimeout(() => {
-      live2d.setMessageBox("欢迎欢迎~有什么需要帮助的吗", 4000);
-    }, 1000);
-  } catch (error) {
-    console.warn('Live2D initialization failed:', error);
-  }
+ 
 });
 </script>
 
@@ -217,6 +219,13 @@ onMounted(() => {
                 />
               </v-avatar>
               <v-card>
+                <v-progress-linear
+                  :active="isLoading"
+                  :indeterminate="isLoading"
+                  color="deep-purple-accent-4"
+                  location="bottom"
+                  absolute
+                ></v-progress-linear>
                 <div>
                   <md-preview :modelValue="message.content" class="font-1" />
                 </div>
@@ -252,6 +261,19 @@ onMounted(() => {
           @click="chatGPTStore.configDialog = true"
         >
           <v-icon size="30" class="text-primary">mdi-cog-outline</v-icon>
+          <v-tooltip
+            activator="parent"
+            location="top"
+            text="ChatGPT Config"
+          ></v-tooltip>
+        </v-btn>
+        <v-btn
+          class="mb-1 ml-1"
+          variant="elevated"
+          icon
+          
+        >
+          <v-icon size="30" class="text-primary">mdi-file</v-icon>
           <v-tooltip
             activator="parent"
             location="top"

@@ -271,10 +271,10 @@ const { xs } = useDisplay();
             <v-tooltip
               activator="parent"
               location="top"
-              text="ChatGPT Config"
+              text="AI Config"
             ></v-tooltip>
           </v-btn>
-
+          
           <v-textarea
             class="mx-2"
             color="primary"

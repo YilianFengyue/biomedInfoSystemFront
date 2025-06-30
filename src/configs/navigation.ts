@@ -66,7 +66,7 @@ export default {
         },
         {
           icon: "mdi-robot-excited-outline",
-          text: "AI选购顾问",
+          text: "AI智能助理",
           link: "/ai/chatbot_v1",
         },
         {
