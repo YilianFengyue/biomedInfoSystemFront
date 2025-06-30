@@ -78,3 +78,46 @@ Router/index.ts
 
 #### 映射路由地址（访问路径）
 
+#### 一：前端开发
+推荐使用build:dev + preview
+
+#### 二：electron打包
+1.新建D:\\electron_cache目录
+2.在前端根目录下创建/backend目录，里面存放你的后端jar包
+3.进入package.json，加入以下内容
+"build": {
+    "appId": "com.yourcompany.biomed",
+    "productName": "BiomedInfoSystem",
+    "copyright": "Copyright © 2025 ${author}",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "./backend/BiomedInfoSystem-0.0.1-SNAPSHOT.jar",
+        "to": "backend.jar"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "path/to/your/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "path/to/your/icon.icns"
+    }
+  }
+4.使用powershell 输入$env:ELECTRON_MIRROR="https://registry.npmmirror.com/-/binary/electron/"
+5.$env:ELECTRON_CACHE="D:\electron_cache"
+6.npm run electron:build
+7.运行生成的dist_electron目录下的exe安装包
+  

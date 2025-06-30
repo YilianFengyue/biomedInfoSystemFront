@@ -11,6 +11,7 @@ import { fileURLToPath, URL } from "node:url";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: './', // <--- 添加这一行，将资源路径改为相对路径
   plugins: [
     vue(),
     // https://github.com/vuetifyjs/vuetify-loader/tree/next/packages/vite-plugin
@@ -56,5 +57,8 @@ export default defineConfig({
       css: { charset: false },
     },
   },
-
+  // 【修改】将构建输出目录指向 electron/dist
+  build: {
+    outDir: 'electron/dist'
+  }
 });

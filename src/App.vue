@@ -55,6 +55,7 @@ const currentLayout = computed(() => {
 });
 onMounted(() => {
   theme.global.name.value = appStore.theme;
+  console.log('【生产环境诊断】VITE_API_BASE_URL 的值是:', import.meta.env.VITE_API_BASE_URL);
 });
 </script>
 
