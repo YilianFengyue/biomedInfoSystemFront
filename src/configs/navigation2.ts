@@ -33,11 +33,6 @@ export default {
           icon: "mdi-school-outline",
         },
         {
-          text: "管理员界面",
-          link: "/admin",
-          icon: "mdi-android-studio",
-        },
-        {
           text: "新闻编辑",
           link: "/newsEditor",
           icon: "mdi-file-document-edit-outline",

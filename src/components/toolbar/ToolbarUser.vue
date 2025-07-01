@@ -4,11 +4,13 @@ import { useRouter } from "vue-router";
 import { useTokenStore } from "~/src/stores/tokenStore"; // 假设你的文件名是 tokenStore
 import { useProfileStore } from "@/stores/profileStore";
 import StatusMenu from "./StatusMenu.vue";
+import { useAuthStore } from "~/src/stores/authStore"; // 导入 authStore
 
 // --- 1. 获取 Store 实例 ---
 const router = useRouter();
 const tokenStore = useTokenStore();
 const profileStore = useProfileStore();
+const authStore = useAuthStore();
 
 // --- 2. 使用 storeToRefs 创建响应式引用 ---
 // 这样 isLoggedIn 和 user 就会始终与 store 保持同步
@@ -17,9 +19,9 @@ const { user } = storeToRefs(profileStore);
 
 // --- 3. 保留需要的函数 ---
 const handleLogout = () => {
-  tokenStore.removeToken();
+  authStore.logout();
   // 推荐使用 router.push，除非你确实需要硬刷新
-  router.push("/auth/signin"); 
+  router.push("/"); 
 };
 
 const goToSignIn = () => {

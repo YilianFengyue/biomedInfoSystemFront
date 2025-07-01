@@ -18,7 +18,7 @@ import navigationUserType2 from "@/configs/navigation2";
 
 const customizeTheme = useCustomizeThemeStore();
 const profileStore = useProfileStore();
-const userType = computed(() => profileStore.user?.role ?? 0);
+const userType = computed(() => profileStore.user?.role ?? 1);
 
 // 根据用户类型选择导航配置
 const getNavigationConfig = () => {
