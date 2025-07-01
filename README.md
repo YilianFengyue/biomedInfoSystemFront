@@ -82,9 +82,11 @@ Router/index.ts
 推荐使用build:dev + preview
 
 #### 二：electron打包
-1.新建D:\\electron_cache目录
-2.在前端根目录下创建/backend目录，里面存放你的后端jar包
-3.进入package.json，加入以下内容
+>1.新建D:\\electron_cache目录
+>2.在前端根目录下创建/backend目录，里面存放你的后端jar包
+使用mvn package打包，jar包在target目录下
+>3.进入package.json，加入以下内容
+```ts
 "build": {
     "appId": "com.yourcompany.biomed",
     "productName": "BiomedInfoSystem",
@@ -116,8 +118,10 @@ Router/index.ts
       "icon": "path/to/your/icon.icns"
     }
   }
-4.使用powershell 输入$env:ELECTRON_MIRROR="https://registry.npmmirror.com/-/binary/electron/"
-5.$env:ELECTRON_CACHE="D:\electron_cache"
-6.npm run electron:build
-7.运行生成的dist_electron目录下的exe安装包
+```
+>4.使用powershell 输入$env:ELECTRON_MIRROR="https://registry.npmmirror.com/-/binary/electron/"
+>5.$env:ELECTRON_CACHE="D:\electron_cache"
+>6.npm run electron:build
+>7.运行生成的dist_electron目录下的exe安装包
+>8.需要运行后端，且数据库信息要一样
   
