@@ -13,6 +13,21 @@ export default {
           icon: "mdi-view-dashboard-outline",
         },
         {
+          text: "数据中心",
+          link: "/dataCenter",
+          icon: "mdi-school-outline",
+        },
+        {
+          text: "药材检索",
+          link: "/herb-search",
+          icon: "mdi-school-outline",
+        },
+        {
+          text: "数据采集",
+          link: "/data-collection",
+          icon: "mdi-school-outline",
+        },
+        {
           text: "在线教育",
           link: "/education",
           icon: "mdi-school-outline",
@@ -41,6 +56,11 @@ export default {
           icon: "mdi-robot-outline",
           text: "Image Bot",
           link: "/image-bot",
+        },
+        {
+          icon: "mdi-robot-outline",
+          text: "植物识别",
+          link: "/plant-recognition",
         },
       ],
     },

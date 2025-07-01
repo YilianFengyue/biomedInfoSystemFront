@@ -1,174 +1,120 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
+import { ref } from "vue";
 import { useAuthStore } from "@/stores/authStore";
+import { Icon } from "@iconify/vue";
 
 const authStore = useAuthStore();
-const isLoading = ref(false);
-const isSignInDisabled = ref(false);
 
 const refLoginForm = ref();
-const email = ref("vuetify3-visitor@gmail.com");
-const password = ref("sfm12345");
-const isFormValid = ref(true);
+const form = ref({
+  username: "luyue", // 可改成默认空字符串 ""
+  password: "123456",
+});
 
-// show password field
+const isFormValid = ref(true);
+const isLoading = ref(false);
+const isSignInDisabled = ref(false);
 const showPassword = ref(false);
+const errorMessage = ref("");
+
+// 密码验证规则（用户名不再使用邮箱格式规则）
+const passwordRules = [
+  (v: string) => !!v || "密码不能为空",
+  (v: string) => (v && v.length <= 16) || "密码不能超过16位",
+];
 
 const handleLogin = async () => {
   const { valid } = await refLoginForm.value.validate();
-  if (valid) {
-    isLoading.value = true;
-    isSignInDisabled.value = true;
-    authStore.loginWithEmailAndPassword(email.value, password.value);
-  } else {
-    console.log("no");
+  if (!valid) return;
+
+  isLoading.value = true;
+  isSignInDisabled.value = true;
+  errorMessage.value = "";
+
+  try {
+    await authStore.loginWithUsernameAndPassword(form.value.username, form.value.password);
+    // 成功登录后，authStore 内部会跳转
+  } catch (err: any) {
+    errorMessage.value = err?.response?.data?.msg || "登录失败，请检查用户名和密码";
+  } finally {
+    isLoading.value = false;
+    isSignInDisabled.value = false;
   }
 };
-
-const signInWithGoolgle = () => {
-  authStore.loginWithGoogle();
-};
-
-// Error Check
-const emailRules = ref([
-  (v: string) => !!v || "E-mail is required",
-  (v: string) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-]);
-
-const passwordRules = ref([
-  (v: string) => !!v || "Password is required",
-  (v: string) =>
-    (v && v.length <= 10) || "Password must be less than 10 characters",
-]);
-
-// error provider
-const errorProvider = ref(false);
-const errorProviderMessages = ref("");
-
-const error = ref(false);
-const errorMessages = ref("");
-const resetErrors = () => {
-  error.value = false;
-  errorMessages.value = "";
-};
-
-const signInWithFacebook = () => {
-  alert(authStore.isLoggedIn);
-};
 </script>
+
 <template>
   <v-card color="white" class="pa-3 ma-3" elevation="3">
     <v-card-title class="my-4 text-h4">
       <span class="flex-fill font-weight-bold"> 欢迎 </span>
     </v-card-title>
     <v-card-subtitle>登录您的账户</v-card-subtitle>
-    <!-- sign in form -->
 
     <v-card-text>
-      <v-form
-        ref="refLoginForm"
-        class="text-left"
-        v-model="isFormValid"
-        lazy-validation
-      >
+      <v-alert v-if="errorMessage" type="error" class="mb-4" dense>
+        {{ errorMessage }}
+      </v-alert>
+
+      <v-form ref="refLoginForm" v-model="isFormValid" lazy-validation>
         <v-text-field
-          ref="refEmail"
-          v-model="email"
+          v-model="form.username"
+          label="用户名"
+          placeholder="请输入用户名"
+          prepend-inner-icon="mdi-account-outline"
+          variant="underlined"
+          color="primary"
           required
-          :error="error"
-          :label="$t('login.email')"
-          density="default"
-          variant="underlined"
-          color="primary"
-          bg-color="#fff"
-          :rules="emailRules"
-          name="email"
-          outlined
-          validateOn="blur"
-          placeholder="403474473@qq.com"
-          @keyup.enter="handleLogin"
-          @change="resetErrors"
-        ></v-text-field>
+          class="mb-4"
+        />
+
         <v-text-field
-          ref="refPassword"
-          v-model="password"
-          :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          v-model="form.password"
+          label="密码"
           :type="showPassword ? 'text' : 'password'"
-          :error="error"
-          :error-messages="errorMessages"
-          :label="$t('login.password')"
-          placeholder="sfm12345"
-          density="default"
+          :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+          @click:append-inner="showPassword = !showPassword"
+          :rules="passwordRules"
+          prepend-inner-icon="mdi-lock-outline"
           variant="underlined"
           color="primary"
-          bg-color="#fff"
-          :rules="passwordRules"
-          name="password"
-          outlined
-          validateOn="blur"
-          @change="resetErrors"
-          @keyup.enter="handleLogin"
-          @click:append-inner="showPassword = !showPassword"
-        ></v-text-field>
+          required
+          class="mb-4"
+        />
+
         <v-btn
           :loading="isLoading"
           :disabled="isSignInDisabled"
           block
           size="x-large"
           color="primary"
-          @click="handleLogin"
           class="mt-2"
-          >{{ $t("login.button") }}</v-btn
+          @click="handleLogin"
         >
-
-        <div
-          class="text-grey text-center text-caption font-weight-bold text-uppercase my-5"
-        >
-          {{ $t("login.orsign") }}
-        </div>
-
-        <!-- external providers list -->
-        <v-btn
-          class="mb-2 text-capitalize"
-          color="white"
-          elevation="1"
-          block
-          size="x-large"
-          @click="signInWithGoolgle"
-          :disabled="isSignInDisabled"
-        >
-          <Icon icon="logos:google-icon" class="mr-3 my-2" />
-          Google
+          登录
         </v-btn>
-        <v-btn
-          class="mb-2 lighten-2 text-capitalize"
-          elevation="1"
-          color="white"
-          block
-          size="x-large"
-          :disabled="isSignInDisabled"
-          @click="signInWithFacebook"
-        >
-          <Icon icon="logos:facebook" class="mr-3" />
-          Facebook
-        </v-btn>
+      </v-form>
 
-        <div v-if="errorProvider" class="error--text my-2">
-          {{ errorProviderMessages }}
-        </div>
+      <div class="text-grey text-center text-caption font-weight-bold text-uppercase my-5">
+        或使用第三方登录
+      </div>
 
-        <div class="mt-5 text-center">
-          <router-link class="text-primary" to="/auth/forgot-password">
-            {{ $t("login.forgot") }}
-          </router-link>
-        </div>
-      </v-form></v-card-text
-    >
+      <v-btn class="mb-2" block color="white" @click="authStore.loginWithGoogle">
+        <Icon icon="logos:google-icon" class="mr-3" />
+        Google
+      </v-btn>
+
+      <v-btn block color="white" class="mb-2" @click="authStore.loginWithFacebook">
+        <Icon icon="logos:facebook" class="mr-3" />
+        Facebook
+      </v-btn>
+
+      <div class="text-center mt-6">
+        还没有账号？
+        <router-link to="/auth/signup" class="text-primary font-weight-bold">
+          立即注册
+        </router-link>
+      </div>
+    </v-card-text>
   </v-card>
-  <div class="text-center mt-6">
-    {{ $t("login.noaccount") }}
-    <router-link to="/auth/signup" class="text-primary font-weight-bold">
-      {{ $t("login.create") }}
-    </router-link>
-  </div>
 </template>
+

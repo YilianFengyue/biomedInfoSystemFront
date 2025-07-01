@@ -62,7 +62,7 @@ const editedItem = ref({
 import { useProfileStore } from "@/stores/profileStore";
 
 
-import {userTokenStore} from "@/stores/token";
+import {useTokenStore} from "~/src/stores/tokenStore";
 
 const profileStore = useProfileStore();  // 使用购物车 store
 const account = reactive({ ...profileStore.account });

@@ -13,14 +13,39 @@ export default {
           icon: "mdi-view-dashboard-outline",
         },
         {
-          text: "搜索列表",
-          link: "/houseList",
-          icon: "mdi-format-list-bulleted",
+          text: "数据中心",
+          link: "/dataCenter",
+          icon: "mdi-school-outline",
         },
         {
-          text: "商品类型",
-          link: "/house",
-          icon: "mdi-view-dashboard-outline",
+          text: "药材检索",
+          link: "/herb-search",
+          icon: "mdi-school-outline",
+        },
+        {
+          text: "数据采集",
+          link: "/data-collection",
+          icon: "mdi-school-outline",
+        },
+        {
+          text: "在线教育",
+          link: "/education",
+          icon: "mdi-school-outline",
+        },
+        {
+          text: "管理员界面",
+          link: "/admin",
+          icon: "mdi-android-studio",
+        },
+        {
+          text: "新闻编辑",
+          link: "/newsEditor",
+          icon: "mdi-file-document-edit-outline",
+        },
+        {
+          text: "新闻列表",
+          link: "/newsList",
+          icon: "mdi-message-text-outline",
         },
         {
           icon: "mdi-robot-excited-outline",
@@ -31,6 +56,11 @@ export default {
           icon: "mdi-robot-outline",
           text: "Image Bot",
           link: "/image-bot",
+        },
+        {
+          icon: "mdi-robot-outline",
+          text: "植物识别",
+          link: "/plant-recognition",
         },
       ],
     },

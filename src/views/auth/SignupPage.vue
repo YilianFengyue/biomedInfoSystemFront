@@ -1,139 +1,154 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
+import { useSnackbarStore } from "@/stores/snackbarStore";
+import { Icon } from "@iconify/vue";
 
+const router = useRouter();
 const authStore = useAuthStore();
-const username = ref("");
-const phone = ref("19511053623");
-// sign in buttons
+const snackbarStore = useSnackbarStore();
+
+// 使用一个响应式对象来统一管理表单数据
+const form = reactive({
+  username: "",
+  password: "",
+  confirmPassword: "",
+});
+
+// 加载与状态管理
 const isLoading = ref(false);
-const isSignInDisabled = ref(false);
-
-const refLoginForm = ref();
-const isFormValid = ref(true);
-const email = ref("");
-const password = ref("");
-
-// show password field
+const errorMessage = ref("");
 const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
-// Submit
+// 表单引用
+const refLoginForm = ref();
+
+// 表单验证规则
+const usernameRules = [(v: string) => !!v || "用户名不能为空"];
+const passwordRules = [
+  (v: string) => !!v || "密码不能为空",
+  (v: string) => (v && v.length >= 6) || "密码长度不能少于6位",
+];
+const confirmPasswordRules = [
+  (v: string) => !!v || "请再次输入密码",
+  (v: string) => v === form.password || "两次输入的密码不一致",
+];
+
+// 提交注册
 const handleRegister = async () => {
+  errorMessage.value = "";
   const { valid } = await refLoginForm.value.validate();
+
   if (valid) {
     isLoading.value = true;
-    isSignInDisabled.value = true;
-    authStore.registerWithUsernameAndPassword(phone.value, password.value, email.value);
-  } else {
-    console.log("no");
+    try {
+      const success = await authStore.registerWithUsernameAndPassword(
+        form.username,
+        form.password
+      );
+
+      if (success) {
+        snackbarStore.showSuccessMessage("注册成功！即将跳转到登录页面。");
+        // 注册成功后延迟跳转，给用户看提示的时间
+        setTimeout(() => {
+          router.push("/auth/signin");
+        }, 1500);
+      }
+    } catch (error: any) {
+      // 从Store的拦截器中获取错误信息或使用默认信息
+      errorMessage.value = error.response?.data?.msg || "注册失败，该用户名可能已被使用。";
+    } finally {
+      isLoading.value = false;
+    }
   }
 };
 
-// Error Check
-const emailRules = ref([
-  (v: string) => !!v || "E-mail is required",
-  (v: string) => /.+@.+\..+/.test(v) || "E-mail must be valid",
-]);
-
-const usernameRules = ref([(v: string) => !!v || "Phone is required"]);
-
-const passwordRules = ref([
-  (v: string) => !!v || "Password is required",
-  (v: string) =>
-    (v && v.length <= 10) || "Password must be less than 10 characters",
-]);
-
-
-
-const error = ref(false);
-const errorMessages = ref("");
-
+// 重置错误信息
 const resetErrors = () => {
-  error.value = false;
-  errorMessages.value = "";
+  errorMessage.value = "";
 };
 </script>
+
 <template>
   <v-card color="white" class="pa-3 ma-3" elevation="3">
     <v-card-title primary-title class="my-4 text-h4">
       <span class="flex-fill"> {{ $t("register.title") }} </span>
     </v-card-title>
-    <v-card-subtitle>Let's build amazing products</v-card-subtitle>
-    <!-- sign in form -->
+    <v-card-subtitle>欢迎加入生物医药数字信息系统</v-card-subtitle>
 
     <v-card-text>
+      <!-- 错误信息提示 -->
+      <v-alert v-if="errorMessage" type="error" class="mb-4" dense>
+        {{ errorMessage }}
+      </v-alert>
+
       <v-form
         ref="refLoginForm"
         class="text-left"
-        v-model="isFormValid"
-        lazy-validation
+        @submit.prevent="handleRegister"
       >
+        <!-- 用户名输入框 -->
         <v-text-field
-          v-model="phone"
+          v-model="form.username"
           required
-          :error="error"
-          :label="$t('手机号')"
+          :label="$t('register.username')"
           density="default"
           variant="underlined"
           color="primary"
-          bg-color="#fff"
+          prepend-inner-icon="mdi-account-outline"
           :rules="usernameRules"
-          name="username"
-          outlined
-          validateOn="blur"
-          @keyup.enter="handleRegister"
+          validate-on="blur"
           @change="resetErrors"
-        ></v-text-field>
-        
-        <v-text-field
-          ref="refEmail"
-          v-model="email"
-          required
-          :error="error"
-          :label="$t('register.email')"
-          density="default"
-          variant="underlined"
-          color="primary"
-          bg-color="#fff"
-          :rules="emailRules"
-          name="email"
-          outlined
-          validateOn="blur"
           @keyup.enter="handleRegister"
-          @change="resetErrors"
         ></v-text-field>
+
+        <!-- 密码输入框 -->
         <v-text-field
-          ref="refPassword"
-          v-model="password"
+          v-model="form.password"
           :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
           :type="showPassword ? 'text' : 'password'"
-          :error="error"
-          :error-messages="errorMessages"
           :label="$t('register.password')"
           density="default"
           variant="underlined"
           color="primary"
-          bg-color="#fff"
           :rules="passwordRules"
-          name="password"
-          outlined
-          validateOn="blur"
+          validate-on="blur"
           @change="resetErrors"
           @keyup.enter="handleRegister"
           @click:append-inner="showPassword = !showPassword"
+          prepend-inner-icon="mdi-lock-outline"
         ></v-text-field>
+
+        <!-- 确认密码输入框 -->
+        <v-text-field
+          v-model="form.confirmPassword"
+          :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
+          :type="showConfirmPassword ? 'text' : 'password'"
+          label="确认密码"
+          density="default"
+          variant="underlined"
+          color="primary"
+          :rules="confirmPasswordRules"
+          validate-on="blur"
+          @change="resetErrors"
+          @keyup.enter="handleRegister"
+          @click:append-inner="showConfirmPassword = !showConfirmPassword"
+          prepend-inner-icon="mdi-lock-check-outline"
+        ></v-text-field>
+
+        <!-- 注册按钮 -->
         <v-btn
           :loading="isLoading"
-          :disabled="isSignInDisabled"
+          :disabled="isLoading"
           block
           size="x-large"
           color="primary"
-          @click="handleRegister"
-          class="mt-2"
+          type="submit"
+          class="mt-4"
           >{{ $t("register.button") }}</v-btn
         >
-
-
 
         <div class="my-5 text-center">
           {{ $t("register.agree") }}
@@ -146,9 +161,10 @@ const resetErrors = () => {
             $t("common.policy")
           }}</router-link>
         </div>
-      </v-form></v-card-text
-    >
+      </v-form>
+    </v-card-text>
   </v-card>
+
   <div class="text-center mt-6">
     {{ $t("register.account") }}
     <router-link to="/auth/signin" class="text-primary font-weight-bold">

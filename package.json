@@ -1,15 +1,25 @@
 {
   "name": "vuetify3-design",
   "version": "0.0.0",
+  "private": true,
+  "description": "lu_front",
+  "author": {
+    "name": "luyue"
+  },
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite --mode dev",
-    "build": "vite build --mode pro",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "electron:dev": "electron .",
+    "electron:build": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
     "@element-plus/icons-vue": "^2.3.1",
     "@formkit/auto-animate": "^0.7.0",
     "@mdi/font": "7.2.96",
@@ -32,11 +42,13 @@
     "focus-trap": "^7.4.0",
     "happy-dom": "^9.6.1",
     "live2d-render": "^0.0.6",
+    "lodash-es": "^4.17.21",
     "md-editor-v3": "^5.4.5",
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",
     "moment": "^2.29.4",
     "openai": "^3.2.1",
     "pinia": "^2.0.34",
+    "pinia-persistedstate-plugin": "^0.1.0",
     "pinia-plugin-persist": "^1.0.0",
     "pinia-plugin-persistedstate": "^4.3.0",
     "plantuml-encoder": "^1.4.0",
@@ -67,7 +79,10 @@
     "@vitest/ui": "^0.30.1",
     "@vue/test-utils": "^2.0.0-rc.18",
     "autoprefixer": "^10.4.14",
+    "cross-env": "^7.0.3",
     "depcheck": "^1.4.7",
+    "electron": "^28.0.0",
+    "electron-builder": "^26.0.12",
     "postcss": "^8.4.21",
     "sass": "^1.61.0",
     "tailwindcss": "^3.3.1",
@@ -75,6 +90,8 @@
     "unplugin-icons": "^22.1.0",
     "vite": "^4.3.2",
     "vite-plugin-vuetify": "^1.0.2",
-    "vitest": "^0.30.1"
+    "vitest": "^0.30.1",
+    "wait-on": "^8.0.3"
   }
 }
+

@@ -18,13 +18,45 @@ export const routes = [
     component: () => import("@/views/pages/DashBoard.vue"),
   },
   {
+    path: "/dataCenter",
+    component: () => import("@/views/pages/biomedicine/DataCenter.vue"),
+    meta: {
+      layout: "ui",
+      title: "数据中心与可视化",
+      requiresAuth: true, // 需要登录
+      hidePageHeader: true,
+    },
+  },
+  // 新增的路由配置
+  {
+    path: "/herb-search",
+    name: "herb-search",
+    component: () => import("@/views/pages/biomedicine/HerbSearchPage.vue"),
+    meta: {
+      layout: "ui",
+      title: "药材检索",
+      requiresAuth: true,
+      hidePageHeader: true,
+    },
+  },
+  {
+    path: "/data-collection",
+    component: () => import("@/views/pages/biomedicine/DataCollection.vue"),
+    meta: {
+      layout: "ui",
+      title: "数据采集",
+      requiresAuth: true, // 需要登录
+      hidePageHeader: true,
+    },
+  },
+  {
     path: "/education",
     component: () => import("@/views/pages/biomedicine/EduOnline.vue"),
     meta: {
       layout: "ui",
       title: "在线教育",
       requiresAuth: true, // 需要登录
-      hidePageHeader: true, 
+      hidePageHeader: true,
     },
   },
   {
@@ -34,7 +66,7 @@ export const routes = [
       layout: "ui",
       title: "资源列表",
       requiresAuth: false, // 不需要登录
-      hidePageHeader: true, 
+      hidePageHeader: true,
     },
   },
   {
@@ -44,7 +76,7 @@ export const routes = [
       layout: "ui",
       title: "资源详情",
       requiresAuth: false, // 不需要登录
-      hidePageHeader: true, 
+      hidePageHeader: true,
     },
   },
   //管理员
@@ -127,7 +159,17 @@ export const routes = [
       // title: "ImageBot",
     },
   },
-
+  {
+    path: "/plant-recognition",
+    name: "plant-recognition",
+    component: () => import("@/views/pages/recognition/PlantRecognitionPage.vue"),
+    meta: {
+      layout: "ui", // 假设你使用 ui 布局
+      title: "植物识别",
+      requiresAuth: true,
+      hidePageHeader: true,
+    },
+  },
   {
     path: "/profile",
     name: "profile",

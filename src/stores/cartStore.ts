@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profileStore';
 //存储token
-import {userTokenStore} from "@/stores/token";
+import {useTokenStore} from "@/stores/tokenStore";
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
