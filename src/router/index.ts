@@ -17,7 +17,36 @@ export const routes = [
     },
     component: () => import("@/views/pages/DashBoard.vue"),
   },
-  
+  {
+    path: "/education",
+    component: () => import("@/views/pages/biomedicine/EduOnline.vue"),
+    meta: {
+      layout: "ui",
+      title: "在线教育",
+      requiresAuth: true, // 需要登录
+      hidePageHeader: true, 
+    },
+  },
+  {
+    path: "/biomedicine/resource-list",
+    component: () => import("@/views/pages/biomedicine/ResourceList.vue"),
+    meta: {
+      layout: "ui",
+      title: "资源列表",
+      requiresAuth: false, // 不需要登录
+      hidePageHeader: true, 
+    },
+  },
+  {
+    path: "/biomedicine/resource-detail/:id",
+    component: () => import("@/views/pages/biomedicine/ResourceDetail.vue"),
+    meta: {
+      layout: "ui",
+      title: "资源详情",
+      requiresAuth: false, // 不需要登录
+      hidePageHeader: true, 
+    },
+  },
   //管理员
   {
     path: "/admin",

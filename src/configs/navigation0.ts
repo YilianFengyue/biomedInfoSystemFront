@@ -13,6 +13,11 @@ export default {
           icon: "mdi-view-dashboard-outline",
         },
         {
+          text: "在线教育",
+          link: "/education",
+          icon: "mdi-school-outline",
+        },
+        {
           text: "管理员界面",
           link: "/admin",
           icon: "mdi-android-studio",
