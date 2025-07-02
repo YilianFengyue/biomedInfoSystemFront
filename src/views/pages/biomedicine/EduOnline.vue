@@ -84,6 +84,15 @@
           <div class="d-flex align-center mb-8">
             <h2 class="text-h4 font-weight-bold">精选热门资源</h2>
             <v-spacer></v-spacer>
+            <!--
+            <v-btn
+              color="primary"
+              variant="text"
+              @click="router.push('/biomedicine/video-list')"
+            >
+              查看课程
+              <v-icon end>mdi-arrow-right</v-icon>
+            </v-btn>-->
             <v-btn
               color="primary"
               variant="text"
@@ -144,15 +153,12 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import ResourceCardList from '@/views/pages/biomedicine/ResourceCardList.vue';
 
-// ... 其他 import 和 setup 代码保持不变 ...
-// 引入本地资源
 import main1 from '@/assets/edu/main1.jpg';
 import main2 from '@/assets/edu/main2.jpg';
 import main3 from '@/assets/edu/main3.jpg';
 
 const router = useRouter();
 
-// 定义教师和资源的数据结构类型
 interface Teacher {
   id: number;
   username: string;
@@ -172,12 +178,10 @@ interface EduResource {
   createdAt: string;
 }
 
-// 响应式变量
 const drawer = ref(false);
 const featuredTeachers = ref<Teacher[]>([]);
 const featuredCourses = ref<EduResource[]>([]);
 
-// 滚动到指定锚点
 const scrollTo = (id: string) => {
   const element = document.getElementById(id);
   if (element) {
@@ -186,16 +190,19 @@ const scrollTo = (id: string) => {
   drawer.value = false;
 };
 
-// ... 省略其他不变的JS代码(轮播图、特色、页脚等) ...
 const carouselItems = ref([
   { src: main1 },
   { src: main2 },
   { src: main3 },
 ]);
 
-// 平台特色数据
 const features = ref([
-  { title: '名师直播互动', description: '与行业专家实时交流，深入探讨学术问题。', icon: 'mdi-human-male-board', color: 'blue-darken-2' },
+  { title: '教学资源上传', 
+  description: '上传您的个人课程，相互交流学术问题。', 
+  icon: 'mdi-human-male-board', 
+  color: 'blue-darken-2' ,
+  clickHandler: () => { router.push('/biomedicine/eduupload'); }
+  },
   {
     title: '海量药材图谱',
     description: '高清、多角度的药材图片库，辅助精准辨识。',
@@ -211,8 +218,6 @@ const features = ref([
   }
 ]);
 
-
-// 底部社交图标
 const footerIcons = ref([
   'mdi-wechat',
   'mdi-qqchat',
@@ -220,7 +225,6 @@ const footerIcons = ref([
   'mdi-youtube'
 ]);
 
-// API调用函数
 const fetchTeachers = async () => {
   try {
     const response = await fetch('/api/users/teachers');
@@ -251,7 +255,6 @@ const fetchCourses = async () => {
   }
 };
 
-// onMounted 生命周期钩子
 onMounted(() => {
   fetchTeachers();
   fetchCourses();
@@ -259,7 +262,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 样式保持不变 */
 .hero-section {
   height: 60vh;
   min-height: 400px;

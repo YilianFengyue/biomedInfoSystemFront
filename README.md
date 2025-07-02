@@ -109,6 +109,10 @@ Router/index.ts
       {
         "from": "./backend/BiomedInfoSystem-0.0.1-SNAPSHOT.jar",
         "to": "backend.jar"
+      },
+      {
+        "from": "./jre", 
+        "to": "jre"
       }
     ],
     "win": {
@@ -136,3 +140,7 @@ Router/index.ts
 >7.运行生成的dist_electron目录下的exe安装包
 >
 >8.需要运行后端，且数据库信息(即姓名，密码，端口等)要一样
+
+#### 三: electron打包流程(打包前后端+数据库)
+>1.打开终端 输入"C:\Program Files\Java\jdk-23\bin\jlink" --module-path "C:\Program Files\Java\jdk-23\jmods" --add-modules java.base,java.sql,java.naming,java.management,java.desktop --output D:\VueProject\jre --compress 2 --no-header-files --no-man-pages
+>

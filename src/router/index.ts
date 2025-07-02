@@ -70,6 +70,36 @@ export const routes = [
     },
   },
   {
+    path: "/biomedicine/eduupload",
+    component: () => import("@/views/pages/biomedicine/EduUpload.vue"),
+    meta: {
+      layout: "ui",
+      title: "上传课程",
+      requiresAuth: true, // 需要登录
+      hidePageHeader: true,
+    },
+  },
+  {
+    path: "/biomedicine/video-List",
+    component: () => import("@/views/pages/biomedicine/EduVideolist.vue"),
+    meta: {
+      layout: "ui",
+      title: "视频一览",
+      requiresAuth: false, // 不需要登录
+      hidePageHeader: true,
+    },
+  },
+  {
+    path: "/biomedicine/VideoDetail/:id",
+    component: () => import("@/views/pages/biomedicine/VideoDetail.vue"),
+    meta: {
+      layout: "ui",
+      title: "视频详情",
+      requiresAuth: false, // 不需要登录
+      hidePageHeader: true,
+    },
+  },
+  {
     path: "/biomedicine/resource-detail/:id",
     component: () => import("@/views/pages/biomedicine/ResourceDetail.vue"),
     meta: {

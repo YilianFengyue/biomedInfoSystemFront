@@ -22,7 +22,10 @@
             class="mx-4 mt-4"
             @error="handleImageError"
           >
-          <template v-slot:placeholder>
+            <div v-if="resource.type === 'video'" class="d-flex align-center justify-center fill-height video-overlay">
+              <v-icon color="white" size="x-large">mdi-play-circle</v-icon>
+            </div>
+            <template v-slot:placeholder>
               <div class="d-flex align-center justify-center fill-height">
                 <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
               </div>
@@ -51,13 +54,13 @@
 
           <v-card-text>
             <p class="text-body-1 text-truncate-multiline">
-              {{ getPlainText(resource.content) }}
+              {{ resource.description }}
             </p>
           </v-card-text>
 
           <v-card-actions>
             <v-btn variant="text" color="primary" @click.stop="navigateToDetail(resource)">
-              查看详情
+              {{ resource.type === 'video' ? '观看视频' : '查看详情' }}
               <v-icon end>mdi-arrow-right</v-icon>
             </v-btn>
             <v-spacer></v-spacer>
@@ -69,15 +72,7 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="!resources || resources.length === 0" justify="center">
-      <v-col cols="12" class="text-center py-10">
-        <v-icon size="64" color="grey">mdi-book-open-page-variant-outline</v-icon>
-        <p class="text-h6 text-grey mt-4">
-          暂无精选资源
-        </p>
-      </v-col>
-    </v-row>
-  </v-container>
+    </v-container>
 </template>
 
 <script setup lang="ts">
@@ -85,50 +80,36 @@ import { defineProps } from 'vue';
 import { useRouter } from 'vue-router';
 import defaultCover from '@/assets/edu/new.jpg';
 
-// ... interface 定义和 props 定义保持不变 ...
-interface EduResource {
+// 【修改】更新接口定义，增加detailUrl
+interface DisplayResource {
   id: number;
+  type: 'text' | 'video';
   title: string;
-  coverImageUrl: string;
-  content: string;
-  authorId: number;
+  coverImageUrl: string | null;
+  description: string;
   authorName: string;
-  status: string;
-  createdAt: string; // 假设后端返回的是 ISO 格式的日期字符串
+  createdAt: string;
+  videoUrl?: string;
+  detailUrl: string; 
 }
 
+
 const props = defineProps<{
-  resources: EduResource[];
+  resources: DisplayResource[];
 }>();
 
 const router = useRouter();
 
-//  ↓↓↓ 新增图片加载错误处理函数 ↓↓↓
-/**
- * 处理图片加载失败事件
- * @param event - DOM事件对象
- */
+
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   if (target) {
     target.src = defaultCover;
   }
 };
-//  ↑↑↑ 新增图片加载错误处理函数 ↑↑↑
 
 
-// --- 复用自NewsList的辅助函数 (保持不变) ---
-
-const getPlainText = (html: string | null | undefined): string => {
-  if (!html) return '暂无内容简介';
-  if (typeof document !== 'undefined') {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent || div.innerText || '';
-  }
-  return html.replace(/<[^>]*>?/gm, '');
-};
-
+// 格式化时间函数 (保持不变)
 const formatPublishTime = (dateString: string) => {
   if (!dateString) return '未知时间';
   const date = new Date(dateString);
@@ -147,6 +128,7 @@ const formatPublishTime = (dateString: string) => {
   });
 };
 
+// 头像颜色 (保持不变)
 const getAvatarColor = (author: string) => {
   if (!author) return 'grey';
   const colors = ['primary', 'secondary', 'success', 'info', 'warning', 'error'];
@@ -154,18 +136,25 @@ const getAvatarColor = (author: string) => {
   return colors[index];
 };
 
-// --- 卡片交互事件 (保持不变) ---
 
-const navigateToDetail = (resource: EduResource) => {
-  console.log(`跳转到资源: ${resource.title}`);
-  router.push(`/biomedicine/resource-detail/${resource.id}`);
+// --- 卡片交互事件 (已修改) ---
+
+// 【修改】统一使用 detailUrl 进行跳转
+const navigateToDetail = (resource: DisplayResource) => {
+  if (resource.detailUrl) {
+    router.push(resource.detailUrl);
+  } else {
+    // 降级处理，以防万一
+    console.error("该资源缺少详情页链接: ", resource);
+    alert('无法跳转到详情页！');
+  }
 };
 
-const shareResource = async (resource: EduResource) => {
+const shareResource = async (resource: DisplayResource) => {
   const shareData = {
     title: resource.title,
-    text: `来看看这篇来自 ${resource.authorName} 的教学资源`,
-    url: window.location.href,
+    text: `来看看这个资源: ${resource.title}`,
+    url: window.location.origin + resource.detailUrl, // 使用完整的详情页URL
   };
   if (navigator.share) {
     try {
@@ -180,7 +169,6 @@ const shareResource = async (resource: EduResource) => {
 </script>
 
 <style scoped lang="scss">
-/* 样式保持不变 */
 .text-truncate-multiline {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -199,5 +187,14 @@ const shareResource = async (resource: EduResource) => {
 .resource-card:hover {
   transform: translateY(-10px) scale(1.05);
   box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.video-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: background-color 0.3s ease;
+}
+
+.resource-card:hover .video-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
 }
 </style>

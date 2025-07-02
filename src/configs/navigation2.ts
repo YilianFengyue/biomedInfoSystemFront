@@ -23,6 +23,11 @@ export default {
           icon: "mdi-school-outline",
         },
         {
+          text: "数据采集",
+          link: "/data-collection",
+          icon: "mdi-school-outline",
+        },
+        {
           text: "在线教育",
           link: "/education",
           icon: "mdi-school-outline",

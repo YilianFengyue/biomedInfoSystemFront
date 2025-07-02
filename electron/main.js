@@ -1,59 +1,111 @@
 // electron/main.js
 
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog } = require('electron');
 const path = require('path');
+const { spawn } = require('child_process');
 
-// 判断是否处于开发环境
-const isDev = process.env.NODE_ENV !== 'production';
+// 1. 【推荐】使用 app.isPackaged 来准确判断环境
+const isDev = !app.isPackaged;
+
+let mainWindow;
+let backendProcess = null;
+
+// 启动后端服务 (此函数逻辑是正确的，无需修改)
+function runBackend() {
+  const backendJarPath = isDev
+    ? path.join(__dirname, '..', 'backend', 'BiomedInfoSystem-0.0.1-SNAPSHOT.jar')
+    : path.join(process.resourcesPath, 'backend.jar');
+
+  const jreExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
+  const jrePath = isDev
+    ? path.join(__dirname, '..', 'jre', 'bin', jreExecutable)
+    : path.join(process.resourcesPath, 'jre', 'bin', jreExecutable);
+
+  console.log(`[Backend] JRE Path: ${jrePath}`);
+  console.log(`[Backend] JAR Path: ${backendJarPath}`);
+
+  try {
+    backendProcess = spawn(jrePath, ['-jar', backendJarPath]);
+
+    backendProcess.stdout.on('data', (data) => {
+      console.log(`[Backend] >> ${data}`);
+    });
+
+    backendProcess.stderr.on('data', (data) => {
+      console.error(`[Backend ERR] >> ${data}`);
+      if (!isDev) {
+        dialog.showErrorBox('后端服务错误', data.toString());
+      }
+    });
+
+    backendProcess.on('close', (code) => {
+      console.log(`[Backend] 后端服务已退出，退出码 ${code}`);
+    });
+
+    backendProcess.on('error', (err) => {
+       console.error('[Backend] 无法启动后端进程:', err);
+       if(!isDev) {
+          dialog.showErrorBox('后端启动失败', `无法启动Java进程，请检查JRE配置。\n错误: ${err.message}`);
+       }
+    });
+  } catch (err) {
+      console.error('[Backend] Spawn process failed:', err);
+      if(!isDev) {
+        dialog.showErrorBox('后端启动异常', `创建子进程失败。\n错误: ${err.message}`);
+      }
+  }
+}
 
 function createWindow() {
-  // 创建浏览器窗口
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      // 预加载脚本，推荐使用，用于在渲染进程中安全地暴露 Node.js API
-      // 注意：需要您创建一个 preload.js 文件
       preload: path.join(__dirname, 'preload.js'),
-      // 出于安全考虑，推荐将 contextIsolation 保持为 true
       contextIsolation: true,
-      // 在开发模式下可以启用 nodeIntegration，但发布时建议关闭
       nodeIntegration: false,
     }
   });
 
-  // 根据环境加载不同的 URL
+  // 2. 【推荐】为开发和生产环境使用不同的加载方式
   if (isDev) {
-    // 生产环境下，加载打包后的 index.html 文件
-    // 关键！这里的路径必须和您用 asar list 看到的路径匹配
-    // __dirname 指向 /electron 目录，所以我们需要再拼接上 'dist/index.html'
-    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
-    // 自动打开开发者工具
+    // 开发环境：加载 Vite 开发服务器，享受热更新
+    // 确认你的 vite dev server 运行在 5173 端口
+    mainWindow.loadURL('http://localhost:5173'); 
     mainWindow.webContents.openDevTools();
   } else {
-    // 生产环境下，加载打包后的 index.html 文件
-    // 根据您之前的日志，Vite 将文件打包到了 electron/dist/ 目录下
-    // __dirname 指向当前文件所在的目录 (即 electron/)
-    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    // 生产环境：加载打包后的静态文件
+    const indexPath = path.join(__dirname, 'dist/index.html');
+    mainWindow.loadFile(indexPath);
   }
 }
 
-// 当 Electron 完成初始化后，创建窗口
+// 当 Electron 完成初始化后...
 app.whenReady().then(() => {
+  // 3. 【核心修正】在这里调用 runBackend() 来启动后端服务！
+  runBackend(); 
+  
   createWindow();
 
   app.on('activate', () => {
-    // 在 macOS 上，当点击 dock 图标并且没有其他窗口打开时，
-    // 通常在应用程序中重新创建一个窗口。
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
 });
 
-// 除了 macOS 外，当所有窗口都关闭时退出应用
+// 在应用退出前，确保杀死后端子进程
+app.on('before-quit', () => {
+  if (backendProcess) {
+    console.log('正在关闭后端服务...');
+    backendProcess.kill();
+    backendProcess = null;
+  }
+});
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
+
