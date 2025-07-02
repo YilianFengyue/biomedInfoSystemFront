@@ -89,7 +89,7 @@ Router/index.ts
 #### 二：electron打包
 >1.新建D:\\electron_cache目录
 >
->2.在前端根目录下创建/
+>2.在前端根目录下创建/backend目录
 >
 >使用mvn package打包，jar包在target目录下
 >

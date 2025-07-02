@@ -41,6 +41,7 @@
     "flag-icons": "^6.6.6",
     "focus-trap": "^7.4.0",
     "happy-dom": "^9.6.1",
+    "jspdf": "^3.0.1",
     "live2d-render": "^0.0.6",
     "lodash-es": "^4.17.21",
     "md-editor-v3": "^5.4.5",
@@ -125,4 +126,3 @@
     }
   }
 }
-

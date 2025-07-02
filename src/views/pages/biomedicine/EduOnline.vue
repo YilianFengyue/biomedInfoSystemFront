@@ -203,7 +203,12 @@ const features = ref([
     color: 'teal-darken-2',
     clickHandler: () => { router.push('/herb-search'); }
   },
-  { title: '系统化学习路径', description: '从入门到精通，为您规划最科学的学习方案。', icon: 'mdi-sitemap', color: 'orange-darken-2' }
+  { title: '系统化学习路径', 
+    description: '从入门到精通，为您规划最科学的学习方案。', 
+    icon: 'mdi-sitemap', 
+    color: 'orange-darken-2' ,
+    clickHandler: () => { router.push('/biomedicine/eduplan'); }
+  }
 ]);
 
 

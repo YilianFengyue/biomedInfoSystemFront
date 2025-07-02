@@ -79,6 +79,16 @@ export const routes = [
       hidePageHeader: true,
     },
   },
+  {
+    path: "/biomedicine/eduplan",
+    component: () => import("@/views/pages/biomedicine/EduPlan.vue"),
+    meta: {
+      layout: "ui",
+      title: "学习计划",
+      requiresAuth: false, // 不需要登录
+      hidePageHeader: true,
+    },
+  },
   //管理员
   {
     path: "/admin",
