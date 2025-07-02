@@ -30,7 +30,6 @@ import { useAppStore } from "@/stores/appStore";
 const appStore = useAppStore();
 // live2d
 import Live2d from "@/components/Live2d.vue";
-import RepaireCard from "./components/RepaireCard.vue";
 import { useProfileStore } from "@/stores/profileStore";
 const customizeTheme = useCustomizeThemeStore();
 const route = useRoute();

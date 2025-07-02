@@ -33,11 +33,6 @@ export default {
           icon: "mdi-school-outline",
         },
         {
-          text: "新闻编辑",
-          link: "/newsEditor",
-          icon: "mdi-file-document-edit-outline",
-        },
-        {
           text: "新闻列表",
           link: "/newsList",
           icon: "mdi-message-text-outline",

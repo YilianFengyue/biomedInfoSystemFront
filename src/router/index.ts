@@ -89,6 +89,16 @@ export const routes = [
       hidePageHeader: true,
     },
   },
+  {
+    path: "/herbs/edit/:id",
+    component: () => import("@/views/pages/biomedicine/HerbEditPage.vue"),
+    meta: {
+      layout: "ui",
+      title: "药材编辑",
+      requiresAuth: false, // 不需要登录
+      hidePageHeader: true,
+    },
+  },
   //管理员
   {
     path: "/admin",

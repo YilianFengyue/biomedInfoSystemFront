@@ -23,11 +23,6 @@ export default {
           icon: "mdi-school-outline",
         },
         {
-          text: "数据采集",
-          link: "/data-collection",
-          icon: "mdi-school-outline",
-        },
-        {
           text: "在线教育",
           link: "/education",
           icon: "mdi-school-outline",
@@ -36,11 +31,6 @@ export default {
           text: "新闻编辑",
           link: "/newsEditor",
           icon: "mdi-file-document-edit-outline",
-        },
-        {
-          text: "新闻列表",
-          link: "/newsList",
-          icon: "mdi-message-text-outline",
         },
         {
           icon: "mdi-robot-excited-outline",
