@@ -24,6 +24,7 @@ const isUploading = ref(false);
 const editableProfile = reactive({
   nickname: '',
   bio: '',
+  gender: 'unknown' as 'male' | 'female' | 'unknown',
   // 注意：后端DTO不包含以下字段，仅为UI占位
   email: 'user@example.com',
   phone: '138-xxxx-xxxx',
@@ -39,6 +40,13 @@ const passwordFormValid = ref(false);
 const currentPasswordShow = ref(false);
 const newPasswordShow = ref(false);
 const confirmPasswordShow = ref(false);
+
+// 性别选项
+const genderItems = [
+  { title: '男', value: 'male' },
+  { title: '女', value: 'female' },
+  { title: '未知', value: 'unknown' }
+];
 
 // --- 密码验证规则 ---
 const passwordRules = {
@@ -59,8 +67,10 @@ watch(user, (newUser) => {
   if (newUser) {
     editableProfile.nickname = newUser.nickname || '';
     editableProfile.bio = newUser.bio || '';
+    editableProfile.gender = newUser.gender || 'unknown';
     // 假设 email 从 user 对象获取，如果后端不提供，则显示静态文本
-    editableProfile.email = newUser.email || 'backend-no-email-data'; 
+    editableProfile.email = 'backend-no-email-data';
+    editableProfile.phone = 'backend-no-phone-data';
   }
 }, { immediate: true, deep: true });
 
@@ -80,8 +90,7 @@ const handleAvatarUpload = async (blob: Blob, done: () => void) => {
     const newAvatarUrl = await uploadFileToOSS(avatarFile, policyData);
 
     await http.patch('/users/updateAvatar', null, { params: { avatar: newAvatarUrl } });
-    
-    // 更新 Pinia Store 以立即刷新 UI
+
     if (profileStore.user) {
       profileStore.user.avatarUrl = newAvatarUrl;
     }
@@ -89,11 +98,10 @@ const handleAvatarUpload = async (blob: Blob, done: () => void) => {
     snackbarStore.showSuccessMessage('头像更新成功！');
     isCropperOpen.value = false;
   } catch (error: any) {
-    const errorMessage = error.response?.data?.msg || '头像更新失败，请重试';
-    snackbarStore.showErrorMessage(errorMessage);
+    snackbarStore.showErrorMessage(error.response?.data?.msg || '头像更新失败，请重试');
   } finally {
     isUploading.value = false;
-    done(); // 通知子组件处理完成
+    done();
   }
 };
 
@@ -102,17 +110,17 @@ const handleAvatarUpload = async (blob: Blob, done: () => void) => {
  */
 const updateUserInfo = async () => {
   try {
-    // 仅提交后端支持的字段
     const profileData = {
       nickname: editableProfile.nickname,
       bio: editableProfile.bio,
+      gender: editableProfile.gender,
     };
     await http.put('/users/update', profileData);
-    
-    // 成功后更新 Store
+
     if(profileStore.user){
        profileStore.user.nickname = editableProfile.nickname;
        profileStore.user.bio = editableProfile.bio;
+       profileStore.user.gender = editableProfile.gender;
     }
 
     snackbarStore.showSuccessMessage('用户信息更新成功！');
@@ -132,13 +140,15 @@ const updatePassword = async () => {
   }
   try {
     await http.patch('/users/updatePwd', passwords);
-    snackbarStore.showSuccessMessage('密码修改成功，会话已失效，请重新登录。');
-    authStore.logout();
+    snackbarStore.showSuccessMessage('密码修改成功，即将前往登录页面...');
+    // 延迟2秒后登出，给用户看提示的时间
+    setTimeout(() => {
+      authStore.logout();
+    }, 2000);
   } catch (error: any) {
     snackbarStore.showErrorMessage(error.response?.data?.msg || '密码修改失败');
   }
 };
-
 </script>
 
 <template>
@@ -186,6 +196,10 @@ const updatePassword = async () => {
                   <v-label class="font-weight-medium mb-2">昵称</v-label>
                   <v-text-field v-model="editableProfile.nickname" color="primary" variant="outlined" density="compact" placeholder="你的昵称" hide-details />
                 </v-col>
+                <v-col cols="12" sm="6">
+                   <v-label class="font-weight-medium mb-2">性别</v-label>
+                   <v-select v-model="editableProfile.gender" :items="genderItems" color="primary" variant="outlined" density="compact" hide-details></v-select>
+                </v-col>
                 <v-col cols="12">
                   <v-label class="font-weight-medium mb-2">个人简介</v-label>
                   <v-textarea v-model="editableProfile.bio" color="primary" variant="outlined" rows="3" placeholder="介绍一下自己吧" hide-details />
@@ -207,16 +221,15 @@ const updatePassword = async () => {
                 <v-row>
                   <v-col cols="12">
                     <v-label class="font-weight-medium mb-2">原密码</v-label>
-                    <v-text-field v-model="passwords.old_pwd" type="password" density="compact" variant="outlined" color="primary" :rules="[passwordRules.required]" />
+                    <v-text-field v-model="passwords.old_pwd" :type="currentPasswordShow ? 'text' : 'password'" density="compact" variant="outlined" color="primary" :rules="[passwordRules.required]" :append-inner-icon="currentPasswordShow ? 'mdi-eye' : 'mdi-eye-off'" @click:append-inner="currentPasswordShow = !currentPasswordShow" />
                   </v-col>
                   <v-col cols="12" sm="6">
                     <v-label class="font-weight-medium mb-2">新密码</v-label>
-                    <v-text-field v-model="passwords.new_pwd" :type="newPasswordShow ? 'text' : 'password'" density="compact" variant="outlined" color="primary" :rules="[passwordRules.required, passwordRules.minLength]" :append-inner-icon="newPasswordShow ? 'mdi-eye' : 'mdi-eye-off'" @click:append-inner="newPasswordShow = !newPasswordShow" @input="checkPasswordMatch" />
+                    <v-text-field v-model="passwords.new_pwd" :type="newPasswordShow ? 'text' : 'password'" density="compact" variant="outlined" color="primary" :rules="[passwordRules.required, passwordRules.minLength]" :append-inner-icon="newPasswordShow ? 'mdi-eye' : 'mdi-eye-off'" @click:append-inner="newPasswordShow = !newPasswordShow" />
                   </v-col>
                   <v-col cols="12" sm="6">
                     <v-label class="font-weight-medium mb-2">确认新密码</v-label>
-                    <v-text-field v-model="passwords.re_pwd" :type="confirmPasswordShow ? 'text' : 'password'" density="compact" variant="outlined" color="primary" :rules="[passwordRules.required, passwordRules.match]" :append-inner-icon="confirmPasswordShow ? 'mdi-eye' : 'mdi-eye-off'" @click:append-inner="confirmPasswordShow = !confirmPasswordShow" @input="checkPasswordMatch" />
-                    <v-alert v-if="showPasswordMismatch" type="error" density="compact" class="mt-2" text="两次输入的密码不一致" />
+                    <v-text-field v-model="passwords.re_pwd" :type="confirmPasswordShow ? 'text' : 'password'" density="compact" variant="outlined" color="primary" :rules="[passwordRules.required, passwordRules.match]" :append-inner-icon="confirmPasswordShow ? 'mdi-eye' : 'mdi-eye-off'" @click:append-inner="confirmPasswordShow = !confirmPasswordShow" />
                   </v-col>
                 </v-row>
               </v-form>
@@ -224,7 +237,7 @@ const updatePassword = async () => {
             <v-divider />
             <v-card-actions class="pa-5">
               <v-spacer />
-              <v-btn class="px-5" color="primary" variant="elevated" @click="updatePassword">修改密码</v-btn>
+              <v-btn class="px-5" color="primary" variant="elevated" @click="updatePassword" :disabled="!passwordFormValid">修改密码</v-btn>
             </v-card-actions>
           </v-card>
         </v-col>
@@ -236,7 +249,3 @@ const updatePassword = async () => {
     <p class="mt-4 text-grey-darken-1">正在加载用户信息...</p>
   </div>
 </template>
-
-<style scoped lang="scss">
-/* 您可以在此添加自定义样式，以进一步微调布局 */
-</style>
