@@ -20,6 +20,12 @@ export default {
     noaccount: "还没有帐号？",
     create: "在此处创建一个",
     error: "电子邮件/密码组合无效",
+    welcome: "欢迎",
+    log_msg: "登录您的账户",
+    username: "用户名",
+    username1: "请输入用户名",
+    third_log: "使用第三方登录",
+    reg: "立即注册"
   },
   Phone: "手机号",
   register: {
@@ -31,10 +37,12 @@ export default {
     agree: "签署即表示您同意",
     account: "已经有帐号了？",
     signin: "登录",
+    welcome: "欢迎加入生物医药数字信息系统",
+    con_password: "确认密码"
   },
   menu: {
     search: "搜索（按“ Ctrl + /”进行聚焦）",
-    dashboard: "仪表板",
+    dashboard: "主页",
     logout: "登出",
     profile: "个人资料",
     blank: "空白页",
@@ -127,6 +135,16 @@ export default {
     voicebot: "语音对话助手",
     imagebot: "图像助手",
     chartbot: "图表助手",
+    dataCenter: "数据中心",
+    herb_search: "药材检索",
+    data_collection: "数据采集",
+    education: "在线教育",
+    performance: "业绩展示",
+    admim: "管理员界面",
+    newsEditor: "新闻编辑",
+    newsList: "新闻列表",
+    plant_recognition: "植物识别",
+    chatbot: "AI选购顾问"
   },
   dashboard: {
     activity: "活动",

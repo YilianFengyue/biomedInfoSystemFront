@@ -16,6 +16,10 @@ import navigationUserType0 from "@/configs/navigation0";
 import navigationUserType1 from "@/configs/navigation1";
 import navigationUserType2 from "@/configs/navigation2";
 
+// 导入 i18n
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+
 const customizeTheme = useCustomizeThemeStore();
 const profileStore = useProfileStore();
 const userType = computed(() => profileStore.user?.role ?? 1);

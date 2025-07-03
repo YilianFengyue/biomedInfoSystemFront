@@ -8,43 +8,43 @@ export default {
       text: "",
       items: [
         {
-          text: "主页",
+          text: "menu.dashboard",
           link: "/dashboard",
           icon: "mdi-view-dashboard-outline",
         },
         {
-          text: "数据中心",
+          text: "menu.dataCenter",
           link: "/dataCenter",
           icon: "mdi-school-outline",
         },
         {
-          text: "药材检索",
+          text: "menu.herb_search",
           link: "/herb-search",
           icon: "mdi-school-outline",
         },
         {
-          text: "数据采集",
+          text: "menu.data_collection",
           link: "/data-collection",
           icon: "mdi-school-outline",
         },
         {
-          text: "在线教育",
+          text: "menu.education",
           link: "/education",
           icon: "mdi-school-outline",
         },
         {
-          text: "业绩展示",
+          text: "menu.performance",
           link: "/biomedicine/performance",
           icon: "mdi-view-dashboard-outline",
         },
         {
-          text: "新闻编辑",
+          text: "menu.newsEditor",
           link: "/newsEditor",
           icon: "mdi-file-document-edit-outline",
         },
         {
           icon: "mdi-robot-excited-outline",
-          text: "AI选购顾问",
+          text: "menu.chatbot",
           link: "/ai/chatbot_v1",
         },
         {
@@ -54,7 +54,7 @@ export default {
         },
         {
           icon: "mdi-robot-outline",
-          text: "植物识别",
+          text: "menu.plant_recognition",
           link: "/plant-recognition",
         },
       ],

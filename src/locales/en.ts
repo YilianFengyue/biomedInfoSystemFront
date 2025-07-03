@@ -21,6 +21,12 @@ export default {
     noaccount: "Don't have an account?",
     create: "Create one here",
     error: "The email / password combination is invalid",
+    welcome: "Welcome",
+    log_msg: "Sign in Your Account",
+    username: "username",
+    username1: "please input username",
+    third_log: "Third party login",
+    reg: "register right now"
   },
   register: {
     title: "Create Account",
@@ -32,6 +38,8 @@ export default {
     agree: "By signing up, you agree to the",
     account: "Already have an account?",
     signin: "Sign In",
+    welcome: "Welcome to BioMedicalInfoSystem",
+    con_password: "confirm password"
   },
   menu: {
     search: 'Search (press "ctrl + /" to focus)',
@@ -130,6 +138,16 @@ export default {
     voicebot: "VoiceBot",
     imagebot: "ImageBot",
     chartbot: "ChartBot",
+    dataCenter: "DataCenter",
+    herb_search: "Herb Search",
+    data_collection: "Data Collection",
+    education: "Online Education",
+    performance: "Performance",
+    admim: "Admin Page",
+    newsEditor: "News Editor",
+    newsList: "News List",
+    plant_recognition: "Plant Recognition",
+    chatbot: "AI Chatbot"
   },
 
   dashboard: {

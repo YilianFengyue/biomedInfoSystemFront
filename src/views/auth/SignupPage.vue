@@ -4,6 +4,8 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
 import { useSnackbarStore } from "@/stores/snackbarStore";
 import { Icon } from "@iconify/vue";
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -74,9 +76,9 @@ const resetErrors = () => {
 <template>
   <v-card color="white" class="pa-3 ma-3" elevation="3">
     <v-card-title primary-title class="my-4 text-h4">
-      <span class="flex-fill"> {{ $t("register.title") }} </span>
+      <span class="flex-fill"> {{ t("register.title") }} </span>
     </v-card-title>
-    <v-card-subtitle>欢迎加入生物医药数字信息系统</v-card-subtitle>
+    <v-card-subtitle>{{ t('register.welcome') }}</v-card-subtitle>
 
     <v-card-text>
       <!-- 错误信息提示 -->
@@ -93,7 +95,7 @@ const resetErrors = () => {
         <v-text-field
           v-model="form.username"
           required
-          :label="$t('register.username')"
+          :label="t('register.username')"
           density="default"
           variant="underlined"
           color="primary"
@@ -109,7 +111,7 @@ const resetErrors = () => {
           v-model="form.password"
           :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
           :type="showPassword ? 'text' : 'password'"
-          :label="$t('register.password')"
+          :label="t('register.password')"
           density="default"
           variant="underlined"
           color="primary"
@@ -126,7 +128,7 @@ const resetErrors = () => {
           v-model="form.confirmPassword"
           :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
           :type="showConfirmPassword ? 'text' : 'password'"
-          label="确认密码"
+          :label="t('register.con_password')"
           density="default"
           variant="underlined"
           color="primary"
@@ -147,18 +149,18 @@ const resetErrors = () => {
           color="primary"
           type="submit"
           class="mt-4"
-          >{{ $t("register.button") }}</v-btn
+          >{{ t("register.button") }}</v-btn
         >
 
         <div class="my-5 text-center">
-          {{ $t("register.agree") }}
+          {{ t("register.agree") }}
           <br />
           <router-link class="text-primary" to="">{{
-            $t("common.tos")
+            t("common.tos")
           }}</router-link>
           &
           <router-link class="text-primary" to="">{{
-            $t("common.policy")
+            t("common.policy")
           }}</router-link>
         </div>
       </v-form>
@@ -166,9 +168,9 @@ const resetErrors = () => {
   </v-card>
 
   <div class="text-center mt-6">
-    {{ $t("register.account") }}
+    {{ t("register.account") }}
     <router-link to="/auth/signin" class="text-primary font-weight-bold">
-      {{ $t("register.signin") }}
+      {{ t("register.signin") }}
     </router-link>
   </div>
 </template>

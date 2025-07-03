@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { useCustomizeThemeStore } from "@/stores/customizeTheme";
+// 1. 导入 useI18n，这是实现翻译的关键
+import { useI18n } from 'vue-i18n';
+
+// 2. 获取 t 函数，我们将在模板中使用它
+const { t } = useI18n();
+
 const customizeTheme = useCustomizeThemeStore();
 
 const props = defineProps({
@@ -17,11 +23,10 @@ const props = defineProps({
         v-if="!customizeTheme.miniSidebar && (menuArea.key || menuArea.text)"
         class="pa-1 mt-2 text-overline"
       >
-        {{ menuArea.text }}
+        {{ t(menuArea.text) }}
       </div>
       <template v-if="menuArea.items">
         <template v-for="menuItem in menuArea.items" :key="menuItem.key">
-          <!-- menu level 1 -->
           <v-list-item
             v-if="!menuItem.items"
             :to="menuItem.link"
@@ -29,24 +34,23 @@ const props = defineProps({
             :active-class="`active-nav-${customizeTheme.primaryColor.colorName}`"
             density="compact"
           >
-            <v-list-item-title v-text="menuItem.text"></v-list-item-title>
+            <v-list-item-title v-text="t(menuItem.text)"></v-list-item-title>
           </v-list-item>
+          
           <v-list-group v-else :value="menuItem.items">
-            <!-- subMenu activator -->
             <template v-slot:activator="{ props }">
               <v-list-item
                 v-bind="props"
                 :prepend-icon="menuItem.icon || 'mdi-circle-medium'"
-                :title="menuItem.text"
+                :title="t(menuItem.text)"
               >
               </v-list-item>
             </template>
-            <!-- menu level 2 -->
             <v-list-item
               v-for="subMenuItem in menuItem.items"
               :key="subMenuItem.key"
               :prepend-icon="subMenuItem.icon || 'mdi-circle-medium'"
-              :title="subMenuItem.text"
+              :title="t(subMenuItem.text)"
               :to="subMenuItem.link"
               density="compact"
             ></v-list-item>
@@ -61,7 +65,7 @@ const props = defineProps({
 .v-list-group .v-list-item {
   padding-left: 8px !important;
 }
-
+/* 其他样式保持不变... */
 .active-nav-grey {
   border-left: 5px solid;
   border-image-slice: 1;

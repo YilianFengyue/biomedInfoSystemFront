@@ -8,17 +8,25 @@ import config from "@/configs";
 import { Icon } from "@iconify/vue";
 import { useLocale } from "vuetify";
 import { useCustomizeThemeStore } from "@/stores/customizeTheme";
+import { useI18n } from "vue-i18n"; // 1. 导入 useI18n
+
 const { current } = useLocale();
 const { availableLocales } = config.locales;
 const customizeTheme = useCustomizeThemeStore();
+
+// 2. 获取两个 locale 的控制器
+const { current: vuetifyLocale } = useLocale(); // 用于 Vuetify 组件
+const { locale: i18nLocale } = useI18n();      // 用于您应用中的 $t() 文本
 
 onMounted(() => {
   setLocale(customizeTheme.localCode);
 });
 
 const setLocale = (locale: string) => {
-  current.value = locale;
-  customizeTheme.setLocalCode(locale);
+  // 3. 同时更新两个 locale
+  vuetifyLocale.value = locale; // 更新 Vuetify
+  i18nLocale.value = locale;    // 更新您应用的全局语言
+  customizeTheme.setLocalCode(locale); // 持久化保存用户的选择
 };
 </script>
 <template>

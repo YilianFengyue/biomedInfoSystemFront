@@ -2,6 +2,8 @@
 import { ref } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import { Icon } from "@iconify/vue";
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 const authStore = useAuthStore();
 
@@ -46,9 +48,9 @@ const handleLogin = async () => {
 <template>
   <v-card color="white" class="pa-3 ma-3" elevation="3">
     <v-card-title class="my-4 text-h4">
-      <span class="flex-fill font-weight-bold"> 欢迎 </span>
+      <span class="flex-fill font-weight-bold"> {{ t('login.welcome') }} </span>
     </v-card-title>
-    <v-card-subtitle>登录您的账户</v-card-subtitle>
+    <v-card-subtitle>{{ t('login.log_msg') }}</v-card-subtitle>
 
     <v-card-text>
       <v-alert v-if="errorMessage" type="error" class="mb-4" dense>
@@ -58,8 +60,8 @@ const handleLogin = async () => {
       <v-form ref="refLoginForm" v-model="isFormValid" lazy-validation>
         <v-text-field
           v-model="form.username"
-          label="用户名"
-          placeholder="请输入用户名"
+          :label="t('login.username')"
+          :placeholder="t('login.username1')"
           prepend-inner-icon="mdi-account-outline"
           variant="underlined"
           color="primary"
@@ -69,7 +71,7 @@ const handleLogin = async () => {
 
         <v-text-field
           v-model="form.password"
-          label="密码"
+          :label="t('login.password')"
           :type="showPassword ? 'text' : 'password'"
           :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
           @click:append-inner="showPassword = !showPassword"
@@ -90,12 +92,12 @@ const handleLogin = async () => {
           class="mt-2"
           @click="handleLogin"
         >
-          登录
+          {{ t('login.button') }}
         </v-btn>
       </v-form>
 
       <div class="text-grey text-center text-caption font-weight-bold text-uppercase my-5">
-        或使用第三方登录
+        {{ t('login.third_log') }}
       </div>
 
       <v-btn class="mb-2" block color="white" @click="authStore.loginWithGoogle">
@@ -109,9 +111,9 @@ const handleLogin = async () => {
       </v-btn>
 
       <div class="text-center mt-6">
-        还没有账号？
+        {{ t('login.noaccount') }}
         <router-link to="/auth/signup" class="text-primary font-weight-bold">
-          立即注册
+          {{ t('login.reg') }}
         </router-link>
       </div>
     </v-card-text>

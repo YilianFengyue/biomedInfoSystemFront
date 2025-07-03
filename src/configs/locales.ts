@@ -1,9 +1,9 @@
 import enMessages from "@/locales/en";
 import zhHansMessages from "@/locales/zhHans";
-import jaMessages from "@/locales/ja";
+// import jaMessages from "@/locales/ja";
 
-const supported = ["en", "zhHans", "ja"];
-let locale = "en";
+const supported = ["en", "zhHans"];
+let locale = "zhHans";
 
 try {
   const { 0: browserLang } = navigator.language.split("-");
@@ -17,7 +17,7 @@ export default {
   locale,
 
   // when translation is not available fallback to that locale
-  fallbackLocale: "en",
+  fallbackLocale: "zhHans",
 
   // availabled locales for user selection
   availableLocales: [
@@ -35,17 +35,17 @@ export default {
       label: "中文",
       messages: zhHansMessages,
     },
-    {
-      code: "ja",
-      flag: "jp",
-      name: "japan",
-      label: "日本語",
-      messages: jaMessages,
-    },
+    // {
+    //   code: "ja",
+    //   flag: "jp",
+    //   name: "japan",
+    //   label: "日本語",
+    //   messages: jaMessages,
+    // },
   ],
   messages: {
     en: enMessages,
     zhHans: zhHansMessages,
-    ja: jaMessages,
+    // ja: jaMessages,
   },
 };

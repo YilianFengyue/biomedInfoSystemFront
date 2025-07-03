@@ -258,6 +258,9 @@ import axios from 'axios';
 import { useChart, RenderType, ThemeType } from "@/plugins/echarts";
 import type { EChartsOption } from "echarts";
 
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+
 interface HistoryItem {
   id: number;
   changedAt: string;
