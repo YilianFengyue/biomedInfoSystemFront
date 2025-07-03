@@ -103,15 +103,14 @@
       "output": "dist_electron"
     },
     "files": [
-      {
-        "from": "electron",
-        "to": "electron"
-      },
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
       {
         "from": "backend",
         "to": "backend"
-      },
-      "package.json"
+      }
     ],
     "win": {
       "target": "nsis",

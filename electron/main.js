@@ -1,108 +1,98 @@
-// electron/main.js
+// electron/main.js (最终调试版，带日志记录)
 
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process'); // 1. 引入 child_process 模块
-const net = require('net'); // <--- 把这一行加进去！
+const { spawn } = require('child_process');
+const fs = require('fs'); // 1. 引入文件系统模块
 
-// 判断是否处于开发环境
-const isDev = process.env.NODE_ENV !== 'production';
+// --- 日志记录设置 ---
+const logDirectory = app.getPath('userData'); // 获取用户数据目录，这是一个安全的可写路径
+const logFilePath = path.join(logDirectory, 'backend-log.txt');
 
-let backendProcess = null; // 用于存储后端进程的引用
+// 清空旧日志
+fs.writeFileSync(logFilePath, 'Log started at ' + new Date().toString() + '\n\n');
 
-// 新增一个函数，用于检测端口是否被占用
-function checkPortInUse(port, callback) {
-  const server = net.createServer();
-  server.once('error', (err) => {
-    if (err.code === 'EADDRINUSE') {
-      callback(true); // 端口已被占用
-    }
-  });
-  server.once('listening', () => {
-    server.close();
-    callback(false); // 端口未被占用
-  });
-  server.listen(port);
+function logToFile(message) {
+  console.log(message); // 同时在控制台打印
+  fs.appendFileSync(logFilePath, message + '\n'); // 写入到日志文件
 }
+// --------------------
 
-function startBackend(onBackendReady) {
-  const isDev = process.env.NODE_ENV !== 'production';
-  const backendPath = isDev 
-    ? path.join(__dirname, '..', 'backend')
-    : path.join(process.resourcesPath, 'backend');
-  
-  const jarFile = path.join(backendPath, 'BiomedInfoSystem-0.0.1-SNAPSHOT.jar');
-  const javaExecutable = process.platform === 'win32'
-    ? path.join(backendPath, 'jre', 'bin', 'java.exe')
-    : path.join(backendPath, 'jre', 'bin', 'java');
 
-  console.log(`Starting backend: ${javaExecutable} -jar ${jarFile}`);
-  backendProcess = spawn(javaExecutable, ['-jar', jarFile], {
-    cwd: backendPath // 设置工作目录
-  });
+let backendProcess = null;
 
-  // 监听后端的输出
-  backendProcess.stdout.on('data', (data) => {
-    const output = data.toString();
-    console.log(`Backend stdout: ${output}`);
-    // 通过日志判断 Spring Boot 是否已启动成功
-    if (output.includes("Tomcat started on port(s): 81")) {
-      console.log('Backend is ready!');
-      if (onBackendReady) {
-        onBackendReady();
-      }
+function startBackend() {
+  if (app.isPackaged) {
+    logToFile('App is packaged. Attempting to start backend...');
+
+    const backendPath = path.join(process.resourcesPath, 'backend');
+    logToFile(`Backend path resolved to: ${backendPath}`);
+    
+    const jarFile = path.join(backendPath, 'BiomedInfoSystem-0.0.1-SNAPSHOT.jar');
+    logToFile(`JAR file path resolved to: ${jarFile}`);
+
+    const javaExecutable = process.platform === 'win32'
+      ? path.join(backendPath, 'jre', 'bin', 'java.exe')
+      : path.join(backendPath, 'jre', 'bin', 'java');
+    logToFile(`Java executable path resolved to: ${javaExecutable}`);
+
+    try {
+      backendProcess = spawn(javaExecutable, ['-jar', jarFile], {
+        cwd: backendPath,
+        detached: false
+      });
+
+      logToFile('Spawn command executed. Process object created.');
+
+      backendProcess.stdout.on('data', (data) => {
+        logToFile(`Backend stdout: ${data.toString()}`);
+      });
+
+      backendProcess.stderr.on('data', (data) => {
+        logToFile(`Backend stderr: ${data.toString()}`);
+      });
+
+      backendProcess.on('error', (err) => {
+        logToFile(`Spawn ERROR: ${err.toString()}`);
+      });
+
+      backendProcess.on('close', (code) => {
+        logToFile(`Backend process exited with code ${code}`);
+      });
+
+    } catch (error) {
+      logToFile(`Failed to execute spawn command: ${error.toString()}`);
     }
-  });
-
-  backendProcess.stderr.on('data', (data) => {
-    console.error(`Backend stderr: ${data}`);
-  });
-  
-  backendProcess.on('close', (code) => {
-    console.log(`Backend process exited with code ${code}`);
-  });
+  } else {
+    logToFile('App is in development mode. Skipping backend start.');
+  }
 }
 
 function createWindow() {
-  // 创建浏览器窗口
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      // 预加载脚本，推荐使用，用于在渲染进程中安全地暴露 Node.js API
-      // 注意：需要您创建一个 preload.js 文件
       preload: path.join(__dirname, 'preload.js'),
-      // 出于安全考虑，推荐将 contextIsolation 保持为 true
       contextIsolation: true,
-      // 在开发模式下可以启用 nodeIntegration，但发布时建议关闭
       nodeIntegration: false,
     }
   });
 
-  // 根据环境加载不同的 URL
-  if (isDev) {
-    // 生产环境下，加载打包后的 index.html 文件
-    // 关键！这里的路径必须和您用 asar list 看到的路径匹配
-    // __dirname 指向 /electron 目录，所以我们需要再拼接上 'dist/index.html'
-    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
-    // 自动打开开发者工具
+  // Vite 打包后的输出目录是 electron/dist
+  mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+
+  // 判断是否处于开发模式，如果是，则打开开发者工具
+  // 注意：'electron-is-dev' 是一个可靠的小型库，但为了减少依赖，我们也可以用 process.env
+  // 为了简单起见，我们假设 'npm run electron:dev' 会设置一个环境变量
+  if (!app.isPackaged) {
     mainWindow.webContents.openDevTools();
-  } else {
-    // 生产环境下，加载打包后的 index.html 文件
-    // 根据您之前的日志，Vite 将文件打包到了 electron/dist/ 目录下
-    // __dirname 指向当前文件所在的目录 (即 electron/)
-    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
   }
 }
 
-// 当 Electron 完成初始化后，创建窗口
-// 修改 whenReady 逻辑
 app.whenReady().then(() => {
-  // 先启动后端，并传递一个回调函数
-  startBackend(() => {
-    // 当后端准备好后，再创建窗口
-    createWindow();
-  });
+  startBackend();
+  createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -111,18 +101,15 @@ app.whenReady().then(() => {
   });
 });
 
-
-// 除了 macOS 外，当所有窗口都关闭时退出应用
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     if (backendProcess) {
-      backendProcess.kill(); // 5. 关闭后端进程
+      backendProcess.kill();
     }
     app.quit();
   }
 });
 
-// 在应用退出前，再次确保后端进程被关闭
 app.on('before-quit', () => {
   if (backendProcess) {
     backendProcess.kill();
