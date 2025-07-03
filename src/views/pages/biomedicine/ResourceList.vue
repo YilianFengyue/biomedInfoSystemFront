@@ -17,6 +17,7 @@ interface EduResource {
 }
 
 // 视频资源原始接口
+//【关键修改】: 为视频资源接口增加 status 字段
 interface EduVideo {
   id: number;
   title: string;
@@ -27,6 +28,7 @@ interface EduVideo {
   uploaderId: number;
   createdAt: string;
   uploaderName?: string;
+  status: string; // 新增 status 字段
 }
 
 // 统一的、用于卡片展示的资源数据结构
@@ -39,7 +41,6 @@ interface DisplayResource {
   authorName: string;
   createdAt: string;
   videoUrl?: string; 
-  // 【新增】为卡片点击跳转准备的链接
   detailUrl: string; 
 }
 
@@ -49,7 +50,6 @@ const allResources = ref<DisplayResource[]>([]);
 const loading = ref<boolean>(false);
 const search = ref<string>("");
 
-// 【新增】资源类型筛选
 const resourceTypeFilter = ref<string>('all');
 const resourceTypeList = ref([
   { title: '全部类型', value: 'all' },
@@ -65,7 +65,7 @@ const filterList = ref([
   { title: '本月发布', value: 'month' },
 ]);
 
-const sortOrder = ref<string>('latest'); // 默认排序为 'latest'
+const sortOrder = ref<string>('latest');
 const sortList = ref([
   { title: '最新发布', value: 'latest' },
   { title: '最早发布', value: 'earliest' },
@@ -86,12 +86,10 @@ const getPlainText = (html: string | null | undefined): string => {
 const filteredList = computed(() => {
   let processedList = [...allResources.value];
 
-  // 【新增】按资源类型过滤
   if (resourceTypeFilter.value !== 'all') {
     processedList = processedList.filter(item => item.type === resourceTypeFilter.value);
   }
   
-  // 搜索过滤
   if (search.value) {
     const searchLower = search.value.toLowerCase();
     processedList = processedList.filter(item =>
@@ -101,7 +99,6 @@ const filteredList = computed(() => {
     );
   }
 
-  // 时间范围过滤
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   switch (filterType.value) {
@@ -118,11 +115,9 @@ const filteredList = computed(() => {
       break;
   }
 
-  // 排序
   return processedList.sort((a, b) => {
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
-    // 【修正】修复了这里的笔误，确保按最新排序生效
     return sortOrder.value === "earliest" ? dateA - dateB : dateB - dateA;
   });
 });
@@ -147,7 +142,9 @@ const fetchAllResources = async () => {
     const combinedList: DisplayResource[] = [];
 
     if (textResult.code === 20000 && textResult.data?.records) {
-      const textResources = textResult.data.records.map((res: EduResource): DisplayResource => ({
+      const textResources = textResult.data.records
+        .filter((res: EduResource) => res.status !== 'draft') // 过滤图文
+        .map((res: EduResource): DisplayResource => ({
         id: res.id,
         type: 'text',
         title: res.title,
@@ -161,7 +158,9 @@ const fetchAllResources = async () => {
     }
 
     if (videoResult.code === 20000 && videoResult.data?.content) {
-      const videoResources = videoResult.data.content.map((vid: EduVideo): DisplayResource => ({
+      const videoResources = videoResult.data.content
+        .filter((vid: EduVideo) => vid.status !== 'draft') //【关键修改】: 过滤视频
+        .map((vid: EduVideo): DisplayResource => ({
         id: vid.id,
         type: 'video',
         title: vid.title,
@@ -184,6 +183,7 @@ const fetchAllResources = async () => {
     loading.value = false;
   }
 };
+
 
 // --- 5. 生命周期钩子 ---
 onMounted(() => {

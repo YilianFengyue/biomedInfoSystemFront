@@ -84,15 +84,6 @@
           <div class="d-flex align-center mb-8">
             <h2 class="text-h4 font-weight-bold">精选热门资源</h2>
             <v-spacer></v-spacer>
-            <!--
-            <v-btn
-              color="primary"
-              variant="text"
-              @click="router.push('/biomedicine/video-list')"
-            >
-              查看课程
-              <v-icon end>mdi-arrow-right</v-icon>
-            </v-btn>-->
             <v-btn
               color="primary"
               variant="text"
@@ -171,11 +162,17 @@ interface EduResource {
   id: number;
   title: string;
   coverImageUrl: string;
-  content: string;
+  content?: string; // 视频可能没有content
   authorId: number;
   authorName: string;
   status: string;
   createdAt: string;
+  type?: 'text' | 'video';
+  description?: string;
+  videoUrl?: string;
+  detailUrl?: string;
+  uploaderName?: string; // 视频上传者
+  coverUrl?: string; // 视频封面
 }
 
 const drawer = ref(false);
@@ -197,9 +194,9 @@ const carouselItems = ref([
 ]);
 
 const features = ref([
-  { title: '教学资源上传', 
-  description: '上传您的个人课程，相互交流学术问题。', 
-  icon: 'mdi-human-male-board', 
+  { title: '教学资源上传',
+  description: '上传您的个人课程，相互交流学术问题。',
+  icon: 'mdi-human-male-board',
   color: 'blue-darken-2' ,
   clickHandler: () => { router.push('/biomedicine/eduupload'); }
   },
@@ -210,9 +207,9 @@ const features = ref([
     color: 'teal-darken-2',
     clickHandler: () => { router.push('/herb-search'); }
   },
-  { title: '系统化学习路径', 
-    description: '从入门到精通，为您规划最科学的学习方案。', 
-    icon: 'mdi-sitemap', 
+  { title: '系统化学习路径',
+    description: '从入门到精通，为您规划最科学的学习方案。',
+    icon: 'mdi-sitemap',
     color: 'orange-darken-2' ,
     clickHandler: () => { router.push('/biomedicine/eduplan'); }
   }
@@ -240,24 +237,52 @@ const fetchTeachers = async () => {
   }
 };
 
-const fetchCourses = async () => {
+const fetchFeaturedCourses = async () => {
   try {
-    const response = await fetch('/api/edu/resources/page?pageNum=1&pageSize=3');
-    if (!response.ok) throw new Error('网络请求失败');
-    const result = await response.json();
-    if (result.code === 20000 && result.data && result.data.records) {
-      featuredCourses.value = result.data.records;
-    } else {
-      console.error('获取课程数据失败:', result.msg);
+    // 两个API都请求状态为'published'的资源
+    const [textResponse, videoResponse] = await Promise.all([
+      fetch('/api/resources?status=published&pageSize=10'),
+      fetch('/api/videos/page?status=published&pageSize=10')
+    ]);
+
+    let combinedList: EduResource[] = [];
+
+    if (textResponse.ok) {
+        const textResult = await textResponse.json();
+        if (textResult.code === 20000 && textResult.data?.content) {
+            // 【关键修改】在客户端再次过滤，确保只处理 'published' 状态的资源
+            const textResources = textResult.data.content
+                .filter((r: EduResource) => r.status === 'published')
+                .map((r: EduResource) => ({ ...r, type: 'text', detailUrl: `/biomedicine/resource-detail/${r.id}` }));
+            combinedList.push(...textResources);
+        }
     }
+
+    if (videoResponse.ok) {
+        const videoResult = await videoResponse.json();
+        if (videoResult.code === 20000 && videoResult.data?.content) {
+            // 【关键修改】在客户端再次过滤，确保只处理 'published' 状态的资源
+            const videoResources = videoResult.data.content
+                .filter((v: EduResource) => v.status === 'published')
+                .map((v: EduResource) => ({ ...v, type: 'video', coverImageUrl: v.coverUrl, authorName: v.uploaderName, detailUrl: `/biomedicine/VideoDetail/${v.id}` }));
+            combinedList.push(...videoResources);
+        }
+    }
+
+    // 在合并后的列表中按创建时间降序排序，并截取最新的前3条作为精选资源
+    featuredCourses.value = combinedList
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 3);
+
   } catch (error) {
-    console.error('请求课程数据时出错:', error);
+    console.error('请求精选资源时出错:', error);
   }
 };
 
+
 onMounted(() => {
   fetchTeachers();
-  fetchCourses();
+  fetchFeaturedCourses();
 });
 </script>
 
