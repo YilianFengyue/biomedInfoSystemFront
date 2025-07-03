@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 
 // --- Data for search fields ---
 const searchLocation = ref('');
@@ -59,13 +61,13 @@ const scrollToTop = () => {
         <div class="text-center pa-5">
           <v-responsive class="mx-auto" max-width="850px"> 
             <h1 class="text-h3 black text-sm-h2 text-md-h1 font-weight-bold mb-5 text-primary">
-              生物医药信息系统
+              {{ t('menu.main') }}
             </h1>
             <p
               class="text-h6 text-sm-h5 mb-8 text-primary font-weight-bold source-han"
               style="opacity: 0.85;" 
             >
-              搜索医药
+              {{ t('menu.med_search') }}
             </p>
             <div class="text-center">
           <v-btn size="x-large" class="text-white" color="primary"

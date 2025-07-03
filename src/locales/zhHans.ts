@@ -140,11 +140,26 @@ export default {
     data_collection: "数据采集",
     education: "在线教育",
     performance: "业绩展示",
-    admim: "管理员界面",
+    admin: "管理员界面",
     newsEditor: "新闻编辑",
     newsList: "新闻列表",
     plant_recognition: "植物识别",
-    chatbot: "AI选购顾问"
+    chatbot: "AI选购顾问",
+    main: "生物医药信息系统",
+    med_search: "搜索医药"
+  },
+  dataCenter: {
+    main: "中药材地理分布网络地图",
+    map_load: "地图加载中...",
+    med_dis: "药材地域分布 (玫瑰图)",
+    view_look: "查看图例",
+    comparison: "图谱比对",
+    click_mark: "点击地图上的标记点，可将该地点的药材图片填充至下方进行对比。",
+    click_lmark: "点击标记点选择左侧图片",
+    click_rmark: "点击标记点选择右侧图片",
+    data_ma: "数据溯源管理",
+    search: "搜索药材名、地址、指标等",
+    history: "暂无历史记录"
   },
   dashboard: {
     activity: "活动",

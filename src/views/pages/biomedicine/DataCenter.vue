@@ -14,7 +14,7 @@
               class="mr-2"
               color="primary"
             >mdi-map-marker-radius</v-icon>
-            中药材地理分布网络地图
+            {{ t('dataCenter.main') }}
             <v-spacer></v-spacer>
             <v-chip
               v-if="weatherInfo"
@@ -41,7 +41,7 @@
                   indeterminate
                   color="primary"
                 ></v-progress-circular>
-                <div class="mt-2">地图加载中...</div>
+                <div class="mt-2">{{ t('dataCenter.map_load') }}</div>
               </div>
             </div>
           </v-card-text>
@@ -58,13 +58,13 @@
               class="mr-2"
               color="primary"
             >mdi-chart-pie</v-icon>
-            药材地域分布 (玫瑰图)
+            {{ t('dataCenter.med_dis') }}
             <v-spacer></v-spacer>
             <v-menu open-on-hover location="bottom end">
                 <template v-slot:activator="{ props }">
                     <v-btn v-bind="props" icon variant="text" color="grey-lighten-1">
                         <v-icon>mdi-information-outline</v-icon>
-                        <v-tooltip activator="parent" location="top">查看图例</v-tooltip>
+                        <v-tooltip activator="parent" location="top">{{ t('dataCenter.view_look') }}</v-tooltip>
                     </v-btn>
                 </template>
                 <v-sheet class="pa-2" elevation="6" rounded="lg">
@@ -104,12 +104,12 @@
               class="mr-2"
               color="primary"
             >mdi-image-multiple</v-icon>
-            图谱比对
+            {{ t('dataCenter.comparison') }}
           </v-card-title>
           <v-divider></v-divider>
           <v-card-text class="pa-4 flex-grow-1">
             <p class="text-body-2 text-grey-darken-2 mb-4">
-             点击地图上的标记点，可将该地点的药材图片填充至下方进行对比。
+             {{ t('dataCenter.click_mark') }}
             </p>
             <v-row>
               <v-col cols="6">
@@ -135,7 +135,7 @@
                       </template>
                     </v-img>
                     <div v-else class="placeholder">
-                      <span class="text-grey">点击标记点选择左侧图片</span>
+                      <span class="text-grey">{{ t('dataCenter.click_lmark') }}</span>
                     </div>
                   </div>
                 </v-card>
@@ -163,7 +163,7 @@
                       </template>
                     </v-img>
                     <div v-else class="placeholder">
-                      <span class="text-grey">点击标记点选择右侧图片</span>
+                      <span class="text-grey">{{ t('dataCenter.click_rmark') }}</span>
                     </div>
                   </div>
                 </v-card>
@@ -183,13 +183,13 @@
               class="mr-2"
               color="primary"
             >mdi-source-branch</v-icon>
-            数据溯源管理
+            {{ t('dataCenter.data_ma') }}
              <v-spacer></v-spacer>
              <v-text-field
                 v-model="historySearchQuery"
                 density="compact"
                 variant="outlined"
-                label="搜索药材名、地址、指标等"
+                :label="t('dataCenter.search')"
                 prepend-inner-icon="mdi-magnify"
                 single-line
                 hide-details
@@ -238,7 +238,7 @@
                 </v-timeline-item>
             </v-timeline>
              <div v-else class="text-center text-grey-darken-1 pa-10">
-                暂无历史记录
+                {{ t('dataCenter.history') }}
             </div>
           </v-card-text>
         </v-card>

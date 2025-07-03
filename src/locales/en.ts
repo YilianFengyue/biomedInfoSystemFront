@@ -143,13 +143,27 @@ export default {
     data_collection: "Data Collection",
     education: "Online Education",
     performance: "Performance",
-    admim: "Admin Page",
+    admin: "Admin Page",
     newsEditor: "News Editor",
     newsList: "News List",
     plant_recognition: "Plant Recognition",
-    chatbot: "AI Chatbot"
+    chatbot: "AI Chatbot",
+    main: "BioMedicalInfoSystem",
+    med_search: "search for medicine"
   },
-
+  dataCenter: {
+    main: "Geo-distribution network map of traditional Chinese medicinal",
+    map_load: "Map Loading...",
+    med_dis: "Geo-distribution of medicinal herbs (rose chart)",
+    view_look: "View Legend",
+    comparison: "Comparison of Spectra",
+    click_mark: "Click on the marked point on the map to fill the medicinal herb image of that location below for comparison.",
+    click_lmark: "Click on the marked point to select the image on the left",
+    click_rmark: "Click on the marked point to select the image on the right",
+    data_ma: "Data traceability management",
+    search: "Search for medicinal herb names, addresses, indicators, etc",
+    history: "No historical records available at the moment"
+  },
   dashboard: {
     activity: "Activity",
     weeklySales: "Weekly Sales",
