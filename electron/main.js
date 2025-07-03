@@ -115,3 +115,42 @@ app.on('before-quit', () => {
     backendProcess.kill();
   }
 });
+
+// electron/main.js (纯前端客户端版本)
+
+// const { app, BrowserWindow } = require('electron');
+// const path = require('path');
+
+// function createWindow() {
+//   const mainWindow = new BrowserWindow({
+//     width: 1200,
+//     height: 800,
+//     webPreferences: {
+//       preload: path.join(__dirname, 'preload.js'),
+//       contextIsolation: true,
+//       nodeIntegration: false,
+//     }
+//   });
+
+//   // 直接加载 Vite 打包好的 index.html
+//   mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+
+//   // 你甚至可以在生产环境中禁用开发者工具
+//   // mainWindow.webContents.openDevTools(); 
+// }
+
+// app.whenReady().then(() => {
+//   createWindow();
+
+//   app.on('activate', () => {
+//     if (BrowserWindow.getAllWindows().length === 0) {
+//       createWindow();
+//     }
+//   });
+// });
+
+// app.on('window-all-closed', () => {
+//   if (process.platform !== 'darwin') {
+//     app.quit();
+//   }
+// });

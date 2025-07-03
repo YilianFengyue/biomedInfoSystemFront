@@ -219,3 +219,35 @@ jre\bin\java.exe -jar BiomedInfoSystem-0.0.1-SNAPSHOT.jar来测试是否打包�
 >10.在C:\Users\你的用户名\AppData\Roaming里有一个backend-log.txt(没有可以搜索一下)，里面有报错信息
 >
 >11.这个教程是根据前后端分离(vue3+springboot+mysql)制定，可能稍有不同
+
+#### 三：只打包前端
+>如果未来你部署了后端，数据库，redis等，或是你电脑上可以运行后端和数据库，那么可以只打包前端(应该说这才是主流方式)
+>
+>1.请修改你前端项目根目录下的 .env.production 文件。这个文件里的 VITE_API_BASE_URL 
+变量决定了你的桌面应用要去连接哪个服务器，填写你部署在云服务器上的后端域名(注意不要留空格)。
+>
+>2.简化 electron/main.js 文件
+>
+>3.简化 package.json 中的 build 配置
+````ts
+"build": {
+    "appId": "com.yourcompany.biomed",
+    "productName": "BiomedInfoSystem",
+    "copyright": "Copyright © 2025 ${author}",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "electron/**/*", // 只需要打包包含 main.js 和 dist 的 electron 文件夹
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "electron/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+````
