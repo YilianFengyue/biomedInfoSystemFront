@@ -32,6 +32,11 @@ export default {
           link: "/education",
           icon: "mdi-school-outline",
         },
+        /*{
+          text: "业绩展示",
+          link: "/biomedicine/performance",
+          icon: "mdi-view-dashboard-outline",
+        },*/
         {
           text: "新闻列表",
           link: "/newsList",

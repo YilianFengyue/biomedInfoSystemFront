@@ -103,31 +103,27 @@
       "output": "dist_electron"
     },
     "files": [
-      "electron/**/*"
-    ],
-    "extraResources": [
       {
-        "from": "./backend/BiomedInfoSystem-0.0.1-SNAPSHOT.jar",
-        "to": "backend.jar"
+        "from": "electron",
+        "to": "electron"
       },
       {
-        "from": "./jre",
-        "to": "jre"
-      }
+        "from": "backend",
+        "to": "backend"
+      },
+      "package.json"
     ],
     "win": {
       "target": "nsis",
-      "icon": "path/to/your/icon.ico"
+      "icon": "electron/icons/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "allowElevation": true,
-      "createDesktopShortcut": true
+      "allowToChangeInstallationDirectory": true
     },
     "mac": {
       "target": "dmg",
-      "icon": "path/to/your/icon.icns"
+      "icon": "electron/icons/icon.icns"
     }
   }
 }

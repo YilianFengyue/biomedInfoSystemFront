@@ -120,6 +120,17 @@ export const routes = [
     },
   },
   {
+    path: "/biomedicine/performance",
+    component: () => import("@/views/pages/biomedicine/Performance.vue"),
+    meta: {
+      layout: "ui",
+      title: "业绩展示",
+      requiresAuth: false, // 不需要登录
+      hidePageHeader: true,
+    },
+  },
+
+  {
     path: "/herbs/edit/:id",
     component: () => import("@/views/pages/biomedicine/HerbEditPage.vue"),
     meta: {

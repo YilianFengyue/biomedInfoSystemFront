@@ -33,6 +33,11 @@ export default {
           icon: "mdi-school-outline",
         },
         {
+          text: "业绩展示",
+          link: "/biomedicine/performance",
+          icon: "mdi-view-dashboard-outline",
+        },
+        {
           text: "新闻编辑",
           link: "/newsEditor",
           icon: "mdi-file-document-edit-outline",
