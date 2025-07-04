@@ -1,3 +1,235 @@
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { useSnackbarStore } from '@/stores/snackbarStore';
+import { getAddressFromCoordinates, geocodeAddress } from '@/utils/amap'; // 导入地址解析服务
+import {
+  searchHerbsApi,
+  createLocationApi,
+  uploadImagesForLocationApi,
+  getOSSPolicyApi,
+  uploadFileToOSS,
+  createHerbApi,
+  type Herb,
+  type LocationCreatePayload,
+  type ImageInfo,
+  type HerbCreatePayload,
+} from '@/api/herbApi';
+import { debounce } from 'lodash-es';
+import provinces from '@/data/provinces.json'; // 导入省市数据
+
+// --- State ---
+const snackbarStore = useSnackbarStore();
+const formStep1 = ref<any>(null);
+const formStep2 = ref<any>(null);
+const isStep1Valid = ref(false);
+const isStep2Valid = ref(false);
+const isSubmitting = ref(false);
+const isGettingLocation = ref(false);
+const isSearchingHerbs = ref(false);
+const isCreatingNewHerb = ref(false);
+const step = ref(1);
+
+// --- 新增：手动输入模式的状态 ---
+const manualLocationEntry = ref(false);
+
+const selectedHerb = ref<Herb | null>(null);
+const searchedHerbs = ref<Herb[]>([]);
+
+// 地理位置数据
+const locationData = ref({
+  longitude: null as number | null,
+  latitude: null as number | null,
+  province: '',
+  city: '',
+  address: '',
+});
+
+const selectedFiles = ref<File[]>([]);
+const primaryImageIndex = ref<number>(0);
+
+const newHerb = ref<HerbCreatePayload>({
+    name: '',
+    scientificName: '',
+    familyName: '',
+    resourceType: '野生',
+    lifeForm: '',
+    description: ''
+});
+
+// 省市联动数据
+const cities = computed(() => {
+    if (locationData.value.province) {
+        const province = provinces.find(p => p.name === locationData.value.province);
+        return province ? province.children.map(c => c.name) : [];
+    }
+    return [];
+});
+
+watch(() => locationData.value.province, () => {
+  // 当省份变化时，清空城市选择
+  locationData.value.city = '';
+});
+
+
+// --- Validation Rules ---
+const rules = {
+  required: (v: any) => !!v || '此字段为必填项',
+  requiredObject: (v: any) => !!(v && v.id) || '必须选择一个药材',
+  // 动态验证规则
+  requiredLocation: (v: any) => {
+      if (manualLocationEntry.value) {
+          return !!locationData.value.province && !!locationData.value.address || '手动模式下，省份和详细地址为必填项';
+      }
+      return !!locationData.value.longitude || '自动模式下，必须采集地理位置';
+  }
+};
+
+
+// --- Computed ---
+const locationDisplay = computed(() => {
+  if(manualLocationEntry.value) {
+    return '手动输入模式'
+  }
+  const { longitude, latitude } = locationData.value;
+  return latitude ? `经纬度: ${longitude?.toFixed(6)}, ${latitude?.toFixed(6)}` : '尚未获取地理位置';
+});
+
+// --- Methods ---
+
+const handleStepperAction = async (nextFn: () => void) => {
+    if (step.value === 1) {
+        const { valid } = await formStep1.value.validate();
+        if (valid) nextFn();
+        else snackbarStore.showWarningMessage('请先完成当前步骤的信息');
+    } else if (step.value === 2) {
+        const { valid } = await formStep2.value.validate();
+        if (valid) nextFn();
+        else snackbarStore.showWarningMessage('请先完成当前步骤的信息');
+    } else if (step.value === 3) {
+        submit();
+    }
+}
+
+const onHerbSearchInput = debounce(async (query: string) => {
+  if (!query || query.length < 1) {
+    searchedHerbs.value = [];
+    return;
+  }
+  isSearchingHerbs.value = true;
+  try {
+    const response = await searchHerbsApi({ name: query });
+    searchedHerbs.value = response.data.data.records;
+  } catch (error) {
+    snackbarStore.showErrorMessage('搜索药材失败');
+  } finally {
+    isSearchingHerbs.value = false;
+  }
+}, 300);
+
+const getGeoLocation = async () => {
+    isGettingLocation.value = true;
+    try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 }));
+        const { longitude, latitude } = position.coords;
+        const addressInfo = await getAddressFromCoordinates(longitude, latitude);
+        
+        locationData.value = {
+            longitude,
+            latitude,
+            ...addressInfo
+        };
+        snackbarStore.showSuccessMessage('地理位置解析成功！');
+    } catch (error: any) {
+        snackbarStore.showErrorMessage(`操作失败: ${error.message}`);
+    } finally {
+        isGettingLocation.value = false;
+    }
+};
+
+const resetForm = () => {
+    formStep1.value?.resetValidation();
+    formStep2.value?.resetValidation();
+    step.value = 1;
+    manualLocationEntry.value = false;
+    isCreatingNewHerb.value = false;
+    selectedHerb.value = null;
+    newHerb.value = { name: '', scientificName: '', familyName: '', resourceType: '野生', lifeForm: '', description: '' };
+    locationData.value = { longitude: null, latitude: null, province: '', city: '', address: '' };
+    selectedFiles.value = [];
+    primaryImageIndex.value = 0;
+};
+
+const submit = async () => {
+  isSubmitting.value = true;
+  try {
+    let herbIdToUse: number;
+
+    // --- 步骤零：如果是手动输入地址，先进行地理编码 ---
+    if (manualLocationEntry.value) {
+        snackbarStore.showInfoMessage('正在解析手动输入的地址...');
+        try {
+            const fullAddress = `${locationData.value.province}${locationData.value.city}${locationData.value.address}`;
+            const location = await geocodeAddress(fullAddress);
+            locationData.value.longitude = location.lng;
+            locationData.value.latitude = location.lat;
+        } catch (error) {
+            throw new Error('手动地址解析失败，请检查地址是否正确或过于模糊。');
+        }
+    }
+    
+    // --- 步骤一：处理药材 ---
+    if (isCreatingNewHerb.value) {
+        const herbResponse = await createHerbApi(newHerb.value);
+        herbIdToUse = herbResponse.data.data.id;
+        snackbarStore.showSuccessMessage(`新药材 "${newHerb.value.name}" 创建成功 (ID: ${herbIdToUse})`);
+    } else {
+        herbIdToUse = selectedHerb.value!.id;
+    }
+
+    // --- 步骤二：创建观测点 ---
+    const locationPayload: LocationCreatePayload = {
+      herbId: herbIdToUse,
+      longitude: locationData.value.longitude,
+      latitude: locationData.value.latitude,
+      province: locationData.value.province,
+      city: locationData.value.city,
+      address: locationData.value.address,
+      observationYear: new Date().getFullYear(),
+      description: `对 ${isCreatingNewHerb.value ? newHerb.value.name : selectedHerb.value!.name} 的一次新观测`,
+    };
+    const locationResponse = await createLocationApi(locationPayload);
+    const newLocationId = locationResponse.data.data.id;
+    snackbarStore.showSuccessMessage(`观测点创建成功 (ID: ${newLocationId})`);
+
+    // --- 步骤三：上传并关联图片 ---
+    if (selectedFiles.value.length > 0) {
+      const policyResponse = await getOSSPolicyApi();
+      const imageUrls = await Promise.all(
+        selectedFiles.value.map(file => uploadFileToOSS(file, policyResponse.data.data))
+      );
+
+      const imagesToLink: ImageInfo[] = imageUrls.map((url, index) => ({
+        url: url,
+        primary: isCreatingNewHerb.value ? (index === primaryImageIndex.value) : false,
+        description: `${(isCreatingNewHerb.value && index === primaryImageIndex.value) ? '主图' : '附加图片'}: ${selectedFiles.value[index].name}`
+      }));
+
+      await uploadImagesForLocationApi(newLocationId, { images: imagesToLink });
+      snackbarStore.showSuccessMessage(`${imagesToLink.length} 张图片已成功关联`);
+    }
+
+    snackbarStore.showSuccessMessage('所有数据已成功保存！');
+    resetForm();
+
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.msg || error.message || '未知操作失败';
+    snackbarStore.showErrorMessage(errorMessage);
+  } finally {
+    isSubmitting.value = false;
+  }
+};
+</script>
+
 <template>
   <v-container fluid class="pa-md-6 pa-4">
     <v-card class="main-card" rounded="lg">
@@ -91,7 +323,16 @@
           <v-card title="第二步：添加观测详情" flat>
             <v-card-text>
                <v-form ref="formStep2" v-model="isStep2Valid">
+                <v-switch
+                    v-model="manualLocationEntry"
+                    :label="manualLocationEntry ? '模式：手动输入地址' : '模式：自动GPS定位'"
+                    color="teal"
+                    inset
+                    class="mb-4"
+                ></v-switch>
+
                 <v-text-field
+                  v-if="!manualLocationEntry"
                   v-model="locationDisplay"
                   label="采集观测点地理位置"
                   prepend-inner-icon="mdi-map-marker-outline"
@@ -109,6 +350,38 @@
                     </v-btn>
                   </template>
                 </v-text-field>
+                
+                <v-row v-else>
+                    <v-col cols="12" sm="6">
+                        <v-select
+                            v-model="locationData.province"
+                            :items="provinces.map(p => p.name)"
+                            label="省份/直辖市"
+                            variant="outlined"
+                            :rules="[rules.required]"
+                        ></v-select>
+                    </v-col>
+                    <v-col cols="12" sm="6">
+                        <v-select
+                            v-model="locationData.city"
+                            :items="cities"
+                            label="城市"
+                            variant="outlined"
+                            no-data-text="请先选择省份"
+                            :disabled="!locationData.province"
+                        ></v-select>
+                    </v-col>
+                     <v-col cols="12">
+                        <v-text-field
+                            v-model="locationData.address"
+                            label="详细地址"
+                            variant="outlined"
+                            placeholder="例如：XX街道XX号"
+                            :rules="[rules.required]"
+                        ></v-text-field>
+                    </v-col>
+                </v-row>
+
 
                 <v-file-input
                   v-model="selectedFiles"
@@ -121,6 +394,7 @@
                   chips
                   show-size
                   counter
+                  class="mt-4"
                 ></v-file-input>
 
                 <v-card v-if="isCreatingNewHerb && selectedFiles.length > 0" variant="tonal" class="mt-4 pa-3">
@@ -168,7 +442,8 @@
                         <template v-slot:prepend><v-icon color="teal">mdi-map-marker</v-icon></template>
                         <v-list-item-title>观测地点</v-list-item-title>
                         <v-list-item-subtitle>
-                            {{ locationData.address || '未获取位置' }}
+                            <span v-if="manualLocationEntry">{{ locationData.province }} {{ locationData.city }} {{ locationData.address }}</span>
+                            <span v-else>{{ locationData.address || '未获取位置' }}</span>
                         </v-list-item-subtitle>
                     </v-list-item>
 
@@ -205,218 +480,14 @@
             </v-btn>
           </v-card-actions>
         </template>
-        </v-stepper>
+      </v-stepper>
     </v-card>
   </v-container>
 </template>
 
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useSnackbarStore } from '@/stores/snackbarStore';
-import { getAddressFromCoordinates } from '@/utils/amap';
-import {
-  searchHerbsApi,
-  createLocationApi,
-  uploadImagesForLocationApi,
-  getOSSPolicyApi,
-  uploadFileToOSS,
-  createHerbApi,
-  type Herb,
-  type LocationCreatePayload,
-  type ImageInfo,
-  type HerbCreatePayload,
-} from '@/api/herbApi';
-import { debounce } from 'lodash-es';
-
-// --- State ---
-const snackbarStore = useSnackbarStore();
-const formStep1 = ref<any>(null); // Ref for step 1 form
-const formStep2 = ref<any>(null); // Ref for step 2 form
-const isStep1Valid = ref(false);
-const isStep2Valid = ref(false);
-const isSubmitting = ref(false);
-const isGettingLocation = ref(false);
-const isSearchingHerbs = ref(false);
-const isCreatingNewHerb = ref(false);
-const step = ref(1); // Stepper state
-
-const selectedHerb = ref<Herb | null>(null);
-const searchedHerbs = ref<Herb[]>([]);
-const locationData = ref({
-  longitude: null as number | null,
-  latitude: null as number | null,
-  province: '',
-  city: '',
-  address: '',
-});
-const selectedFiles = ref<File[]>([]);
-const primaryImageIndex = ref<number>(0);
-
-const newHerb = ref<HerbCreatePayload>({
-    name: '',
-    scientificName: '',
-    familyName: '',
-    resourceType: '野生',
-    lifeForm: '',
-    description: ''
-});
-
-// --- Validation Rules ---
-const rules = {
-  required: (v: any) => !!v || '此字段为必填项',
-  requiredObject: (v: any) => !!(v && v.id) || '必须选择一个药材',
-  requiredLocation: (v: any) => !!locationData.value.longitude || '必须采集地理位置',
-};
-
-// --- Computed ---
-const locationDisplay = computed(() => {
-  const { longitude, latitude } = locationData.value;
-  return latitude ? `经纬度: ${longitude?.toFixed(6)}, ${latitude?.toFixed(6)}` : '尚未获取地理位置';
-});
-
-// --- Methods ---
-
-const handleStepperAction = async (nextFn: () => void) => {
-    if (step.value === 1) {
-        const { valid } = await formStep1.value.validate();
-        if (valid) nextFn();
-        else snackbarStore.showWarningMessage('请先完成当前步骤的信息');
-    } else if (step.value === 2) {
-        const { valid } = await formStep2.value.validate();
-        if (valid) nextFn();
-        else snackbarStore.showWarningMessage('请先完成当前步骤的信息');
-    } else if (step.value === 3) {
-        submit();
-    }
-}
-
-const onHerbSearchInput = debounce(async (query: string) => {
-  if (!query || query.length < 1) {
-    searchedHerbs.value = [];
-    return;
-  }
-  isSearchingHerbs.value = true;
-  try {
-    const response = await searchHerbsApi({ name: query });
-    searchedHerbs.value = response.data.data.records;
-  } catch (error) {
-    snackbarStore.showErrorMessage('搜索药材失败');
-  } finally {
-    isSearchingHerbs.value = false;
-  }
-}, 300);
-
-const getGeoLocation = async () => {
-    isGettingLocation.value = true;
-    try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 }));
-        const { longitude, latitude } = position.coords;
-        locationData.value.longitude = longitude;
-        locationData.value.latitude = latitude;
-        const addressInfo = await getAddressFromCoordinates(longitude, latitude);
-        Object.assign(locationData.value, addressInfo);
-        snackbarStore.showSuccessMessage('地理位置解析成功！');
-    } catch (error: any) {
-        snackbarStore.showErrorMessage(`操作失败: ${error.message}`);
-    } finally {
-        isGettingLocation.value = false;
-    }
-};
-
-const resetForm = () => {
-    formStep1.value?.resetValidation();
-    formStep2.value?.resetValidation();
-    step.value = 1; // 回到第一步
-    isCreatingNewHerb.value = false;
-    selectedHerb.value = null;
-    newHerb.value = {
-        name: '',
-        scientificName: '',
-        familyName: '',
-        resourceType: '野生',
-        lifeForm: '',
-        description: ''
-    };
-    locationData.value = {
-        longitude: null,
-        latitude: null,
-        province: '',
-        city: '',
-        address: '',
-    };
-    selectedFiles.value = [];
-    primaryImageIndex.value = 0;
-};
-
-const submit = async () => {
-  isSubmitting.value = true;
-  try {
-    let herbIdToUse: number;
-
-    // --- 步骤一：处理药材（创建或获取ID） ---
-    if (isCreatingNewHerb.value) {
-        snackbarStore.showInfoMessage('正在创建新药材记录...');
-        const herbResponse = await createHerbApi(newHerb.value);
-        herbIdToUse = herbResponse.data.data.id;
-        if (!herbIdToUse) throw new Error("创建新药材失败，未返回ID");
-        snackbarStore.showSuccessMessage(`新药材 "${newHerb.value.name}" 创建成功 (ID: ${herbIdToUse})`);
-    } else {
-        herbIdToUse = selectedHerb.value!.id;
-    }
-
-    // --- 步骤二：创建观测点 ---
-    const locationPayload: LocationCreatePayload = {
-      herbId: herbIdToUse,
-      longitude: locationData.value.longitude,
-      latitude: locationData.value.latitude,
-      province: locationData.value.province,
-      city: locationData.value.city,
-      address: locationData.value.address,
-      observationYear: new Date().getFullYear(),
-      description: `对 ${isCreatingNewHerb.value ? newHerb.value.name : selectedHerb.value!.name} 的一次新观测`,
-    };
-    
-    snackbarStore.showInfoMessage('正在创建观测点记录...');
-    const locationResponse = await createLocationApi(locationPayload);
-    const newLocationId = locationResponse.data.data.id;
-    if (!newLocationId) throw new Error("创建观测点失败，未返回ID");
-    snackbarStore.showSuccessMessage(`观测点创建成功 (ID: ${newLocationId})`);
-
-    // --- 步骤三：上传并关联图片 ---
-    if (selectedFiles.value.length > 0) {
-      snackbarStore.showInfoMessage('正在上传图片...');
-      const policyResponse = await getOSSPolicyApi();
-      const imageUrls = await Promise.all(
-        selectedFiles.value.map(file => uploadFileToOSS(file, policyResponse.data.data))
-      );
-      snackbarStore.showInfoMessage('所有图片已上传至OSS，正在关联到观测点...');
-
-      const imagesToLink: ImageInfo[] = imageUrls.map((url, index) => ({
-        url: url,
-        primary: isCreatingNewHerb.value ? (index === primaryImageIndex.value) : false,
-        description: `${(isCreatingNewHerb.value && index === primaryImageIndex.value) ? '主图' : '附加图片'}: ${selectedFiles.value[index].name}`
-      }));
-
-      await uploadImagesForLocationApi(newLocationId, { images: imagesToLink });
-      snackbarStore.showSuccessMessage(`${imagesToLink.length} 张图片已成功关联`);
-    }
-
-    snackbarStore.showSuccessMessage('所有数据已成功保存！表单已重置。');
-    resetForm();
-
-  } catch (error: any) {
-    const errorMessage = error.response?.data?.msg || error.message || '未知操作失败';
-    snackbarStore.showErrorMessage(errorMessage);
-  } finally {
-    isSubmitting.value = false;
-  }
-};
-</script>
-
 <style scoped lang="scss">
 .main-card {
-    background-color: #f8f9fa; /* 给主卡片一个轻微的背景色 */
+    background-color: #f8f9fa;
 }
 
 .image-preview-card {
@@ -430,7 +501,7 @@ const submit = async () => {
 }
 
 .border-primary {
-  border: 2px solid #1976D2; /* Vuetify 默认主色 */
+  border: 2px solid #1976D2; 
   box-shadow: 0 0 8px rgba(25, 118, 210, 0.4);
 }
 
