@@ -44,6 +44,7 @@
     "happy-dom": "^9.6.1",
     "jspdf": "^3.0.1",
     "live2d-render": "^0.0.6",
+    "livekit-client": "^2.15.2",
     "lodash-es": "^4.17.21",
     "md-editor-v3": "^5.4.5",
     "microsoft-cognitiveservices-speech-sdk": "^1.27.0",

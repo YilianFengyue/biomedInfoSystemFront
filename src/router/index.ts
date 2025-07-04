@@ -129,6 +129,16 @@ export const routes = [
       hidePageHeader: true,
     },
   },
+  {
+    path: "/LiveVideo",
+    component: () => import("@/views/pages/biomedicine/LiveKitClassroom.vue"),
+    meta: {
+      layout: "ui",
+      title: "直播课堂",
+      requiresAuth: true, // 不需要登录
+      hidePageHeader: true,
+    },
+  },
 
   {
     path: "/herbs/edit/:id",
