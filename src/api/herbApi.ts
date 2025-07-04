@@ -8,6 +8,7 @@ export interface Herb {
   id: number;
   name: string;
   scientificName?: string;
+  imageUrl?: string; // <-- 新增此行
 }
 
 // 分页查询药材的返回结构

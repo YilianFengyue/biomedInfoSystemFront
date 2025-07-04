@@ -8,26 +8,14 @@ const customizeTheme = useCustomizeThemeStore();
 </script>
 
 <template>
-  <!-- ---------------------------------------------- -->
-  <!---Main Sidebar -->
-  <!-- ---------------------------------------------- -->
   <MainSidebar />
-  <!-- ---------------------------------------------- -->
-  <!---Top AppBar -->
-  <!-- ---------------------------------------------- -->
   <MainAppbar />
-  <!-- ---------------------------------------------- -->
-  <!---MainArea -->
-  <!-- ---------------------------------------------- -->
-
   <v-main
-    class="main-container"
     v-touch="{
       left: () => (customizeTheme.mainSidebar = false),
       right: () => (customizeTheme.mainSidebar = true),
     }"
   >
-    <!-- <GlobalLoading /> -->
     <ToolBox />
     <div class="flex-fill">
       <slot></slot>
@@ -39,23 +27,5 @@ const customizeTheme = useCustomizeThemeStore();
 .scrollnav {
   height: calc(100vh - 326px);
 }
-.main-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  width: 80%;
-  /* 使用 margin: auto 来使其在 v-main 内居中 */
-  margin-left: auto !important;  
-  margin-right: auto !important;
-  
-}
-
-@media (max-width: 959px) {
-  .main-container {
-    width: 100%; 
-    margin-left: 0 !important; 
-    margin-right: 0 !important;
-   
-  }
-}
+/* 移除了 main-container 的样式 */
 </style>

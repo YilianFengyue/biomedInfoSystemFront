@@ -8,6 +8,7 @@ export const routes = [
     path: "/",
     redirect: "/dashboard",
     meta: {
+      transition: "slide-fade",
         //根路径重定向，通常不直接渲染，可不加动画
     },
   } as any,

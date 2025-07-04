@@ -1,3 +1,5 @@
+// --- 已有的组件动画 (保留) ---
+
 .heartBeat {
   animation: heartBeat 0.5s;
 }
@@ -6,19 +8,15 @@
   0% {
     transform: scale(1);
   }
-
   14% {
     transform: scale(1.3);
   }
-
   28% {
     transform: scale(1);
   }
-
   42% {
     transform: scale(1.3);
   }
-
   70% {
     transform: scale(1);
   }
@@ -33,39 +31,89 @@
   0% {
     transform: translateX(0);
   }
-
   6.5% {
     transform: translateX(-6px) rotateY(-9deg);
   }
-
   18.5% {
     transform: translateX(5px) rotateY(7deg);
   }
-
   31.5% {
     transform: translateX(-3px) rotateY(-5deg);
   }
-
   43.5% {
     transform: translateX(2px) rotateY(3deg);
   }
-
   50% {
     transform: translateX(0);
   }
 }
 
+// --- 页面切换动画 (优化和新增) ---
+
+// 1. 默认淡入淡出 (纯粹的 opacity 变化)
 .fade-enter-active,
 .fade-leave-active {
-  transition: all 0.5s ease;
+  transition: opacity 0.3s ease-in-out;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateX(30px);
 }
 
+// 2. 滑动淡入 (向右滑动并淡入)
+.slide-fade-enter-active {
+  transition: all 0.4s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(30px);
+  opacity: 0;
+}
+
+// 3. 向上滑动 (新增)
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.35s ease-out;
+}
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(50px);
+}
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-30px);
+}
+
+// 4. 缩放淡入 (新增)
+.zoom-fade-enter-active,
+.zoom-fade-leave-active {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+.zoom-fade-enter-from {
+  transform: scale(0.95);
+  opacity: 0;
+}
+.zoom-fade-leave-to {
+  transform: scale(1.05);
+  opacity: 0;
+}
+
+// 5. 快速缩放 (新增)
+.zoom-out-enter-active,
+.zoom-out-leave-active {
+  transition: all 0.4s cubic-bezier(0.52, 0.02, 0.19, 1.02);
+}
+.zoom-out-enter-from {
+  opacity: 0;
+  transform: scale(0.8);
+}
+.zoom-out-leave-to {
+  opacity: 0;
+  transform: scale(1.2);
+}
 
 // Base
 .v-enter-active,
@@ -108,29 +156,4 @@
 .slide-x-leave-to {
   opacity: 0;
   transform: translateX(30px);
-}
-
-// 新增页面切换动画
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-.slide-fade-enter-active {
-  transition: all 0.4s ease-out;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateX(30px);
-  opacity: 0;
 }
