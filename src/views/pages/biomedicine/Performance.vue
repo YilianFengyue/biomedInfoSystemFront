@@ -4,7 +4,7 @@
       <v-col cols="12" md="6">
         <v-card class="fill-height">
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-3" color="primary">mdi-chart-pie</v-icon>
+            <Icon icon="streamline-stickies-color:library-research" />&nbsp;
             <span class="text-h5">资源类型分布</span>
           </v-card-title>
           <v-divider></v-divider>
@@ -14,7 +14,7 @@
       <v-col cols="12" md="6">
         <v-card class="fill-height">
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-3" color="amber">mdi-trophy-award</v-icon>
+            <Icon icon="streamline-ultimate-color:ranking-people-first" />&nbsp;
             <span class="text-h5">教师业绩排行</span>
           </v-card-title>
           <v-divider></v-divider>
@@ -40,7 +40,7 @@
       <v-col cols="12">
         <v-card>
            <v-card-title class="d-flex align-center">
-            <v-icon class="mr-3" color="info">mdi-folder-multiple</v-icon>
+            <Icon icon="vscode-icons:folder-type-library-opened" />&nbsp;
             <span class="text-h5">我上传的资源</span>
           </v-card-title>
            <v-divider></v-divider>
@@ -63,6 +63,7 @@ import { useSnackbarStore } from '@/stores/snackbarStore';
 import { useProfileStore } from '@/stores/profileStore';
 import { useChart, RenderType } from "@/plugins/echarts";
 import type { EChartsOption } from "echarts";
+import { Icon } from "@iconify/vue";
 import ResourceCardList from '@/views/pages/biomedicine/ResourceCardList.vue'; // 复用这个组件
 
 // --- Store & Utils ---

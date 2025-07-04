@@ -254,6 +254,7 @@ import aMapLoaderInstance from "@/utils/amap";
 import { getCityWeather } from "@/utils/weather";
 import { getHerbDistribution, type HerbDistribution } from "@/api/biomedicine";
 import axios from 'axios';
+import { Icon } from "@iconify/vue";
 
 import { useChart, RenderType, ThemeType } from "@/plugins/echarts";
 import type { EChartsOption } from "echarts";

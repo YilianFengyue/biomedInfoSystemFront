@@ -41,7 +41,11 @@
         </v-col>
       </v-row>
 
-      <v-row class="mt-6">
+      <v-row
+        v-intersect.once="onIntersectResources"
+        class="mt-6 animated-section"
+        :class="{ 'is-visible': isResourcesVisible }"
+      >
         <v-col cols="12" md="5" class="d-flex align-center justify-center">
           <v-img
             :src="doctorSvg"
@@ -53,9 +57,9 @@
         </v-col>
 
         <v-col cols="12" md="7">
-          <v-card rounded="lg" class="fill-height">
+          <v-card rounded="lg" class="fill-height interactive-card">
             <v-card-title class="d-flex align-center title-green">
-              <v-icon color="primary" class="mr-2">mdi-star-box</v-icon>
+              <Icon icon="noto:fire" />&nbsp;
               <span class="text-h5 font-weight-bold">精选热门资源</span>
             </v-card-title>
             <v-divider></v-divider>
@@ -85,11 +89,15 @@
         </v-col>
       </v-row>
       
-      <v-row class="mt-6">
+      <v-row
+        v-intersect.once="onIntersectHealth"
+        class="mt-6 animated-section"
+        :class="{ 'is-visible': isHealthVisible }"
+      >
         <v-col cols="12" md="5">
-            <v-card class="fill-height" rounded="lg">
+            <v-card class="fill-height interactive-card" rounded="lg" v-ripple>
                 <v-card-title class="d-flex align-center title-yellow">
-                    <v-icon color="primary" class="mr-2">mdi-leaf</v-icon>
+                    <Icon icon="streamline-emojis:leaf-fluttering-in-wind" />&nbsp;
                     <span class="text-h5 font-weight-bold">今日养生</span>
                 </v-card-title>
                 <v-divider></v-divider>
@@ -125,6 +133,21 @@
 
     </div>
   </v-container>
+
+  <br>
+  <br>
+
+  <footer class="app-footer">
+    <v-container fluid class="py-4 text-center">
+      <div>
+        <br>
+        <a href="#" class="text-decoration-none text-grey-darken-1 mr-4">联系我们 |</a>
+        <a href="#" class="text-decoration-none text-grey-darken-1 mr-4">关于我们 |</a>
+        <a href="#" class="text-decoration-none text-grey-darken-1">版权所有 © 2025</a>
+      </div>
+    </v-container>
+  </footer>
+
 </template>
 
 <script setup lang="ts">
@@ -133,17 +156,34 @@ import { useRouter } from 'vue-router';
 import solarLunar from 'solarlunar';
 
 // Importing assets for carousel and illustrations
-import main1 from '@/assets/edu/main1.jpg';
-import main2 from '@/assets/edu/main2.jpg';
-import main3 from '@/assets/edu/main3.jpg';
+import main1 from '@/assets/bio/BIO.jpg';
+import main2 from '@/assets/bio/building.jpg';
+import main3 from '@/assets/bio/TPC.jpg';
 import doctorSvg from '@/assets/svg/undraw_doctor_aum1.svg';
 import dataCenterSvg from '@/assets/svg/undraw_algorithm-execution_rksm.svg';
 import herbSearchSvg from '@/assets/svg/undraw_environment_9luj.svg';
 import eduOnlineSvg from '@/assets/svg/undraw_educator_6dgp.svg';
 import seasonalSvg from '@/assets/svg/undraw_online-calendar_zaoc.svg';
-
+import { Icon } from "@iconify/vue";
 
 const router = useRouter();
+
+// --- 新增：为动画效果创建响应式变量和处理函数 ---
+const isResourcesVisible = ref(false);
+const isHealthVisible = ref(false);
+
+const onIntersectResources = (isIntersecting: boolean) => {
+  if (isIntersecting) {
+    isResourcesVisible.value = true;
+  }
+};
+
+const onIntersectHealth = (isIntersecting: boolean) => {
+  if (isIntersecting) {
+    isHealthVisible.value = true;
+  }
+};
+
 
 // --- Data for UI Elements ---
 
@@ -300,7 +340,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 新增：参考 EduOnline.vue 的样式 */
+/* 参考 EduOnline.vue 的样式 */
 .hero-section {
   height: 60vh;
   min-height: 500px;
@@ -344,7 +384,7 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* 新增：为标题栏添加背景色 */
+/* 为标题栏添加背景色 */
 .title-green {
   background-color: #F1F8E9; /* 浅绿色 */
 }
@@ -352,4 +392,43 @@ onMounted(() => {
 .title-yellow {
   background-color: #FFFDE7; /* 浅黄色 */
 }
+
+/* --- 新增：进入和悬浮动画样式 --- */
+
+/* 定义交互式卡片的悬浮效果 */
+.interactive-card {
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.interactive-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* 定义模块进入动画的初始状态 */
+.animated-section {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+/* 定义模块进入动画的最终状态 */
+.animated-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 新增：底部框样式 */
+.app-footer {
+  width: 100%;
+  background-color: black; /* 修改为黑色背景 */
+  color: white;           /* 默认字体颜色修改为白色 */
+  font-size: 0.8rem;
+}
+
+/* 新增：确保链接文字也是白色的 */
+.app-footer a {
+  color: white;
+}
+
 </style>
