@@ -1,9 +1,13 @@
 <template>
   <v-app>
-    <component :is="currentLayout" v-if="isRouterLoaded" >
-      <router-view> </router-view>
+    <component :is="currentLayout" v-if="isRouterLoaded">
+      <router-view v-slot="{ Component, route }">
+        <transition :name="route.meta.transition || 'fade'" mode="out-in">
+          <component :is="Component" :key="route.path" />
+        </transition>
+      </router-view>
     </component>
-    
+
     <RepaireCard />
     <CustomizationMenu />
     <BackToTop />

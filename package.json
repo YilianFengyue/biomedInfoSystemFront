@@ -95,35 +95,5 @@
     "vite-plugin-vuetify": "^1.0.2",
     "vitest": "^0.30.1",
     "wait-on": "^8.0.3"
-  },
-  "build": {
-    "appId": "com.yourcompany.biomed",
-    "productName": "BiomedInfoSystem",
-    "copyright": "Copyright © 2025 ${author}",
-    "directories": {
-      "output": "dist_electron"
-    },
-    "files": [
-      "electron/**/*",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "backend",
-        "to": "backend"
-      }
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "electron/icons/icon.ico"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "electron/icons/icon.icns"
-    }
   }
 }

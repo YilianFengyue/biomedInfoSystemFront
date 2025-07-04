@@ -58,7 +58,7 @@ export default defineConfig({
     },
   },
   // 【修改】将构建输出目录指向 electron/dist
-  build: {
+  /*build: {
     outDir: 'electron/dist'
-  }
+  }*/
 });
