@@ -1,8 +1,8 @@
 import AMapLoader from '@amap/amap-jsapi-loader';
 
 // --- 配置 (使用您已有的配置) ---
-const AMapKey = "730a4cd776856690dfea5fa14dbce396"; // 您的API Key
-const AMapSecurityCode = "24da513567f9cebee7655d511d61c59b"; // 您的安全密钥
+const AMapKey = import.meta.env.VITE_AMAP_KEY; // 您的API Key
+const AMapSecurityCode = import.meta.env.VITE_AMAP_SECURITY_CODE; // 您的安全密钥
 
 // 在window上设置安全密钥
 (window as any)._AMapSecurityConfig = {
