@@ -4,6 +4,14 @@ import AMapLoader from '@amap/amap-jsapi-loader';
 const AMapKey = import.meta.env.VITE_AMAP_KEY; // 您的API Key
 const AMapSecurityCode = import.meta.env.VITE_AMAP_SECURITY_CODE; // 您的安全密钥
 
+// 检查配置
+if (!AMapKey) {
+  console.error('VITE_AMAP_KEY 未配置');
+}
+if (!AMapSecurityCode) {
+  console.error('VITE_AMAP_SECURITY_CODE 未配置');
+}
+
 // 在window上设置安全密钥
 (window as any)._AMapSecurityConfig = {
   securityJsCode: AMapSecurityCode,
@@ -13,8 +21,13 @@ const AMapSecurityCode = import.meta.env.VITE_AMAP_SECURITY_CODE; // 您的安�
 const aMapLoaderInstance = AMapLoader.load({
   key: AMapKey,
   version: "2.0",
-  // 确认 Geocoder 插件已被加载
-  plugins: ['AMap.Geocoder', 'AMap.AutoComplete', 'AMap.PlaceSearch'],
+  plugins: ['AMap.Geocoder', 'AMap.AutoComplete', 'AMap.PlaceSearch', 'AMap.MarkerClusterer'],
+}).then(AMap => {
+  console.log('高德地图加载成功');
+  return AMap;
+}).catch(error => {
+  console.error('高德地图加载失败:', error);
+  throw error;
 });
 
 export default aMapLoaderInstance;
