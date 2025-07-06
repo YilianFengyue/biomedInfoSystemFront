@@ -52,5 +52,8 @@ const customizeTheme = useCustomizeThemeStore();
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* --- 新增这两行 --- */
+  width: 90%;          /* 设置宽度为90% */
+  margin: 0 auto;      /* 上下边距为0，左右自动，实现水平居中 */
 }
 </style>

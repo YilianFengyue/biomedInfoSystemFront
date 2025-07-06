@@ -9,8 +9,8 @@ import axios from 'axios';
 import { useProfileStore } from "@/stores/profileStore";
 import { useRouter } from 'vue-router'; // 新增：引入路由
 
-const profileStore = useProfileStore();
-const username = profileStore.user.name;
+// const profileStore = useProfileStore();
+// const username = profileStore.user.name;
 const router = useRouter(); // 新增：初始化路由
 
 // 定义消息类型

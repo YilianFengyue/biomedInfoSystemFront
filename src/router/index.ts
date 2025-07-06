@@ -17,7 +17,7 @@ export const routes = [
     component: () => import("@/views/pages/DashBoard.vue"),
     meta: {
       requiresAuth: true,
-      layout: "landing",
+      layout: "ui",
       transition: "slide-fade", // 主要页面切换
     },
   },

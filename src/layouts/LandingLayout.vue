@@ -15,6 +15,7 @@ const customizeTheme = useCustomizeThemeStore();
       left: () => (customizeTheme.mainSidebar = false),
       right: () => (customizeTheme.mainSidebar = true),
     }"
+    
   >
     <ToolBox />
     <div class="flex-fill">
@@ -28,4 +29,5 @@ const customizeTheme = useCustomizeThemeStore();
   height: calc(100vh - 326px);
 }
 /* 移除了 main-container 的样式 */
+
 </style>

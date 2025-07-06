@@ -12,7 +12,8 @@ import LanguageSwitcher from "./LanguageSwitcher.vue";
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFixCardStore } from '@/stores/fixCardStore' 
-
+//导入Iconify
+import { Icon } from "@iconify/vue";
 const fixCardStore = useFixCardStore() 
 
 const toggleFixCard = () => {
@@ -36,7 +37,7 @@ const color = ref('indigo')
 </script>
 
 <template>
-  <v-app-bar :density="mdAndUp ? 'default' : 'compact'">
+  <v-app-bar :density="mdAndUp ? 'default' : 'compact'"  image="/images/AppBarBackGround.png">
     <div class="px-2 d-flex align-center justify-space-between w-100">
       <v-app-bar-nav-icon
         @click="customizeTheme.mainSidebar = !customizeTheme.mainSidebar"
@@ -60,8 +61,8 @@ const color = ref('indigo')
 
       <v-divider vertical thickness="2" inset class="ml-5 mr-1"></v-divider>
       <ToolbarNotifications />
-      <v-btn icon @click="customizeTheme.themeDrawer = !customizeTheme.themeDrawer">
-        <v-icon>mdi-cart</v-icon>
+      <v-btn icon >
+        <v-icon><Icon icon="ic:outline-account-balance-wallet" /></v-icon>
       </v-btn>
 
       <div class="d-flex">

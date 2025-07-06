@@ -2,7 +2,6 @@
 import { useTheme } from "vuetify";
 import { useCustomizeThemeStore } from "@/stores/customizeTheme";
 import { Icon } from "@iconify/vue";
-import axios from "axios";
 interface Color {
   colorId: number;
   colorName: string;
@@ -10,108 +9,49 @@ interface Color {
 }
 const customizeTheme = useCustomizeThemeStore();
 const theme = useTheme();
-const themeDrawer = computed({
-  get: () => customizeTheme.themeDrawer,
-  set: (val) => customizeTheme.themeDrawer = val,
-});
+const themeDrawer = ref(false);
 const currentColor = ref<Color>({
-  colorId: 2,
-  colorName: "grey",
-  colorValue: "#344767",
+  colorId: 1,
+  colorName: "purple",
+  colorValue: "#705CF6",
 });
 const primaryColors = ref([
+  {
+    colorId: 1,
+    colorName: "purple",
+    colorValue: "#705CF6",
+  },
   {
     colorId: 2,
     colorName: "grey",
     colorValue: "#344767",
   },
+  {
+    colorId: 3,
+    colorName: "info",
+    colorValue: "#17C1E8",
+  },
+  {
+    colorId: 4,
+    colorName: "success",
+    colorValue: "#558B2F",
+  },
+  {
+    colorId: 5,
+    colorName: "warning",
+    colorValue: "#F2825A",
+  },
+  {
+    colorId: 6,
+    colorName: "error",
+    colorValue: "#EA0606",
+  },
 ]);
-//购物车
-import { useCartStore } from '@/stores/cartStore';
-const cartStore = useCartStore();  // 使用购物车 store
-const cartitems =cartStore.cartItems;
-const cartTotal = computed(() => cartStore.cartTotal);
 
-//订单
-const editedItem = ref({
-  userid: "ACID",
-  orderdate: "2024-11-04T16:00:00.000+00:00",
-  shipaddr1: "901 San Antonio Road",
-  shipaddr2: "MS UCUP02-206",
-  shipcity: "Palo Alto",
-  shipstate: "CA",
-  shipzip: "94303",
-  shipcountry: "USA",
-  billaddr1: "901 San Antonio Road",
-  billaddr2: "MS UCUP02-206",
-  billcity: "Palo Alto",
-  billstate: "CA",
-  billzip: "94303",
-  billcountry: "USA",
-  courier: "USA",
-  totalprice: 193.50,
-  billtofirstname: "ABC",
-  billtolastname: "XYX",
-  shiptofirstname: "ABC",
-  shiptolastname: "XYX",
-  creditcard: "999 9999 9999 9999",
-  exprdate: "12/03",
-  cardtype: "Visa",
-  locale: "CA"
-});
-import { useProfileStore } from "@/stores/profileStore";
-
-
-import {useTokenStore} from "~/src/stores/tokenStore";
-
-const profileStore = useProfileStore();  // 使用购物车 store
-const account = reactive({ ...profileStore.account });
-const proceedToPay = () => {
-  cartStore.submitCart(); // 提交购物车
-
-  // 从用户信息中填入姓名
-  const { account } = profileStore;
-  editedItem.value.userid = account.userid;
-  editedItem.value.billtofirstname = account.firstname;
-  editedItem.value.billtolastname = account.lastname;
-  editedItem.value.shiptofirstname = account.firstname;
-  editedItem.value.shiptolastname = account.lastname;
-  console.log(editedItem.value);
-  // 填入购物车总价
-
-  // 打开订单确认对话框
-  detailDialog.value = true;
-};
-const detailDialog = ref(false)
-
-const save = async () => {
-  try {
-    // const response = await axios.post('/sdApi/orders', editedItem.value);
-    const tokenStore = userTokenStore(); // 使用token store
-    const response = await axios.post(
-      '/sdApi/orders',
-      editedItem.value,
-      {
-        headers: {
-          Authorization: tokenStore.token, // 或者加上前缀：`Bearer ${tokenStore.token}`
-        }
-      }
-    );
-    if (response.data.code === 20011) {
-      // 成功提示 + 关闭对话框
-      console.log('订单提交成功');
-      detailDialog.value = false;
-    } else {
-      console.error('订单提交失败');
-    }
-  } catch (err) {
-    console.error('提交出错', err);
-  }
-};
 onMounted(() => updatePrimaryColor(customizeTheme.primaryColor));
 
 watch(currentColor, (newVal) => {
-  updatePrimaryColor(newVal)
+  updatePrimaryColor(newVal);
 });
 
 const updatePrimaryColor = (newColor: Color) => {
@@ -119,226 +59,94 @@ const updatePrimaryColor = (newColor: Color) => {
   theme.themes.value.dark.colors.primary = newColor.colorValue;
   customizeTheme.setPrimaryColor(newColor);
   currentColor.value = newColor;
-
-}
+};
 </script>
 
 <template>
   <div>
-    <!-- <div class="drawer-button" @click="themeDrawer = true">
+    <div class="drawer-button" @click="themeDrawer = true">
       <v-icon class="text-white">mdi-cog-outline</v-icon>
-    </div> -->
+    </div>
 
     <v-navigation-drawer
       v-model="themeDrawer"
       location="right"
       temporary
-      width="500"
+      width="300"
       class="theme-drawer"
     >
       <div class="pa-5">
         <div class="top-area">
           <div class="d-flex align-center">
-            <h1><b>ShoppingCart</b></h1>
+            <b>UI Configurator</b>
             <v-spacer></v-spacer>
           </div>
-          <div>See our items options.</div>
+          <div>See our dashboard options.</div>
         </div>
 
         <hr class="my-6" />
+
         <div class="theme-area">
-          <!-- <b>Global Theme Mode</b> -->
-          <v-data-table
-            :items="cartitems"
-            hide-default-footer
-            :pagination="false">
-          </v-data-table>
-
+          <b>Global Theme Mode</b>
+          <div class="px-3 pt-3" v-if="customizeTheme.darkTheme">
+            <v-btn
+              @click="customizeTheme.darkTheme = !customizeTheme.darkTheme"
+              icon
+              color="grey-darken-4"
+              class="text-white"
+            >
+              <Icon width="30" icon="line-md:moon-filled-loop" />
+            </v-btn>
+            <span class="ml-5">Dark Mode</span>
+          </div>
         </div>
         <hr class="my-6" />
+
+        <div class="primary-color-area">
+          <b>Primary Colors</b>
+          <v-item-group
+            class="mt-3"
+            v-model="currentColor"
+            selected-class="elevation-12"
+            mandatory
+          >
+            <v-item
+              v-for="color in primaryColors"
+              :key="color.colorId"
+              :value="color"
+              v-slot="{ isSelected, toggle }"
+            >
+              <v-btn
+                @click="toggle"
+                class="text-white mr-1"
+                icon
+                size="30"
+                :color="color.colorValue"
+              >
+                <Icon width="22" v-if="isSelected" icon="line-md:confirm" />
+              </v-btn>
+            </v-item>
+          </v-item-group>
+        </div>
         <hr class="my-6" />
         <div class="">
-          <h2><b>TotalPrice:¥{{ cartTotal.toFixed(2) }}</b></h2>
-
+          <b>MiniSideBar</b>
         </div>
         <hr class="mb-6" />
         <div>
           <v-btn color="" class="gradient info" block size="large"
-          @click="proceedToPay">
-            Proceed To Checkout</v-btn
+            >Contact Me</v-btn
           >
         </div>
         <div class="ml-5 mt-5 d-flex align-center">
           <v-icon color="primary" class="mr-6">mdi-email-outline</v-icon>
           <a href="mailto:yjkbako@gmail.com">yjkbako@gmail.com</a>
         </div>
-
+        <div>
+          <img src="@/assets/wechat.jpg" alt="" />
+        </div>
       </div>
     </v-navigation-drawer>
-
-
-
-    <v-dialog
-                v-model="detailDialog"
-                persistent
-                max-width="600px"
-        >
-          <v-card>
-            <v-card-title>
-              <span class="text-h5">订单确认</span>
-            </v-card-title>
-            <!-- 编辑卡片 -->
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="6"
-                  >
-                  <v-select
-                    label="Card Type"
-                    :items="['Visa', 'MasterCard', 'American Express']"
-                    v-model="editedItem.cardtype"
-                  ></v-select>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="6"
-                  >
-                    <v-text-field
-                            v-model="editedItem.creditcard"
-                            label="Card Number"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="4"
-                  >
-                    <v-text-field
-                            v-model="editedItem.billtofirstname"
-                            disabled
-                            label="First Name"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="4"
-                  >
-                    <v-text-field
-                            v-model="editedItem.billtolastname"
-                            disabled
-                            label="Last Name"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="4"
-                  >
-                    <v-text-field
-                            v-model="editedItem.exprdate"
-                            label="Expiry Date (MM/YYYY):"
-                    ></v-text-field>
-                  </v-col>
-
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="3"
-                  >
-                    <v-text-field
-                            v-model="editedItem.billaddr1"
-                            label="Address 1"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="3"
-                  >
-                  <v-text-field
-                            v-model="editedItem.billaddr2"
-                            label="Address 2"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="3"
-                  >
-                    <v-text-field
-                            v-model="editedItem.shipcity"
-                            label="City"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="3"
-                  >
-                    <v-text-field
-                            v-model="editedItem.shipstate"
-                            label="State"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="4"
-                  >
-                    <v-text-field
-                            v-model="editedItem.shipzip"
-                            label="Zip"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="4"
-                  >
-                    <v-text-field
-                            v-model="editedItem.shipcountry"
-                            label="Country"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col
-                          cols="12"
-                          sm="6"
-                          md="4"
-                  >
-                    <v-text-field
-                            v-model="editedItem.totalprice"
-                            disabled
-                            label="Total Price"
-                    >${{cartTotal.toFixed(2)}}</v-text-field>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card-text>
-
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn
-                      color="blue darken-1"
-                      text
-                      @click="detailDialog = false"
-              >
-                Cancel
-              </v-btn>
-              <v-btn
-                      color="blue darken-1"
-                      text
-                      @click="save"
-              >
-                Confirm
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
   </div>
 </template>
 

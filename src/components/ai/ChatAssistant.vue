@@ -136,13 +136,27 @@ watch(
 );
 
 const displayMessages = computed(() => {
-  const messagesCopy = messages.value.slice(); // 创建原始数组的副本
+  if (messages.value.length === 0) return []; 
+  
+  const messagesCopy = messages.value.slice();
   const lastMessage = messagesCopy[messagesCopy.length - 1];
-  const updatedLastMessage = {
-    ...lastMessage,
-    content: countAndCompleteCodeBlocks(lastMessage.content),
-  };
-  messagesCopy[messagesCopy.length - 1] = updatedLastMessage;
+  
+  if (lastMessage) {
+    let contentText = '';
+    if (typeof lastMessage.content === 'string') {
+      contentText = lastMessage.content;
+    } else if (Array.isArray(lastMessage.content) && lastMessage.content[0]?.text) {
+      contentText = lastMessage.content[0].text;
+    }
+    
+    const updatedLastMessage = {
+      ...lastMessage,
+      // 🔥 直接在这里确保是字符串
+      content: countAndCompleteCodeBlocks(String(contentText || '')),
+    };
+    messagesCopy[messagesCopy.length - 1] = updatedLastMessage;
+  }
+  
   return messagesCopy;
 });
 
@@ -191,7 +205,7 @@ const { xs } = useDisplay();
               />
             </v-avatar>
 
-            智能顾问
+            OpenAi Chat
           </span>
 
           <v-spacer></v-spacer>
@@ -271,10 +285,10 @@ const { xs } = useDisplay();
             <v-tooltip
               activator="parent"
               location="top"
-              text="AI Config"
+              text="ChatGPT Config"
             ></v-tooltip>
           </v-btn>
-          
+
           <v-textarea
             class="mx-2"
             color="primary"

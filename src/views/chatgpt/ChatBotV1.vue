@@ -212,11 +212,9 @@ watch(messages, () => {
 <!-- 样式部分保持不变 -->
 <style scoped lang="scss">
 .chat-bot {
-  background-repeat: repeat;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
 
   .messsage-area {
     flex: 1;
