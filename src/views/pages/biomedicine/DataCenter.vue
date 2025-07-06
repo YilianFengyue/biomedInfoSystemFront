@@ -339,6 +339,9 @@ import { useChart, RenderType, ThemeType } from "@/plugins/echarts";
 import type { EChartsOption } from "echarts";
 
 import { useI18n } from 'vue-i18n';
+// 导入天气函数
+import { getCityWeather } from '@/utils/weather';
+
 const { t } = useI18n();
 
 // --- Map State ---
@@ -443,6 +446,17 @@ const chartOption = computed<EChartsOption>(() => ({
 }));
 const { setOption } = useChart(pieChartRef as Ref<HTMLDivElement>, true, false, RenderType.SVGRenderer, ThemeType.Dark);
 
+// 获取天气信息
+const fetchWeather = async () => {
+  try {
+    weatherInfo.value = await getCityWeather(null);
+  } catch (error) {
+    console.error(error);
+    // 可选：在这里处理错误，比如显示一个默认信息
+    weatherInfo.value = { city: '未知', weather: 'N/A', temperature: 'N/A' };
+  }
+};
+
 
 // --- **视图切换函数** ---
 const showProvinceView = () => {
@@ -535,6 +549,7 @@ const initMapAndMarkers = (AMap: any) => {
 
 // --- 生命周期钩子 ---
 onMounted(() => {
+  fetchWeather(); // 获取天气
   aMapLoaderInstance.then(AMap => {
     nextTick(() => { initMapAndMarkers(AMap); });
   });
