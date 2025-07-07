@@ -258,6 +258,28 @@ export const routes = [
     },
   },
   {
+    path: "/knowledge-graph",
+    component: () => import("@/views/pages/biomedicine/KnowledgeGraph.vue"),
+    meta: {
+      layout: "ui",
+      title: "中医药知识图谱",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "zoom-fade",
+    },
+  },
+  {
+    path: "/formulas",
+    component: () => import("@/views/pages/biomedicine/FormulaManagement.vue"),
+    meta: {
+      layout: "ui",
+      title: "方剂管理",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
     path: "/profile",
     name: "profile",
     component: () =>

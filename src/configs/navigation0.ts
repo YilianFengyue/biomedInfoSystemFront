@@ -67,6 +67,14 @@ export default {
           text: "menu.plant_recognition",
           link: "/plant-recognition",
         },
+        {
+          text: "知识图谱",
+          link: "/knowledge-graph",
+        },
+        {
+          text: "方剂管理",
+          link: "/formulas",
+        }
       ],
     },
     // 如果你需要保留这些菜单组，可以取消注释
