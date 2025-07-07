@@ -1264,6 +1264,11 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@kurkle/color@^0.3.0":
+  version "0.3.4"
+  resolved "https://registry.npmmirror.com/@kurkle/color/-/color-0.3.4.tgz#4d4ff677e1609214fc71c580125ddddd86abcabf"
+  integrity sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==
+
 "@lezer/common@^1.0.0", "@lezer/common@^1.0.2", "@lezer/common@^1.1.0", "@lezer/common@^1.2.0", "@lezer/common@^1.2.1":
   version "1.2.3"
   resolved "https://registry.npmmirror.com/@lezer/common/-/common-1.2.3.tgz#138fcddab157d83da557554851017c6c1e5667fd"
@@ -2893,6 +2898,13 @@ chalk@^4.0.0, chalk@^4.0.2, chalk@^4.1.0, chalk@^4.1.1, chalk@^4.1.2:
   dependencies:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
+
+chart.js@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.npmmirror.com/chart.js/-/chart.js-4.5.0.tgz#11a1ef6c4befc514b1b0b613ebac226c4ad2740b"
+  integrity sha512-aYeC/jDgSEx8SHWZvANYMioYMZ2KX02W6f6uVfyteuCGcadDLcYVHdfdygsTQkQ4TKn5lghoojAsPj5pu0SnvQ==
+  dependencies:
+    "@kurkle/color" "^0.3.0"
 
 check-error@^1.0.3:
   version "1.0.3"
@@ -7763,6 +7775,11 @@ vue-advanced-cropper@^2.8.9:
     classnames "^2.2.6"
     debounce "^1.2.0"
     easy-bem "^1.0.2"
+
+vue-chartjs@^5.3.2:
+  version "5.3.2"
+  resolved "https://registry.npmmirror.com/vue-chartjs/-/vue-chartjs-5.3.2.tgz#c0f2009af6b08845af158ddee9d0a68d9dae631b"
+  integrity sha512-NrkbRRoYshbXbWqJkTN6InoDVwVb90C0R7eAVgMWcB9dPikbruaOoTFjFYHE/+tNPdIe6qdLCDjfjPHQ0fw4jw==
 
 vue-component-type-helpers@^1.8.21:
   version "1.8.26"

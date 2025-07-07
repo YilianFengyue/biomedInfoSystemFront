@@ -30,93 +30,140 @@
       </v-toolbar>
       <v-divider></v-divider>
 
-      <v-data-table
+      <v-data-table-server
         :headers="headers"
         :items="serverItems"
         :loading="loading"
-        :items-per-page="itemsPerPage"
+        :items-per-page="options.itemsPerPage"
         :items-length="totalItems"
-        @update:options="handleOptionsUpdate"
+        v-model:page="options.page"
+        @update:options="loadItems"
         item-value="id"
         hover
         class="elevation-0"
       >
-        <template v-slot:item.composition="{ item }">
-          <p class="description-cell">{{ item.raw.composition }}</p>
+        <template v-slot:loading>
+          <v-skeleton-loader type="table-row@10"></v-skeleton-loader>
         </template>
-        <template v-slot:item.function_effect="{ item }">
-          <p class="description-cell">{{ item.raw.function_effect }}</p>
+        
+        <template v-slot:item.name="{ item }">
+          <div class="font-weight-bold">{{ item.name }}</div>
+          <div v-if="item.alias" class="text-caption text-grey-darken-1">别名: {{ item.alias }}</div>
         </template>
-        <template v-slot:item.status="{ item }">
-          <v-chip :color="item.raw.status === 1 ? 'green' : 'grey'" size="small" label>
-            {{ item.raw.status === 1 ? '正常' : '禁用' }}
-          </v-chip>
+        
+        <template v-slot:item.source="{ item }">
+          <div>{{ item.source }}</div>
+          <div class="text-caption text-grey-darken-1">{{ item.dynasty }}</div>
         </template>
+
+        <template v-slot:item.functionEffect="{ item }">
+          <p class="description-cell">{{ item.functionEffect }}</p>
+        </template>
+        <template v-slot:item.mainTreatment="{ item }">
+          <p class="description-cell">{{ item.mainTreatment }}</p>
+        </template>
+
         <template v-slot:item.actions="{ item }">
-          <v-icon small class="mr-2" @click.stop="openEditDialog(item.raw)">mdi-pencil</v-icon>
-          <v-icon small color="error" @click.stop="deleteItem(item.raw)">mdi-delete</v-icon>
+          <v-icon small class="mr-2" @click.stop="openEditDialog(item)">mdi-pencil</v-icon>
+          <v-icon small color="error" @click.stop="deleteItem(item)">mdi-delete</v-icon>
         </template>
-      </v-data-table>
+      </v-data-table-server>
     </v-card>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { getFormulas, type Formula, type FormulaQuery } from '@/api/formulaApi';
+import { ref, watch } from 'vue';
 import { debounce } from 'lodash-es';
+import axios from 'axios';
 
-const itemsPerPage = ref(10);
-const headers = ref([
-  { title: 'ID', key: 'id', sortable: false, width: '80px' },
-  { title: '方名', key: 'name', sortable: true },
-  { title: '出处', key: 'source', sortable: true },
-  { title: '功用', key: 'function_effect', sortable: false, width: '25%' },
-  { title: '药物组成', key: 'composition', sortable: false, width: '25%' },
-  { title: '状态', key: 'status', sortable: true, width: '100px' },
-  { title: '操作', key: 'actions', sortable: false, align: 'center', width: '120px' },
-]);
+// --- 类型定义 ---
+interface Formula {
+  id: number;
+  name: string;
+  alias: string | null;
+  source: string;
+  dynasty: string;
+  functionEffect: string;
+  mainTreatment: string;
+}
 
+interface PaginatedFormulas {
+  records: Formula[];
+  total: number;
+  size: number;
+  current: number;
+  pages: number;
+}
+
+// --- 组件状态 ---
 const serverItems = ref<Formula[]>([]);
 const loading = ref(true);
 const totalItems = ref(0);
 const searchKeyword = ref('');
-let currentSortBy: any[] = [];
 
-// 核心数据加载函数
-const loadItems = async ({ page, itemsPerPage, sortBy }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
+// --- 表格与分页选项 ---
+const options = ref({
+  page: 1,
+  itemsPerPage: 10,
+  sortBy: [],
+});
+
+const headers = ref([
+  { title: 'ID', key: 'id', sortable: false, width: '80px' },
+  { title: '方名', key: 'name', sortable: false },
+  { title: '出处', key: 'source', sortable: false },
+  { title: '功用', key: 'functionEffect', sortable: false, width: '25%' },
+  { title: '主治', key: 'mainTreatment', sortable: false, width: '25%' },
+  { title: '操作', key: 'actions', sortable: false, align: 'center', width: '120px' },
+]);
+
+// --- API 调用 ---
+const loadItems = async () => {
   loading.value = true;
-  currentSortBy = sortBy; // 保存排序状态
-
-  const params: FormulaQuery = {
-    page,
-    per_page: itemsPerPage,
-    keyword: searchKeyword.value,
-  };
-
-  // 如果需要后端排序，可以在这里添加排序参数
-  // if (sortBy.length) {
-  //   params.sortBy = sortBy[0].key;
-  //   params.sortOrder = sortBy[0].order;
-  // }
-  
-  const data = await getFormulas(params);
-  serverItems.value = data.items;
-  totalItems.value = data.total;
-  loading.value = false;
+  try {
+    const params = {
+      page: options.value.page,
+      size: options.value.itemsPerPage,
+      keyword: searchKeyword.value,
+    };
+    
+    const response = await axios.get('api/formula/page', { params });
+    
+    if (response.data && response.data.code === 20000) {
+      const result = response.data.data as PaginatedFormulas;
+      serverItems.value = result.records;
+      totalItems.value = result.total;
+    } else {
+      console.error('获取方剂数据失败:', response.data.msg);
+      serverItems.value = [];
+      totalItems.value = 0;
+    }
+  } catch (error) {
+    console.error('请求后端API时发生错误:', error);
+  } finally {
+    loading.value = false;
+  }
 };
 
-// 表格选项更新时触发（分页、排序）
-const handleOptionsUpdate = ({ page, itemsPerPage, sortBy }: { page: number, itemsPerPage: number, sortBy: any[] }) => {
-  loadItems({ page, itemsPerPage, sortBy });
-};
-
+// --- 事件处理 ---
 // 搜索防抖
 const debouncedSearch = debounce(() => {
-    loadItems({ page: 1, itemsPerPage: itemsPerPage.value, sortBy: currentSortBy });
+  options.value.page = 1; // 搜索时重置到第一页
+  loadItems();
 }, 500);
 
-// --- 占位函数，后续可以实现具体的弹窗逻辑 ---
+// --- 侦听器 ---
+// 侦听选项变化（例如翻页、改变每页数量），自动加载数据
+watch(
+  options,
+  () => {
+    loadItems();
+  },
+  { deep: true, immediate: true }
+);
+
+// --- 占位函数 ---
 const openAddDialog = () => { alert('添加方剂功能待实现'); };
 const openEditDialog = (item: Formula) => { alert(`编辑方剂: ${item.name}`); };
 const deleteItem = (item: Formula) => {
@@ -134,7 +181,7 @@ const deleteItem = (item: Formula) => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: 3.2em; /* 2 lines */
+  max-height: 3.2em;
   line-height: 1.6em;
 }
 </style>
