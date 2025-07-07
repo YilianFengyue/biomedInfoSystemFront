@@ -27,7 +27,7 @@ const Lighttheme: ThemeDefinition = {
     "high-emphasis-opacity": 1,
   },
   colors: {
-    background: "#f2f5f8",
+    background: "#F3F4F3",
     surface: "#ffffff",
     primary: "#344767",
     secondary: "#334155",

@@ -37,7 +37,7 @@ const color = ref('indigo')
 </script>
 
 <template>
-  <v-app-bar :density="mdAndUp ? 'default' : 'compact'"  image="/images/AppBarBackGround.png">
+  <v-app-bar :density="mdAndUp ? 'default' : 'compact'"  image="/images/AppBarBackGround.png" :elevation="20">
     <div class="px-2 d-flex align-center justify-space-between w-100">
       <v-app-bar-nav-icon
         @click="customizeTheme.mainSidebar = !customizeTheme.mainSidebar"

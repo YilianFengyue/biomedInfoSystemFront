@@ -9,7 +9,7 @@
     <v-row class="flex-0" dense>
       <v-col cols="12" xl="4">
         <!-- Sales Card -->
-        <v-card class="card-shadow" height="420">
+        <v-card class="card-shadow mt-10" height="420">
           <!-- <sales-card></sales-card> -->
           <sales-card
             :value="1837.32"
