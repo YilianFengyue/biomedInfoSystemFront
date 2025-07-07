@@ -169,4 +169,7 @@ const scrollToBottom = () => {
     color: rgba(var(--v-theme-primary));
   }
 }
+#mainMenu :deep(.v-list-item--active::before) {
+  display: none !important;
+}
 </style>
