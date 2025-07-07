@@ -4,7 +4,6 @@ import axios from 'axios';
 import { Chart, registerables } from 'chart.js';
 import { Bar } from 'vue-chartjs';
 
-// 注册Chart.js的所有组件
 Chart.register(...registerables);
 
 // --- 类型定义 ---
@@ -14,21 +13,22 @@ interface HerbCombination {
   combinationRatio: number;
 }
 
-// --- 组件状态 ---
-const searchHerb = ref<string>('红花'); // 默认分析“红花”，便于演示
+// --- 配伍分析状态 ---
+const searchHerb = ref<string>('红花');
 const analysisResult = ref<HerbCombination[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
+const analysisLoading = ref(false);
+const analysisError = ref<string | null>(null);
 
-// --- Chart.js 数据和选项 ---
+// --- Chart.js 配置 ---
 const chartData = ref({
   labels: [] as string[],
   datasets: [
     {
       label: '配伍次数',
-      backgroundColor: '#42A5F5',
-      borderColor: '#1E88E5',
-      borderWidth: 1,
+      backgroundColor: 'rgba(63, 81, 181, 0.8)',
+      borderColor: 'rgba(63, 81, 181, 1)',
+      borderWidth: 2,
+      borderRadius: 8,
       data: [] as number[],
     },
   ],
@@ -37,179 +37,199 @@ const chartData = ref({
 const chartOptions = ref({
   responsive: true,
   maintainAspectRatio: false,
-  indexAxis: 'y' as const, // 设置为水平条形图
+  indexAxis: 'y' as const,
   plugins: {
-    legend: {
-      display: false,
-    },
+    legend: { display: false },
     title: {
       display: true,
-      text: '配伍药材',
-      font: {
-        size: 16,
-      },
-    },
-    tooltip: {
-      callbacks: {
-        label: (context: any) => `配伍次数: ${context.raw}`,
-      },
+      text: 'Top 10 配伍药材',
+      font: { size: 16, weight: 'bold' },
+      color: '#3F51B5',
+      padding: 20
     },
   },
   scales: {
     x: {
       beginAtZero: true,
-      title: {
-        display: true,
-        text: '次数',
-      },
+      title: { display: true, text: '配伍次数', font: { weight: 'bold' } },
+      grid: { color: 'rgba(0,0,0,0.1)' }
     },
+    y: {
+      grid: { display: false }
+    }
   },
 });
 
-// --- 方法 ---
+// --- API 调用方法 ---
 const performAnalysis = async () => {
   if (!searchHerb.value) {
-    error.value = '请输入要分析的药材名称。';
-    analysisResult.value = [];
+    analysisError.value = '请输入药材名称。';
     return;
   }
-
-  loading.value = true;
-  error.value = null;
+  analysisLoading.value = true;
+  analysisError.value = null;
   analysisResult.value = [];
-
   try {
-    const response = await axios.get('/api/formula/analysis/herb-combinations', {
-      params: { herbName: searchHerb.value },
-    });
-
-    if (response.data && response.data.code === 20000) {
-      const results = response.data.data as HerbCombination[];
-      analysisResult.value = results;
-
-      if (results.length === 0) {
-        error.value = `未找到关于“${searchHerb.value}”的配伍数据。`;
-        chartData.value.labels = [];
-        chartData.value.datasets[0].data = [];
+    const response = await axios.get('/api/formula/analysis/herb-combinations', { params: { herbName: searchHerb.value } });
+    if (response.data?.code === 20000) {
+      analysisResult.value = response.data.data;
+      if (analysisResult.value.length === 0) {
+        analysisError.value = `未找到关于"${searchHerb.value}"的配伍数据。`;
+        chartData.value = { labels: [], datasets: [{ data: [], label: '配伍次数', backgroundColor: 'rgba(63, 81, 181, 0.8)' }] };
       } else {
-        // 更新图表数据
-        const top10 = results.slice(0, 10).reverse(); // .reverse() for horizontal bar chart
+        const top10 = [...analysisResult.value].slice(0, 10).reverse();
         chartData.value.labels = top10.map(item => item.herbName);
         chartData.value.datasets[0].data = top10.map(item => item.combinationCount);
-        chartOptions.value.plugins.title.text = `“${searchHerb.value}” 配伍药材`;
+        chartOptions.value.plugins.title.text = `"${searchHerb.value}" 配伍药材Top 10`;
       }
     } else {
-      throw new Error(response.data.msg || '获取分析数据失败');
+      throw new Error(response.data.msg);
     }
   } catch (err: any) {
-    console.error('药材配伍分析请求出错:', err);
-    error.value = err.message || '网络请求失败，请检查后端服务是否可用。';
+    analysisError.value = err.message || '请求失败';
   } finally {
-    loading.value = false;
+    analysisLoading.value = false;
   }
 };
-
 </script>
 
 <template>
-  <v-container class="py-8 px-6" fluid>
-    <v-row justify="center">
-      <v-col cols="12" md="10" lg="9">
-        <div class="text-center mb-8">
-          <v-icon size="48" color="primary" class="mb-4">mdi-vector-combine</v-icon>
-          <h1 class="text-h4 font-weight-bold">药材配伍规律分析</h1>
-          <p class="text-h6 text-grey-darken-1 font-weight-regular mt-2">
-            探索中药方剂中药材之间的关联与配伍规律
-          </p>
-        </div>
+  <div class="content-section">
+    <v-card class="analysis-card glass-card" elevation="8">
+      <v-card-title class="section-title">
+        <v-icon class="section-icon">mdi-vector-combine</v-icon>
+        配伍分析
+      </v-card-title>
+      <v-card-text class="analysis-content">
+        <v-text-field v-model="searchHerb" label="输入核心药材进行配伍分析" variant="outlined" clearable
+          prepend-inner-icon="mdi-leaf" class="herb-input" density="comfortable" @keydown.enter="performAnalysis" />
+        <v-btn :loading="analysisLoading" color="primary" variant="flat" size="large" @click="performAnalysis" block
+          class="analysis-btn">
+          <v-icon class="mr-2">mdi-chart-bar</v-icon>
+          开始配伍分析
+        </v-btn>
+      </v-card-text>
+    </v-card>
 
-        <v-card class="pa-4 pa-md-6 mb-8" elevation="5" rounded="xl">
-          <v-card-title class="text-h6 font-weight-medium mb-4">
-            输入核心药材进行分析
+    <div v-if="analysisLoading" class="loading-section">
+      <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular>
+      <p class="loading-text">配伍分析中...</p>
+    </div>
+
+    <v-alert v-if="analysisError" type="info" :text="analysisError" variant="tonal" class="error-alert" />
+
+    <v-row v-if="analysisResult.length > 0" class="analysis-results">
+      <v-col cols="12" lg="5">
+        <v-card class="chart-card glass-card" elevation="8">
+          <v-card-title class="chart-title">
+            <v-icon class="mr-2">mdi-chart-bar</v-icon>
+            配伍频次图表
           </v-card-title>
-          <v-text-field
-            v-model="searchHerb"
-            label="例如：红花、甘草、当归..."
-            variant="outlined"
-            clearable
-            prepend-inner-icon="mdi-leaf"
-            @keydown.enter="performAnalysis"
-          ></v-text-field>
-          <v-card-actions class="mt-4">
-            <v-spacer></v-spacer>
-            <v-btn
-              :loading="loading"
-              color="primary"
-              variant="flat"
-              size="x-large"
-              @click="performAnalysis"
-              block
-            >
-              开始分析
-              <v-icon right>mdi-chart-gantt</v-icon>
-            </v-btn>
-          </v-card-actions>
+          <v-card-text class="chart-content">
+            <div class="chart-container">
+              <Bar :data="chartData" :options="chartOptions" />
+            </div>
+          </v-card-text>
         </v-card>
-
-        <div v-if="loading" class="text-center mt-12">
-          <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-          <p class="mt-4 text-grey-darken-1">正在分析配伍数据，请稍候...</p>
-        </div>
-
-        <v-alert
-          v-if="error"
-          type="info"
-          :text="error"
-          variant="tonal"
-          class="mb-6"
-          border="start"
-        ></v-alert>
-
-        <v-row v-if="analysisResult.length > 0" :dense="true">
-          <v-col cols="12" md="5">
-            <v-card variant="outlined" rounded="lg" class="fill-height">
-              <v-card-text>
-                <div style="height: 400px;">
-                  <Bar :data="chartData" :options="chartOptions" />
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="7">
-            <v-card variant="outlined" rounded="lg">
-              <v-table class="comparison-table">
-                <thead>
-                  <tr>
-                    <th class="text-left font-weight-bold">配伍药材</th>
-                    <th class="text-center font-weight-bold">配伍次数</th>
-                    <th class="text-center font-weight-bold">配伍比例</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in analysisResult" :key="item.herbName">
-                    <td>{{ item.herbName }}</td>
-                    <td class="text-center">{{ item.combinationCount }}</td>
-                    <td class="text-center">{{ (item.combinationRatio * 100).toFixed(0) }}%</td>
-                  </tr>
-                </tbody>
-              </v-table>
-            </v-card>
-          </v-col>
-        </v-row>
+      </v-col>
+      <v-col cols="12" lg="7">
+        <v-card class="table-card glass-card" elevation="8">
+          <v-card-title class="table-title">
+            <v-icon class="mr-2">mdi-table</v-icon>
+            配伍数据详情
+          </v-card-title>
+          <v-card-text class="table-content">
+            <v-table class="analysis-table elegant-table">
+              <thead>
+                <tr class="table-header">
+                  <th class="table-header-cell">配伍药材</th>
+                  <th class="table-header-cell">配伍次数</th>
+                  <th class="table-header-cell">配伍比例</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in analysisResult" :key="item.herbName" class="table-row">
+                  <td class="herb-name">{{ item.herbName }}</td>
+                  <td class="combination-count">{{ item.combinationCount }}</td>
+                  <td class="combination-ratio">{{ (item.combinationRatio * 100).toFixed(0) }}%</td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
-  </v-container>
+  </div>
 </template>
 
 <style scoped>
-.v-container {
-  background-color: #f9f9f9;
+/* 此处放置该组件特有的样式 */
+.content-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
-.comparison-table th,
-.comparison-table td {
-  padding: 12px 16px !important;
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(106, 114, 153, 0.2);
 }
-.comparison-table tbody tr:hover {
-  background-color: #e3f2fd;
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #3F51B5;
+  display: flex;
+  align-items: center;
+  padding-bottom: 1rem;
+}
+.section-icon {
+  margin-right: 0.75rem;
+}
+.elegant-table {
+  background-color: transparent;
+}
+:deep(thead) {
+  background-color: rgba(63, 81, 181, 0.08);
+}
+:deep(th) {
+  font-weight: bold !important;
+  color: #3F51B5 !important;
+}
+:deep(tbody tr:hover) {
+  background-color: rgba(63, 81, 181, 0.04) !important;
+}
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 1rem;
+  gap: 1rem;
+  text-align: center;
+}
+.loading-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #3F51B5;
+}
+.error-alert {
+  font-weight: 500;
+}
+.analysis-card {
+  padding: 1rem;
+}
+.analysis-btn {
+  font-weight: bold;
+}
+.chart-container {
+  height: 450px;
+  padding: 1rem;
+}
+.chart-card,
+.table-card {
+  height: 100%;
 }
 </style>
