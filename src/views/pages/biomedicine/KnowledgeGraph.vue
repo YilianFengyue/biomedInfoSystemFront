@@ -335,9 +335,9 @@ const entityTypes = [
 const quickExamples = [
   { keyword: '血府逐瘀汤', type: 'formula' },
   { keyword: '人参', type: 'herb' },
-  { keyword: '头痛', type: 'symptom' },
-  { keyword: '感冒', type: 'disease' },
-  { keyword: '血瘀证', type: 'syndrome' },
+  { keyword: '发热', type: 'symptom' },
+  { keyword: '风热感冒', type: 'disease' },
+  { keyword: '脾胃气虚证', type: 'syndrome' },
 ];
 
 const selectedEntityTypeLabel = computed(() => {

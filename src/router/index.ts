@@ -22,17 +22,6 @@ export const routes = [
     },
   },
   {
-    path: "/aa",
-    component: () => import("@/views/pages/biomedicine/aa.vue"),
-    meta: {
-      layout: "ui",
-      title: "数据中心与可视化",
-      requiresAuth: true,
-      hidePageHeader: true,
-      transition: "slide-fade",
-    },
-  },
-  {
     path: "/dataCenter",
     component: () => import("@/views/pages/biomedicine/DataCenter.vue"),
     meta: {
