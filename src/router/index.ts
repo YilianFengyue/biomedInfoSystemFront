@@ -45,6 +45,66 @@ export const routes = [
     },
   },
   {
+    path: "/Formula",
+    name: "Formula",
+    component: () => import("@/views/pages/biomedicine/Formula.vue"),
+    meta: {
+      layout: "ui",
+      title: "中医方剂",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
+    path: "/formulaSearch",
+    name: "formulaSearch",
+    component: () => import("@/views/pages/biomedicine/FormulaSearchPage.vue"),
+    meta: {
+      layout: "ui",
+      title: "配方检索",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
+    path: "/formulaRecommend",
+    name: "formulaRecommend",
+    component: () => import("@/views/pages/biomedicine/FormulaRecommend.vue"),
+    meta: {
+      layout: "ui",
+      title: "配方检索",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
+    path: "/formulaCompaire",
+    name: "formulaCompaire",
+    component: () => import("@/views/pages/biomedicine/FormulaComparison.vue"),
+    meta: {
+      layout: "ui",
+      title: "配方比对",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
+    path: "/herbCompaire",
+    name: "herbCompaire",
+    component: () => import("@/views/pages/biomedicine/HerbCombination.vue"),
+    meta: {
+      layout: "ui",
+      title: "药材配伍",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
     path: "/data-collection",
     component: () => import("@/views/pages/biomedicine/DataCollection.vue"),
     meta: {

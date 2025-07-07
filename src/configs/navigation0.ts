@@ -70,10 +70,12 @@ export default {
         {
           text: "知识图谱",
           link: "/knowledge-graph",
+          icon: "mdi-graph-outline",
         },
         {
           text: "方剂管理",
-          link: "/formulas",
+          link: "/Formula",
+          icon: "mdi-pill",
         }
       ],
     },

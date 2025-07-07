@@ -332,15 +332,13 @@ import { useTheme } from 'vuetify';
 import aMapLoaderInstance from "@/utils/amap";
 import { getHerbDistribution, type HerbDistribution } from "@/api/biomedicine";
 import axios from 'axios';
-import { Icon } from "@iconify/vue";
 import { useSnackbarStore } from '@/stores/snackbarStore';
-
-import { useChart, RenderType, ThemeType } from "@/plugins/echarts";
+import { useChart, RenderType } from "@/plugins/echarts";
 import type { EChartsOption } from "echarts";
-
 import { useI18n } from 'vue-i18n';
-// 导入天气函数
-import { getCityWeather } from '@/utils/weather';
+
+// 【关键修改】导入新的 weatherStore
+import { useWeatherStore } from '@/stores/weatherStore';
 
 const { t } = useI18n();
 
@@ -348,12 +346,11 @@ const { t } = useI18n();
 let map: any = null;
 const mapContainerRef = ref<HTMLElement | null>(null);
 const isMapLoading = ref(true);
-let allIndividualMarkers: any[] = []; // 存储所有原始标记点
-let provinceClusterMarkers: any[] = []; // 存储省份聚合标记点
+let allIndividualMarkers: any[] = [];
+let provinceClusterMarkers: any[] = [];
 
 // --- UI & Data State ---
-const isDetailView = ref(false); // 跟踪当前是否为详情（单个省份）视图
-const weatherInfo = ref<any>(null);
+const isDetailView = ref(false);
 const comparisonImages = ref<(string | null)[]>([null, null]);
 const pieChartRef = ref<HTMLDivElement | null>(null);
 const provinceDistributionData = ref<{ name: string; value: number }[]>([]);
@@ -361,6 +358,10 @@ const snackbarStore = useSnackbarStore();
 const allDataHistory = ref<any[]>([]);
 const isHistoryLoading = ref(false);
 const historySearchQuery = ref('');
+
+// 【关键修改】使用 weatherStore
+const weatherStore = useWeatherStore();
+const weatherInfo = computed(() => weatherStore.weatherInfo);
 
 
 // --- 数据处理与图表函数 (这部分代码保持不变) ---
@@ -433,8 +434,9 @@ const logTransformedData = computed(() => {
       originalValue: item.value,
   }));
 });
+const { theming } = useTheme();
 const chartOption = computed<EChartsOption>(() => ({
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theming.value.colors.surface,
     color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
     tooltip: { trigger: 'item', formatter: (params: any) => `${params.seriesName}<br/>${params.name}: <strong>${params.data.originalValue}</strong> (${params.percent}%)`, confine: true },
     series: [{
@@ -444,51 +446,34 @@ const chartOption = computed<EChartsOption>(() => ({
         animationType: 'scale', animationEasing: 'elasticOut', animationDelay: () => Math.random() * 200,
     }],
 }));
-const { setOption } = useChart(pieChartRef as Ref<HTMLDivElement>, true, false, RenderType.SVGRenderer, ThemeType.Dark);
-
-// 获取天气信息
-const fetchWeather = async () => {
-  try {
-    weatherInfo.value = await getCityWeather(null);
-  } catch (error) {
-    console.error(error);
-    // 可选：在这里处理错误，比如显示一个默认信息
-    weatherInfo.value = { city: '未知', weather: 'N/A', temperature: 'N/A' };
-  }
-};
+const { setOption } = useChart(pieChartRef as Ref<HTMLDivElement>, true, false, RenderType.SVGRenderer);
 
 
-// --- **视图切换函数** ---
+// --- **视图切换函数 (保持不变)** ---
 const showProvinceView = () => {
     if (!map) return;
-    // 隐藏所有单个标记点
     allIndividualMarkers.forEach(marker => marker.hide());
-    // 显示所有省份聚合点
     provinceClusterMarkers.forEach(marker => marker.show());
     map.setFitView();
     isDetailView.value = false;
 };
 
-// --- 地图初始化核心函数 (最终交互版) ---
+// --- **地图初始化核心函数 (保持不变)** ---
 const initMapAndMarkers = (AMap: any) => {
   if (!mapContainerRef.value) return;
-
   map = new AMap.Map(mapContainerRef.value, {
     zoom: 5,
     center: [104.06, 30.67],
+    mapStyle: 'amap://styles/whitesmoke',
   });
-
   map.on('complete', async () => {
     isMapLoading.value = false;
-
     try {
       const herbData = await getHerbDistribution();
       calculateProvinceDistribution(herbData);
-
       const validHerbData = herbData.filter(herb => herb.longitude != null && herb.latitude != null);
       if (validHerbData.length === 0) return;
 
-      // 1. 创建所有原始标记点
       allIndividualMarkers = validHerbData.map(herb => {
         const marker = new AMap.Marker({
           position: [herb.longitude, herb.latitude],
@@ -498,12 +483,9 @@ const initMapAndMarkers = (AMap: any) => {
         marker.on("click", (e: any) => fetchImagesForLocation(e.target.getExtData().locationId));
         return marker;
       });
-
-      // **2. 先将所有单个标记点添加到地图，然后立即隐藏**
       map.add(allIndividualMarkers);
       allIndividualMarkers.forEach(marker => marker.hide());
 
-      // 3. 按省份聚合数据
       const provinceAggregates: { [key: string]: { count: number; lng: number; lat: number; items: any[] } } = {};
       validHerbData.forEach((herb, index) => {
         const province = herb.province || '未知省份';
@@ -514,7 +496,6 @@ const initMapAndMarkers = (AMap: any) => {
         provinceAggregates[province].items.push(allIndividualMarkers[index]);
       });
 
-      // 4. 创建省份聚合标记
       provinceClusterMarkers = Object.values(provinceAggregates).map(agg => {
         const markerContent = `<div style="background-color: #0093FF; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); cursor: pointer;">${agg.count}</div>`;
         const marker = new AMap.Marker({
@@ -523,22 +504,17 @@ const initMapAndMarkers = (AMap: any) => {
           offset: new AMap.Pixel(-16, -16),
         });
 
-        // **5. 修改聚合点的点击事件**
         marker.on('click', () => {
           isDetailView.value = true;
-          // 隐藏所有省份聚合点
           provinceClusterMarkers.forEach(m => m.hide());
-          // 显示当前省份下的具体标记点
           agg.items.forEach((individualMarker: any) => individualMarker.show());
-          // 聚焦到这些点上
           map.setFitView(agg.items);
         });
         return marker;
       });
       
-      // 6. 将省份聚合标记添加到地图
       map.add(provinceClusterMarkers);
-      map.setFitView(); // 初始视野
+      map.setFitView();
 
     } catch (error: any) {
         snackbarStore.showErrorMessage(`地图数据加载失败: ${error.message}`);
@@ -546,14 +522,23 @@ const initMapAndMarkers = (AMap: any) => {
   });
 };
 
-
-// --- 生命周期钩子 ---
+// --- **生命周期钩子 (核心修改)** ---
 onMounted(() => {
-  fetchWeather(); // 获取天气
-  aMapLoaderInstance.then(AMap => {
-    nextTick(() => { initMapAndMarkers(AMap); });
-  });
+  // 1. 触发天气数据的获取（如果需要）
+  weatherStore.fetchWeatherIfNeeded();
 
+  // 2. 检查地图SDK是否已加载
+  if ((window as any).AMap) {
+    // 如果已加载，直接初始化地图
+    initMapAndMarkers((window as any).AMap);
+  } else {
+    // 否则，等待加载完成后再初始化
+    aMapLoaderInstance.then(AMap => {
+      initMapAndMarkers(AMap);
+    });
+  }
+  
+  // 3. 其他数据获取保持不变
   fetchAllDataHistory();
 
   watch(provinceDistributionData, (newData) => {
@@ -566,7 +551,6 @@ onUnmounted(() => {
     map.destroy();
     map = null;
   }
-  // 清理数组以释放内存
   allIndividualMarkers = [];
   provinceClusterMarkers = [];
 });
