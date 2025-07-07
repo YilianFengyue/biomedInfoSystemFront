@@ -85,6 +85,8 @@ Router/index.ts
 >2.再yarn install
 >
 >3.跑项目时推荐使用build:dev + preview
+>
+>4.记得自备一个.env.local文件(你也可以自己改名)，里面存放了高德地图和天气的密钥(要换成自己的)
 
 #### 二: electron打包流程(打包前后端+数据库)
 #### 2.1 打包后端及数据库
