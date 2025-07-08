@@ -144,7 +144,7 @@ export default {
     newsEditor: "新闻编辑",
     newsList: "新闻列表",
     plant_recognition: "植物识别",
-    chatbot: "AI选购顾问",
+    chatbot: "智能AI助理",
     main: "生物医药信息系统",
     med_search: "搜索医药"
   },

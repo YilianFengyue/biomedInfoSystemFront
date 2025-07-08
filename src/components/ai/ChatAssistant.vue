@@ -16,14 +16,25 @@ import { useChatGPTStore } from "@/stores/chatGPTStore";
 
 import { useProfileStore } from "@/stores/profileStore";
 const profileStore = useProfileStore();
-const signon = reactive({ ...profileStore.signon });
+const user = computed(() => profileStore.user);
 const snackbarStore = useSnackbarStore();
 const chatGPTStore = useChatGPTStore();
 
+// 保持旧的数据结构用于显示
 interface Message {
   content: string;
   role: "user" | "assistant" | "system";
 }
+
+// 新增：API用的数据结构
+interface ApiMessage {
+  role: "user" | "assistant" | "system";
+  content: Array<{
+    type: 'text';
+    text: string;
+  }>;
+}
+
 // User Input Message
 const userMessage = ref("");
 
@@ -39,22 +50,33 @@ const promptMessage = computed(() => {
   ];
 });
 
-// Message List
+// Message List - 保持旧格式
 const messages = ref<Message[]>([]);
 
+// 🔥 新增：转换为API格式的计算属性
 const requestMessages = computed(() => {
+  let messagesToSend = [];
+  
   if (messages.value.length <= 10) {
-    return [...promptMessage.value, ...messages.value];
+    messagesToSend = [...promptMessage.value, ...messages.value];
   } else {
-    // 截取最新的10条信息
     const slicedMessages = messages.value.slice(-10);
-    return [...promptMessage.value, ...slicedMessages];
+    messagesToSend = [...promptMessage.value, ...slicedMessages];
   }
+  
+  // 转换为API需要的格式
+  return messagesToSend.map(msg => ({
+    role: msg.role,
+    content: [{
+      type: 'text',
+      text: msg.content
+    }]
+  }));
 });
 
 const isLoading = ref(false);
 
-// Send Messsage
+// Send Messsage - 保持不变
 const sendMessage = async () => {
   if (userMessage.value) {
     // Add the message to the list
@@ -72,14 +94,10 @@ const sendMessage = async () => {
 };
 
 const createCompletion = async () => {
-  // Check if the API key is set
-  // if (!chatGPTStore.getApiKey) {
-  //   snackbarStore.showErrorMessage("请先输入API KEY");
-  //   return;
-  // }
+  isLoading.value = true; // 🔥 添加加载状态
 
   try {
-    // Create a completion (axios is not used here because it does not support streaming)
+    // 🔥 使用转换后的消息格式
     const completion = await fetch(
       `${chatGPTStore.proxyUrl}/v1/chat/completions`,
       {
@@ -89,7 +107,7 @@ const createCompletion = async () => {
         },
         method: "POST",
         body: JSON.stringify({
-          messages: requestMessages.value,
+          messages: requestMessages.value, // 使用转换后的格式
           model: chatGPTStore.model,
           stream: true,
         }),
@@ -100,7 +118,6 @@ const createCompletion = async () => {
     if (!completion.ok) {
       const errorData = await completion.json();
       snackbarStore.showErrorMessage(errorData.error.message);
-
       return;
     }
 
@@ -108,18 +125,34 @@ const createCompletion = async () => {
     const reader = completion.body?.getReader();
     if (!reader) {
       snackbarStore.showErrorMessage("Cannot read the stream.");
+      return;
     }
 
-    // Add the bot message
+    // Add the bot message - 保持旧格式
     messages.value.push({
       content: "",
       role: "assistant",
     });
 
+    // 🔥 创建一个临时的新格式数组用于read函数
+    const tempMessages = ref([{
+      role: "assistant" as const,
+      content: [{ type: "text" as const, text: "" }]
+    }]);
+
     // Read the stream
-    read(reader, messages);
+    await read(reader, tempMessages);
+
+    // 🔥 将结果同步回旧格式
+    const lastMessage = messages.value[messages.value.length - 1];
+    if (lastMessage && tempMessages.value[0]) {
+      lastMessage.content = tempMessages.value[0].content[0]?.text || "";
+    }
+
   } catch (error) {
     snackbarStore.showErrorMessage(error.message);
+  } finally {
+    isLoading.value = false; // 🔥 结束加载状态
   }
 };
 
@@ -135,24 +168,17 @@ watch(
   }
 );
 
+// 🔥 简化 displayMessages，因为现在content确保是string
 const displayMessages = computed(() => {
   if (messages.value.length === 0) return []; 
   
   const messagesCopy = messages.value.slice();
   const lastMessage = messagesCopy[messagesCopy.length - 1];
   
-  if (lastMessage) {
-    let contentText = '';
-    if (typeof lastMessage.content === 'string') {
-      contentText = lastMessage.content;
-    } else if (Array.isArray(lastMessage.content) && lastMessage.content[0]?.text) {
-      contentText = lastMessage.content[0].text;
-    }
-    
+  if (lastMessage && lastMessage.content) {
     const updatedLastMessage = {
       ...lastMessage,
-      // 🔥 直接在这里确保是字符串
-      content: countAndCompleteCodeBlocks(String(contentText || '')),
+      content: countAndCompleteCodeBlocks(lastMessage.content),
     };
     messagesCopy[messagesCopy.length - 1] = updatedLastMessage;
   }
@@ -224,7 +250,7 @@ const { xs } = useDisplay();
                 <div class="pa-2 user-message">
                   <v-avatar class="ml-2" rounded="sm" variant="elevated">
                     <img
-                      :src="signon.avatarUrl"
+                      :src="user?.avatarUrl || 'https://i.pinimg.com/736x/af/f4/56/aff45698092ec2541d641407584d5fc0.jpg'"
                       alt="alt"
                     />
                   </v-avatar>
@@ -258,13 +284,8 @@ const { xs } = useDisplay();
                 </div>
               </div>
             </template>
-            <div v-if="isLoading">
-              <div class="pa-6">
-                <div class="message">
-                  <AnimationAi :size="100" />
-                </div>
-              </div>
-            </div>
+            
+            
           </perfect-scrollbar>
         </v-card-text>
         <v-divider />
@@ -280,6 +301,7 @@ const { xs } = useDisplay();
             size="42"
             icon
             @click="chatGPTStore.configDialog = true"
+            :disabled="isLoading"
           >
             <v-icon size="30" class="text-primary">mdi-cog-outline</v-icon>
             <v-tooltip
@@ -303,10 +325,11 @@ const { xs } = useDisplay();
             :rows="inputRow"
             @focus="inputRow = 2"
             @blur="inputRow = 1"
+            :disabled="isLoading"
           >
           </v-textarea>
 
-          <v-btn size="42" class="mb-1" color="primary" variant="elevated" icon>
+          <v-btn size="42" class="mb-1" color="primary" variant="elevated" icon :disabled="isLoading">
             <v-icon @click="sendMessage" size="20">mdi-send</v-icon>
           </v-btn>
         </v-sheet>

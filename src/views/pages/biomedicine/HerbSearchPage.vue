@@ -260,7 +260,7 @@ const deleteHerb = async (herb: Herb) => {
         </v-col>
         <v-col>
           <v-chip-group v-model="searchParams.resourceType" mandatory filter color="primary">
-            <v-chip v-for="item in resourceTypeOptions" :key="item.value" :value="item.value">
+            <v-chip  label v-for="item in resourceTypeOptions" :key="item.value" :value="item.value">
               {{ item.title }}
             </v-chip>
           </v-chip-group>
@@ -268,24 +268,7 @@ const deleteHerb = async (herb: Herb) => {
       </v-row>
       
       <v-row dense align="center" class="mt-2">
-        <v-col cols="12" sm="auto">
-          <div class="filter-label">科名分类:</div>
-        </v-col>
-        <v-col>
-          <v-select
-            v-model="searchParams.familyName"
-            :items="familyNameOptions"
-            item-title="title"
-            item-value="value"
-            label="选择科名"
-            variant="solo-filled"
-            density="compact"
-            flat
-            hide-details
-            clearable
-            bg-color="grey-lighten-4"
-          />
-        </v-col>
+        
       </v-row>
 
       <v-row dense align="center" class="mt-2">
@@ -294,7 +277,7 @@ const deleteHerb = async (herb: Herb) => {
         </v-col>
         <v-col>
           <v-chip-group v-model="searchParams.lifeFormStructural" mandatory filter color="primary">
-            <v-chip v-for="item in lifeFormStructuralOptions" :key="item.value" :value="item.value">
+            <v-chip label  v-for="item in lifeFormStructuralOptions" :key="item.value" :value="item.value">
               {{ item.title }}
             </v-chip>
           </v-chip-group>
@@ -307,7 +290,7 @@ const deleteHerb = async (herb: Herb) => {
         </v-col>
         <v-col>
           <v-chip-group v-model="searchParams.lifeFormCycle" mandatory filter color="primary">
-            <v-chip v-for="item in lifeFormCycleOptions" :key="item.value" :value="item.value">
+            <v-chip label v-for="item in lifeFormCycleOptions" :key="item.value" :value="item.value">
               {{ item.title }}
             </v-chip>
           </v-chip-group>
@@ -316,14 +299,28 @@ const deleteHerb = async (herb: Herb) => {
       
       <v-row dense align="center" class="mt-3">
         <v-col cols="12" sm="auto">
-          <div class="filter-label">精确查找:</div>
+          <div class="filter-label">科名分类:</div>
         </v-col>
-        
-        <v-col cols="12" sm="6" md>
+        <v-col>
+          <v-select
+            v-model="searchParams.familyName"
+            :items="familyNameOptions"
+            item-title="title"
+            item-value="value"
+            label="选择科名"
+            variant="solo"
+            density="compact"
+            flat
+            hide-details
+            clearable
+            bg-color="grey-lighten-4"
+          />
+        </v-col>
+        <v-col cols="4" sm="4" md>
           <v-text-field
             v-model="searchParams.scientificName"
             label="学名"
-            variant="solo-filled"
+            variant="solo"
             density="compact"
             flat
             clearable
@@ -332,14 +329,14 @@ const deleteHerb = async (herb: Herb) => {
             @keydown.enter="performSearch"
           />
         </v-col>
-        <v-col cols="12" sm="6" md>
+        <v-col cols="4" sm="4" md>
           <v-select
             v-model="searchParams.province"
             :items="provinceItems"
             item-title="name"
             item-value="value"
             label="省份/地区"
-            variant="solo-filled"
+            variant="solo"
             density="compact"
             flat
             hide-details

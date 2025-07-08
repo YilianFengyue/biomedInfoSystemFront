@@ -72,7 +72,7 @@ const targetContent = ref("");
 
 const prompt = computed(() => {
   return `Translate into ${currentLang.value.name}`;
-  //   return `I want you to act as an ${currentLangName.value} translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in ${currentLang.value.name}. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level ${currentLang.value.name} words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations.”`;
+  //   return `I want you to act as an ${currentLangName.value} translator, spelling corrector and improver. I will speak to you in any language and you will detect the language, translate it and answer in the corrected and improved version of my text, in ${currentLang.value.name}. I want you to replace my simplified A0-level words and sentences with more beautiful and elegant, upper level ${currentLang.value.name} words and sentences. Keep the meaning same, but make them more literary. I want you to only reply the correction, the improvements and nothing else, do not write explanations."`;
 });
 
 const isLoading = ref(false);
@@ -97,9 +97,16 @@ const translate = async () => {
         },
         method: "POST",
         body: JSON.stringify({
+          // 🔥 修复：使用新的消息格式
           messages: [
-            { role: "user", content: prompt.value },
-            { role: "user", content: baseContent.value },
+            { 
+              role: "user", 
+              content: [{ type: 'text', text: prompt.value }] 
+            },
+            { 
+              role: "user", 
+              content: [{ type: 'text', text: baseContent.value }] 
+            },
           ],
           model: chatGPTStore.model,
           stream: true,
@@ -120,17 +127,31 @@ const translate = async () => {
     if (!reader) {
       snackbarStore.showErrorMessage("Cannot read the stream.");
       isLoading.value = false;
+      return;
     }
 
     // Clear the target content
     targetContent.value = "";
 
+    // 🔥 修复：创建临时数组适配read函数
+    const tempMessages = ref([{
+      role: "assistant" as const,
+      content: [{ type: "text" as const, text: "" }]
+    }]);
+
     // Read the stream
-    read(reader, targetContent);
+    await read(reader, tempMessages);
+
+    // 🔥 修复：将结果同步到targetContent
+    if (tempMessages.value[0]) {
+      targetContent.value = tempMessages.value[0].content[0]?.text || "";
+    }
+
   } catch (error) {
     snackbarStore.showErrorMessage(error.message);
+  } finally {
+    isLoading.value = false; // 🔥 确保finally中设置加载状态
   }
-  isLoading.value = false;
 };
 
 const isBaseContentEmpty = ref(false);
@@ -193,7 +214,21 @@ const { xs } = useDisplay();
 
 const readText = () => {
   if (targetContent.value) {
-    speechStore.ssmlToSpeak(targetContent.value);
+    // 停止当前朗读
+    window.speechSynthesis.cancel();
+    
+    // 创建朗读实例
+    const utterance = new SpeechSynthesisUtterance(targetContent.value);
+    
+    // 设置语言（根据当前选择的目标语言）
+    utterance.lang = currentLang.value.code;
+    
+    // 设置语速和音调
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    
+    // 开始朗读
+    window.speechSynthesis.speak(utterance);
   }
 };
 </script>

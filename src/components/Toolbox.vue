@@ -10,6 +10,7 @@ const chatGPTStore = useChatGPTStore();
 import ApiKeyDialog from "@/components/ApiKeyDialog.vue";
 import ChatAssistant from "@/components/ai/ChatAssistant.vue";
 import TranslationAssistant from "@/components/ai/TranslationAssistant.vue";
+import InspirationBoard from "@/components/InspirationBoard.vue";
 const toolboxShow = ref(false);
 </script>
 
@@ -58,6 +59,11 @@ const toolboxShow = ref(false);
       <!-- Translation Assistant -->
       <!-- ---------------------------------------------- -->
       <TranslationAssistant />
+      <v-divider />
+       <!-- ---------------------------------------------- -->
+        <!-- Inspiration Board -->
+      <!-- ---------------------------------------------- -->
+      <InspirationBoard />
       <v-divider />
       <!-- ---------------------------------------------- -->
     </v-card>
