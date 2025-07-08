@@ -138,11 +138,33 @@ export const routes = [
     },
   },
   {
+    path: "/biomedicine/course-list",
+    component: () => import("@/views/pages/biomedicine/CoursesPage.vue"),
+    meta: {
+      layout: "ui",
+      title: "系列课程",
+      requiresAuth: false,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
     path: "/biomedicine/eduupload",
     component: () => import("@/views/pages/biomedicine/EduUpload.vue"),
     meta: {
       layout: "ui",
       title: "上传课程",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-up",
+    },
+  },
+   {
+    path: "/courseEdit",
+    component: () => import("@/views/pages/biomedicine/CourseEdit.vue"),
+    meta: {
+      layout: "ui",
+      title: "章节课程",
       requiresAuth: true,
       hidePageHeader: true,
       transition: "slide-up",

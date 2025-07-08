@@ -79,6 +79,13 @@
         </v-container>
       </section>
 
+      <section class="py-10">
+
+        <v-container fluid> <CoursesPage /></v-container>
+
+      </section>
+
+
       <section id="courses" class="py-10 bg-white">
         <v-container>
           <div class="d-flex align-center mb-8">
@@ -96,6 +103,7 @@
           <ResourceCardList :resources="featuredCourses" />
         </v-container>
       </section>
+
       <section id="teachers" class="py-10">
         <v-container>
           <h2 class="text-h4 font-weight-bold text-center mb-8">权威名师团队</h2>
@@ -147,6 +155,8 @@ import ResourceCardList from '@/views/pages/biomedicine/ResourceCardList.vue';
 import main1 from '@/assets/edu/main1.jpg';
 import main2 from '@/assets/edu/main2.jpg';
 import main3 from '@/assets/edu/main3.jpg';
+
+import CoursesPage from '@/views/pages/biomedicine/CoursesPage.vue';
 
 const router = useRouter();
 

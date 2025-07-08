@@ -4,7 +4,7 @@
       <v-col cols="12" md="10" lg="9">
         <v-card class="pa-4">
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-3" color="primary" size="x-large">mdi-account-circle</v-icon>
+            <v-icon class="mr-3" color="primary" size="x-large">mdi-cloud-upload-outline</v-icon>
             <div>
               <h2 class="text-h5 font-weight-bold">欢迎您，{{ user.username || '用户' }}！</h2>
               <p class="text-body-2 text-grey-darken-1 mt-1">
@@ -16,6 +16,28 @@
 
           <v-card-text>
             <v-tabs v-model="resourceType" color="primary" grow>
+              <v-tab v-if="isTeacher" value="course">
+                    <div class="d-flex align-center">
+                      <v-icon start>mdi-book-open-page-variant-outline</v-icon>
+                      <span>上传课程</span>
+                      
+                      <v-btn
+                        size="small"
+                        variant="tonal"
+                        class="ml-4"
+                        prepend-icon="mdi-pencil-box-multiple-outline"
+                        @click.stop="router.push('/courseEdit')"
+                      >
+                        编辑课时
+                        <v-tooltip
+                          activator="parent"
+                          location="top"
+                        >
+                          前往“我的课程内容管理”页面
+                        </v-tooltip>
+                      </v-btn>
+                    </div>
+                  </v-tab>
               <v-tab value="text">
                 <v-icon start>mdi-file-document-edit</v-icon>
                 上传图文资源
@@ -28,6 +50,82 @@
             <v-divider></v-divider>
 
             <v-window v-model="resourceType" class="mt-5">
+              <v-window-item value="course">
+                  <v-form ref="courseForm" @submit.prevent="submitCourse">
+                      <v-text-field
+                        v-model="course.title"
+                        label="课程标题"
+                        :rules="[rules.required]"
+                        variant="solo"
+                        class="mb-4"
+                        prepend-inner-icon="mdi-format-title"
+                      ></v-text-field>
+
+                      <v-text-field
+                        v-model="course.coverImage"
+                        label="封面图片URL (选填)"
+                        placeholder="https://example.com/cover.jpg"
+                        variant="solo"
+                        class="mb-4"
+                        prepend-inner-icon="mdi-image-outline"
+                      ></v-text-field>
+
+                      <v-textarea
+                        v-model="course.introduction"
+                        label="课程简介 (选填)"
+                        variant="solo"
+                        class="mb-4"
+                        rows="4"
+                      ></v-textarea>
+                      
+                      <v-divider class="my-4"></v-divider>
+
+                      <div class="d-flex align-center mb-4">
+                        <p class="text-h6 font-weight-medium">课程章节</p>
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary" @click="addChapter">
+                          <v-icon start>mdi-plus-circle-outline</v-icon>
+                          添加章节
+                        </v-btn>
+                      </div>
+
+                      <v-alert v-if="course.chapters.length === 0" type="info" variant="tonal" class="mb-4 text-center">
+                        请至少添加一个章节来构建您的课程。
+                      </v-alert>
+                      
+                      <div v-auto-animate>
+                        <div v-for="(chapter, index) in course.chapters" :key="index" class="chapter-editor mb-4">
+                          <div class="d-flex align-center mb-2">
+                            <v-chip color="primary" label class="mr-4">第 {{ index + 1 }} 章</v-chip>
+                            <v-text-field
+                              v-model="chapter.title"
+                              label="章节标题"
+                              :rules="[rules.required]"
+                              variant="outlined"
+                              density="compact"
+                              hide-details
+                              class="flex-grow-1"
+                            ></v-text-field>
+                             <v-btn icon="mdi-delete-outline" variant="text" color="error" @click="removeChapter(index)" class="ml-2"></v-btn>
+                          </div>
+                          <v-textarea
+                            v-model="chapter.description"
+                            label="章节描述 (选填)"
+                            variant="outlined"
+                            density="compact"
+                            rows="2"
+                            hide-details
+                          ></v-textarea>
+                        </div>
+                      </div>
+
+                      <v-btn type="submit" color="success" :loading="isCourseSubmitting" block size="large" class="mt-6">
+                          <v-icon left>mdi-cloud-upload-outline</v-icon>
+                          创建课程
+                      </v-btn>
+                  </v-form>
+              </v-window-item>
+              
               <v-window-item value="text">
                 <v-form ref="textForm" v-model="isTextFormValid" lazy-validation>
                   <v-text-field
@@ -167,6 +265,7 @@ import { useEditor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import { Image as TiptapImage } from '@tiptap/extension-image';
 import EditorMenubar from "@/components/RichEditorMenubar.vue";
+import { vAutoAnimate } from '@formkit/auto-animate';
 
 // --- 状态管理和路由 ---
 const profileStore = useProfileStore();
@@ -174,13 +273,18 @@ const snackbarStore = useSnackbarStore();
 const router = useRouter();
 const user = computed(() => profileStore.user || {});
 
+const isTeacher = computed(() => user.value.role !== 1);
+const resourceType = ref(isTeacher.value ? 'course' : 'text');//判断身份
+
 // --- 组件状态 ---
-const resourceType = ref('text'); // 'text' or 'video'
+//const resourceType = ref('course'); // 默认显示课程上传
 const textForm = ref<any>(null);
 const videoForm = ref<any>(null);
+const courseForm = ref<any>(null); // 新增课程表单引用
 const isTextFormValid = ref(false);
 const isVideoFormValid = ref(false);
 const isSubmitting = ref(false);
+const isCourseSubmitting = ref(false); // 新增课程提交状态
 
 const textCoverPreviewUrl = ref<string | null>(null);
 const videoCoverPreviewUrl = ref<string | null>(null);
@@ -189,6 +293,14 @@ const videoPreviewUrl = ref<string | null>(null);
 // --- 分类列表和选择状态 ---
 const categories = ref([]);
 const selectedCategory = ref<number | null>(null);
+
+// --- 新增：课程数据对象 ---
+const course = reactive({
+  title: '',
+  coverImage: '',
+  introduction: '',
+  chapters: [] as { title: string; description: string }[],
+});
 
 // 图文资源数据
 const textResource = reactive({
@@ -219,7 +331,73 @@ const rules = {
 
 // --- 方法 ---
 
-// 获取分类列表的方法
+// 新增：课程章节操作
+const addChapter = () => {
+  course.chapters.push({ title: '', description: '' });
+};
+
+const removeChapter = (index: number) => {
+  course.chapters.splice(index, 1);
+};
+
+
+// 替换 src/views/pages/biomedicine/EduUpload.vue 文件中的这个函数
+
+const submitCourse = async () => {
+  const { valid } = await courseForm.value?.validate();
+  if (!valid) {
+    snackbarStore.showWarningMessage('请填写所有必填项。');
+    return;
+  }
+  if (course.chapters.length === 0) {
+    snackbarStore.showWarningMessage('课程必须包含至少一个章节。');
+    return;
+  }
+
+  isCourseSubmitting.value = true;
+
+  // ==================== 日志点 1: 检查获取到的用户信息 ====================
+  // 目的：查看从Pinia store中拿到的user对象是否完整，特别是userId字段。
+  console.log('【日志-1】提交时获取到的用户信息:', user.value);
+  // =======================================================================
+
+  // 准备提交到后端的数据
+  const payload = {
+    title: course.title,
+    teacherId: user.value.id, // 从user对象中获取userId
+    coverImage: course.coverImage || null,
+    introduction: course.introduction,
+    categoryId: 1, 
+    chapters: course.chapters.map((chap, index) => ({
+      ...chap,
+      sortOrder: index + 1,
+    })),
+  };
+
+  // ==================== 日志点 2: 检查即将发送的数据 ====================
+  // 目的：确认发送给后端的payload对象中，teacherId字段是否被正确赋值。
+  console.log('【日志-2】即将发送给后端的课程数据(payload):', payload);
+  // =====================================================================
+
+  try {
+    const response = await axios.post('/api/courses', payload);
+    if (response.data.code === 20000) {
+      snackbarStore.showSuccessMessage('课程创建成功！');
+      courseForm.value?.reset();
+      course.chapters = [];
+      router.push('/education'); 
+    } else {
+      throw new Error(response.data.msg || '创建课程失败');
+    }
+  } catch (error: any) {
+    snackbarStore.showErrorMessage(error.response?.data?.msg || error.message || '网络请求失败');
+  } finally {
+    isCourseSubmitting.value = false;
+  }
+};
+
+
+// 获取分类列表的方法 (保留)
 const fetchCategories = async () => {
   try {
     const response = await axios.get('/api/categories');
@@ -250,7 +428,6 @@ const handleVideoFileChange = (event: Event) => {
     const file = (event.target as HTMLInputElement).files?.[0];
     if(file){
         videoPreviewUrl.value = URL.createObjectURL(file);
-        // 获取视频时长
         const videoElement = document.createElement('video');
         videoElement.preload = 'metadata';
         videoElement.onloadedmetadata = () => {
@@ -310,24 +487,22 @@ const submitResource = async (type: 'text' | 'video') => {
     }
   }
 
-  // 构建一个符合后端 ResourceUploadDto 的载荷
   let payload: any = {
     title: type === 'text' ? textResource.title : videoResource.title,
     coverImageUrl,
     authorId: user.value.id,
     status: 'published',
-    resourceType: type,
   };
 
   if (type === 'text') {
+    payload.resourceType = 'text';
     payload.content = editor.value?.getHTML() || '';
     payload.categoryId = selectedCategory.value;
   } else {
-    // 视频类型，不需要categoryId，但需要其他字段
+    payload.resourceType = 'video';
     payload.description = videoResource.description;
     payload.duration = videoResource.duration;
-    // 为视频类型设置一个默认的categoryId，如果后端需要的话
-    payload.categoryId = 0; // 或者一个默认视频分类ID
+    payload.categoryId = 0;
 
     const videoFile = videoResource.videoFile?.[0];
     if (videoFile) {
@@ -344,7 +519,7 @@ const submitResource = async (type: 'text' | 'video') => {
     const response = await axios.post('/api/edu/upload', payload);
     if (response.data.code === 20000) {
       snackbarStore.showSuccessMessage(`资源发布成功！`);
-      setTimeout(() => router.push({ name: 'ResourceList' }), 1500);
+      setTimeout(() => router.push('/biomedicine/resource-list'), 1500);
     } else {
       throw new Error(response.data.msg || '发布失败');
     }
@@ -366,10 +541,15 @@ onBeforeUnmount(() => {
     editor.value.destroy();
   }
 });
-
 </script>
 
 <style scoped lang="scss">
+.chapter-editor {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #f9f9f9;
+}
 .editor-content-container {
   border: 1px solid #e0e0e0;
   border-radius: 0 0 4px 4px;
@@ -377,7 +557,7 @@ onBeforeUnmount(() => {
   min-height: 300px;
   
   &:focus-within {
-    border-color: #1976D2; /* Vuetify primary color */
+    border-color: #1976D2;
   }
 
   :deep(.tiptap) {
