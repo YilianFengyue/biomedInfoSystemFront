@@ -1,13 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useSnackbarStore } from '@/stores/snackbarStore';
-import { getAddressFromCoordinates, geocodeAddress } from '@/utils/amap'; // 导入地址解析服务
+import { getAddressFromCoordinates, geocodeAddress } from '@/utils/amap';
 import {
   searchHerbsApi,
-  createLocationApi,
-  uploadImagesForLocationApi,
   getOSSPolicyApi,
-  uploadFileToOSS,
   createHerbApi,
   type Herb,
   type LocationCreatePayload,
@@ -15,10 +12,15 @@ import {
   type HerbCreatePayload,
 } from '@/api/herbApi';
 import { debounce } from 'lodash-es';
-import provinces from '@/data/provinces.json'; // 导入省市数据
+import provinces from '@/data/provinces.json';
+import http from '@/api/http';
+import { useProfileStore } from '@/stores/profileStore';
+// 引入 Axios 用于带进度的上传
+import axios from 'axios';
 
 // --- State ---
 const snackbarStore = useSnackbarStore();
+const profileStore = useProfileStore();
 const formStep1 = ref<any>(null);
 const formStep2 = ref<any>(null);
 const isStep1Valid = ref(false);
@@ -28,14 +30,13 @@ const isGettingLocation = ref(false);
 const isSearchingHerbs = ref(false);
 const isCreatingNewHerb = ref(false);
 const step = ref(1);
-
-// --- 新增：手动输入模式的状态 ---
 const manualLocationEntry = ref(false);
-
 const selectedHerb = ref<Herb | null>(null);
 const searchedHerbs = ref<Herb[]>([]);
 
-// 地理位置数据
+// **新增：上传进度状态**
+const uploadProgress = ref(0);
+
 const locationData = ref({
   longitude: null as number | null,
   latitude: null as number | null,
@@ -56,7 +57,26 @@ const newHerb = ref<HerbCreatePayload>({
     description: ''
 });
 
-// 省市联动数据
+const growthData = ref({
+    metricName: '平均株高',
+    metricValue: '',
+    metricUnit: 'cm',
+    recordedAt: new Date().toISOString().slice(0, 16)
+});
+
+const metricNameOptions = ['平均株高', '产量', '叶片面积', '根茎长度', '土壤PH值'];
+const metricUnitOptions = ref(['cm', 'kg', 'm²', 'g/株']);
+
+watch(() => growthData.value.metricName, (newName) => {
+    if (newName === '平均株高' || newName === '根茎长度') metricUnitOptions.value = ['cm', 'm'];
+    else if (newName === '产量') metricUnitOptions.value = ['kg', 'g/株', '吨/亩'];
+    else if (newName === '叶片面积') metricUnitOptions.value = ['cm²', 'm²'];
+    else if (newName === '土壤PH值') metricUnitOptions.value = ['无'];
+    else metricUnitOptions.value = [];
+    growthData.value.metricUnit = metricUnitOptions.value[0] || '';
+});
+
+
 const cities = computed(() => {
     if (locationData.value.province) {
         const province = provinces.find(p => p.name === locationData.value.province);
@@ -66,16 +86,12 @@ const cities = computed(() => {
 });
 
 watch(() => locationData.value.province, () => {
-  // 当省份变化时，清空城市选择
   locationData.value.city = '';
 });
 
-
-// --- Validation Rules ---
 const rules = {
   required: (v: any) => !!v || '此字段为必填项',
   requiredObject: (v: any) => !!(v && v.id) || '必须选择一个药材',
-  // 动态验证规则
   requiredLocation: (v: any) => {
       if (manualLocationEntry.value) {
           return !!locationData.value.province && !!locationData.value.address || '手动模式下，省份和详细地址为必填项';
@@ -84,8 +100,6 @@ const rules = {
   }
 };
 
-
-// --- Computed ---
 const locationDisplay = computed(() => {
   if(manualLocationEntry.value) {
     return '手动输入模式'
@@ -93,6 +107,46 @@ const locationDisplay = computed(() => {
   const { longitude, latitude } = locationData.value;
   return latitude ? `经纬度: ${longitude?.toFixed(6)}, ${latitude?.toFixed(6)}` : '尚未获取地理位置';
 });
+
+// --- **新增：带进度的上传函数** ---
+const uploadFileWithProgress = async (file: File, onProgress: (percent: number) => void): Promise<string> => {
+  if (!file) return '';
+
+  const policyResponse = await getOSSPolicyApi();
+  const policyData = policyResponse.data.data;
+
+  const formData = new FormData();
+  const objectKey = `${policyData.dir}${Date.now()}_${file.name}`;
+  formData.append('key', objectKey);
+  formData.append('policy', policyData.policy);
+  formData.append('OSSAccessKeyId', policyData.accessid);
+  formData.append('success_action_status', '200');
+  formData.append('signature', policyData.signature);
+  formData.append('file', file);
+
+  try {
+    const response = await axios.post(policyData.host, formData, {
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      },
+    });
+
+    if (response.status === 200) {
+      snackbarStore.showSuccessMessage(`文件 ${file.name} 上传成功!`);
+      return `${policyData.host}/${objectKey}`;
+    }
+    throw new Error('文件上传到OSS时状态码非200');
+  } catch (error: any) {
+    console.error("文件上传到OSS时出错:", error);
+    const errorMessage = error.response?.data?.message || error.message || `文件 ${file.name} 上传失败`;
+    snackbarStore.showErrorMessage(errorMessage);
+    return '';
+  }
+};
+
 
 // --- Methods ---
 
@@ -132,7 +186,7 @@ const getGeoLocation = async () => {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 }));
         const { longitude, latitude } = position.coords;
         const addressInfo = await getAddressFromCoordinates(longitude, latitude);
-        
+
         locationData.value = {
             longitude,
             latitude,
@@ -157,14 +211,16 @@ const resetForm = () => {
     locationData.value = { longitude: null, latitude: null, province: '', city: '', address: '' };
     selectedFiles.value = [];
     primaryImageIndex.value = 0;
+    growthData.value = { metricName: '平均株高', metricValue: '', metricUnit: 'cm', recordedAt: new Date().toISOString().slice(0, 16) };
 };
 
 const submit = async () => {
   isSubmitting.value = true;
+  uploadProgress.value = 0; // **重置进度条**
+
   try {
     let herbIdToUse: number;
 
-    // --- 步骤零：如果是手动输入地址，先进行地理编码 ---
     if (manualLocationEntry.value) {
         snackbarStore.showInfoMessage('正在解析手动输入的地址...');
         try {
@@ -176,8 +232,7 @@ const submit = async () => {
             throw new Error('手动地址解析失败，请检查地址是否正确或过于模糊。');
         }
     }
-    
-    // --- 步骤一：处理药材 ---
+
     if (isCreatingNewHerb.value) {
         const herbResponse = await createHerbApi(newHerb.value);
         herbIdToUse = herbResponse.data.data.id;
@@ -186,7 +241,6 @@ const submit = async () => {
         herbIdToUse = selectedHerb.value!.id;
     }
 
-    // --- 步骤二：创建观测点 ---
     const locationPayload: LocationCreatePayload = {
       herbId: herbIdToUse,
       longitude: locationData.value.longitude,
@@ -197,16 +251,38 @@ const submit = async () => {
       observationYear: new Date().getFullYear(),
       description: `对 ${isCreatingNewHerb.value ? newHerb.value.name : selectedHerb.value!.name} 的一次新观测`,
     };
-    const locationResponse = await createLocationApi(locationPayload);
+
+    const formattedRecordedAt = new Date(growthData.value.recordedAt + ':00').toISOString().slice(0, 19);
+
+    const uploadDto = {
+        ...locationPayload,
+        growthData: {
+            metricName: growthData.value.metricName,
+            metricValue: growthData.value.metricValue,
+            metricUnit: growthData.value.metricUnit,
+            recordedAt: formattedRecordedAt
+        },
+        uploaderName: profileStore.user?.username || '未知上传者'
+    };
+
+    const locationResponse = await http.post('/herb/locations', uploadDto);
     const newLocationId = locationResponse.data.data.id;
     snackbarStore.showSuccessMessage(`观测点创建成功 (ID: ${newLocationId})`);
 
-    // --- 步骤三：上传并关联图片 ---
     if (selectedFiles.value.length > 0) {
-      const policyResponse = await getOSSPolicyApi();
-      const imageUrls = await Promise.all(
-        selectedFiles.value.map(file => uploadFileToOSS(file, policyResponse.data.data))
-      );
+      const imageUrls = [];
+      for (const file of selectedFiles.value) {
+          // **核心修改：使用带进度的上传函数**
+          const url = await uploadFileWithProgress(file, (percent) => {
+              uploadProgress.value = percent;
+          });
+          if (url) {
+              imageUrls.push(url);
+          } else {
+              // 如果一个文件上传失败，可以选择中断或继续
+              throw new Error(`文件 ${file.name} 上传失败，操作已中断。`);
+          }
+      }
 
       const imagesToLink: ImageInfo[] = imageUrls.map((url, index) => ({
         url: url,
@@ -214,7 +290,7 @@ const submit = async () => {
         description: `${(isCreatingNewHerb.value && index === primaryImageIndex.value) ? '主图' : '附加图片'}: ${selectedFiles.value[index].name}`
       }));
 
-      await uploadImagesForLocationApi(newLocationId, { images: imagesToLink });
+      await http.post(`/herb/locations/${newLocationId}/images`, { images: imagesToLink });
       snackbarStore.showSuccessMessage(`${imagesToLink.length} 张图片已成功关联`);
     }
 
@@ -226,6 +302,7 @@ const submit = async () => {
     snackbarStore.showErrorMessage(errorMessage);
   } finally {
     isSubmitting.value = false;
+    uploadProgress.value = 0; // **完成后隐藏进度条**
   }
 };
 </script>
@@ -240,6 +317,17 @@ const submit = async () => {
         </h2>
       </v-card-title>
       <v-divider></v-divider>
+
+      <v-progress-linear
+        v-if="isSubmitting"
+        v-model="uploadProgress"
+        :color="uploadProgress < 100 ? 'yellow-darken-2' : 'green'"
+        height="25"
+        stream
+        striped
+      >
+        <strong class="white-text">{{ Math.ceil(uploadProgress) }}%</strong>
+      </v-progress-linear>
 
       <v-stepper v-model="step" :items="['选择药材', '观测详情', '确认提交']" alt-labels editable>
         <template v-slot:item.1>
@@ -323,6 +411,7 @@ const submit = async () => {
           <v-card title="第二步：添加观测详情" flat>
             <v-card-text>
                <v-form ref="formStep2" v-model="isStep2Valid">
+                <v-card-subtitle class="text-h6 pa-0 mb-3">地理位置信息</v-card-subtitle>
                 <v-switch
                     v-model="manualLocationEntry"
                     :label="manualLocationEntry ? '模式：手动输入地址' : '模式：自动GPS定位'"
@@ -330,18 +419,14 @@ const submit = async () => {
                     inset
                     class="mb-4"
                 ></v-switch>
-
                 <v-text-field
                   v-if="!manualLocationEntry"
                   v-model="locationDisplay"
                   label="采集观测点地理位置"
                   prepend-inner-icon="mdi-map-marker-outline"
-                  readonly
-                  variant="outlined"
-                  class="mb-6"
+                  readonly variant="outlined" class="mb-6"
                   :hint="locationData.address || '点击右侧按钮自动获取当前位置'"
-                  persistent-hint
-                  :rules="[rules.requiredLocation]"
+                  persistent-hint :rules="[rules.requiredLocation]"
                 >
                   <template v-slot:append-inner>
                     <v-btn icon @click="getGeoLocation" :loading="isGettingLocation" variant="text">
@@ -350,59 +435,66 @@ const submit = async () => {
                     </v-btn>
                   </template>
                 </v-text-field>
-                
                 <v-row v-else>
-                    <v-col cols="12" sm="6">
+                    <v-col cols="12" sm="6"><v-select v-model="locationData.province" :items="provinces.map(p => p.name)" label="省份/直辖市" variant="outlined" :rules="[rules.required]"></v-select></v-col>
+                    <v-col cols="12" sm="6"><v-select v-model="locationData.city" :items="cities" label="城市" variant="outlined" no-data-text="请先选择省份" :disabled="!locationData.province"></v-select></v-col>
+                    <v-col cols="12"><v-text-field v-model="locationData.address" label="详细地址" variant="outlined" placeholder="例如：XX街道XX号" :rules="[rules.required]"></v-text-field></v-col>
+                </v-row>
+                
+                <v-divider class="my-6"></v-divider>
+                <v-card-subtitle class="text-h6 pa-0 mb-3">生长数据</v-card-subtitle>
+                <v-row>
+                    <v-col cols="12" md="4">
                         <v-select
-                            v-model="locationData.province"
-                            :items="provinces.map(p => p.name)"
-                            label="省份/直辖市"
+                            v-model="growthData.metricName"
+                            :items="metricNameOptions"
+                            label="指标名称"
                             variant="outlined"
                             :rules="[rules.required]"
                         ></v-select>
                     </v-col>
-                    <v-col cols="12" sm="6">
-                        <v-select
-                            v-model="locationData.city"
-                            :items="cities"
-                            label="城市"
-                            variant="outlined"
-                            no-data-text="请先选择省份"
-                            :disabled="!locationData.province"
-                        ></v-select>
-                    </v-col>
-                     <v-col cols="12">
+                    <v-col cols="12" md="4">
                         <v-text-field
-                            v-model="locationData.address"
-                            label="详细地址"
+                            v-model="growthData.metricValue"
+                            label="指标值"
                             variant="outlined"
-                            placeholder="例如：XX街道XX号"
                             :rules="[rules.required]"
+                        ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="4">
+                        <v-combobox
+                            v-model="growthData.metricUnit"
+                            :items="metricUnitOptions"
+                            label="指标单位 (可自定义)"
+                            variant="outlined"
+                        ></v-combobox>
+                    </v-col>
+                    <v-col cols="12">
+                        <v-text-field
+                          v-model="growthData.recordedAt"
+                          label="记录时间"
+                          type="datetime-local"
+                          variant="outlined"
+                          :rules="[rules.required]"
                         ></v-text-field>
                     </v-col>
                 </v-row>
 
-
+                <v-divider class="my-6"></v-divider>
+                <v-card-subtitle class="text-h6 pa-0 mb-3">观测图片</v-card-subtitle>
                 <v-file-input
                   v-model="selectedFiles"
                   label="上传观测照片 (可多选)"
-                  multiple
-                  accept="image/*"
-                  prepend-icon=""
-                  prepend-inner-icon="mdi-camera"
-                  variant="outlined"
-                  chips
-                  show-size
-                  counter
-                  class="mt-4"
+                  multiple accept="image/*" prepend-icon=""
+                  prepend-inner-icon="mdi-camera" variant="outlined"
+                  chips show-size counter class="mt-4"
                 ></v-file-input>
-
                 <v-card v-if="isCreatingNewHerb && selectedFiles.length > 0" variant="tonal" class="mt-4 pa-3">
                     <p class="text-subtitle-1 font-weight-medium mb-3">请为新药材选择一张主图：</p>
                     <v-radio-group v-model="primaryImageIndex" inline>
                         <v-row dense>
                             <v-col v-for="(file, index) in selectedFiles" :key="index" cols="6" sm="4" md="3">
-                                <v-card 
+                                <v-card
                                     class="image-preview-card"
                                     :class="{ 'border-primary': primaryImageIndex === index }"
                                     @click="primaryImageIndex = index"
@@ -415,7 +507,6 @@ const submit = async () => {
                         </v-row>
                     </v-radio-group>
                 </v-card>
-
                </v-form>
             </v-card-text>
           </v-card>
@@ -448,6 +539,16 @@ const submit = async () => {
                     </v-list-item>
 
                     <v-divider inset></v-divider>
+                    <v-list-item>
+                         <template v-slot:prepend><v-icon color="green">mdi-chart-line</v-icon></template>
+                         <v-list-item-title>生长数据</v-list-item-title>
+                         <v-list-item-subtitle>
+                           指标: <strong>{{ growthData.metricName }}</strong>,
+                           数值: <strong>{{ growthData.metricValue }} {{ growthData.metricUnit || '' }}</strong>
+                         </v-list-item-subtitle>
+                    </v-list-item>
+
+                    <v-divider inset></v-divider>
 
                      <v-list-item>
                         <template v-slot:prepend><v-icon color="orange">mdi-camera-burst</v-icon></template>
@@ -463,7 +564,7 @@ const submit = async () => {
              </v-card-text>
           </v-card>
         </template>
-        
+
         <template v-slot:actions="{ prev, next }">
           <v-card-actions class="pa-4">
             <v-btn v-if="step > 1" @click="prev" variant="text">
@@ -489,22 +590,18 @@ const submit = async () => {
 .main-card {
     background-color: #f8f9fa;
 }
-
 .image-preview-card {
     cursor: pointer;
     transition: all 0.2s ease-in-out;
     border: 2px solid transparent;
-
     &:hover {
         transform: scale(1.03);
     }
 }
-
 .border-primary {
-  border: 2px solid #1976D2; 
+  border: 2px solid #1976D2;
   box-shadow: 0 0 8px rgba(25, 118, 210, 0.4);
 }
-
 .radio-on-image {
     position: absolute;
     top: 4px;
@@ -512,9 +609,12 @@ const submit = async () => {
     background-color: rgba(255, 255, 255, 0.7);
     border-radius: 50%;
 }
-
 .review-list {
     background-color: #fafafa;
     border-radius: 8px;
+}
+.white-text {
+  color: white !important;
+  font-weight: 600;
 }
 </style>

@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import type { Herb, HerbQuery, PaginatedHerbs } from '@/api/herbApi'
-import http from '@/api/http'
+import type { Herb, HerbQuery } from '@/api/herbApi'
 import { useSnackbarStore } from '@/stores/snackbarStore'
 import { useProfileStore } from '@/stores/profileStore'
 import { useRouter } from 'vue-router'
 import HerbCardWrapper from '@/components/common/Pin/HerbCardWrapper.vue'
-// 导入一个预设的图片作为默认图
 import defaultHerbImage from '@/assets/edu/new.jpg'
-// 导入省份数据用于筛选
 import provinces from '@/data/provinces.json'
+// 导入 herbStore
+import { useHerbStore } from '@/stores/herbStore'
 
 // --- 状态管理和路由 ---
 const router = useRouter()
 const snackbarStore = useSnackbarStore()
 const profileStore = useProfileStore()
+const herbStore = useHerbStore() // 初始化 Store
 const userType = computed(() => profileStore.user?.role ?? 1)
 
 // --- 组件状态 ---
@@ -46,7 +46,7 @@ const searchParams = ref({
   province: '',
   lifeFormStructural: '',
   lifeFormCycle: '',
-  familyName: '' // 科名
+  familyName: ''
 })
 
 // --- 筛选选项数据 ---
@@ -70,7 +70,6 @@ const lifeFormCycleOptions = [
   { title: '多年生', value: '多年生' }
 ]
 
-// 新增：根据数据库提取的科名选项
 const familyNameOptions = [
     { title: '全部科名', value: '' },
     { title: '五加科', value: '五加科' }, { title: '茄科', value: '茄科' },
@@ -107,7 +106,6 @@ const pageCount = computed(() => {
 
 // --- 方法 ---
 
-// 显示图片预览
 const showImagePreview = (imageUrl: string) => {
   previewImageUrl.value = imageUrl
   isPreviewingImage.value = true
@@ -123,50 +121,31 @@ const fetchHerbs = async ({ page, itemsPerPage }: { page: number; itemsPerPage: 
     const lifeForms = [
       searchParams.value.lifeFormStructural,
       searchParams.value.lifeFormCycle
-    ].filter(Boolean) // 使用 filter(Boolean) 过滤掉空字符串
+    ].filter(Boolean)
 
     const params: HerbQuery = {
-      page,
-      limit: itemsPerPage,
       name: searchParams.value.name,
       scientificName: searchParams.value.scientificName,
       familyName: searchParams.value.familyName,
       resourceType: searchParams.value.resourceType,
       province: searchParams.value.province,
-      lifeForm: lifeForms.join(','), // 合并为 "草本,多年生" 格式
+      lifeForm: lifeForms.join(','),
     }
 
-    // 清理掉所有值为空的参数，避免发送空字符串
+    // 清理掉所有值为空的参数
     Object.keys(params).forEach((key) => {
       const K = key as keyof HerbQuery
       if (!params[K]) {
         delete params[K]
       }
     })
+    
+    // **核心修改：调用 herbStore 的 action**
+    const data = await herbStore.fetchHerbsWithCache(page, itemsPerPage, params);
+    
+    herbList.value = data.records;
+    totalItems.value = data.total;
 
-    const response = await http.get<{ data: PaginatedHerbs }>('/herb/herbs', { params })
-    const fetchedHerbs = response.data.data.records
-    totalItems.value = response.data.data.total || 0
-
-    if (fetchedHerbs && fetchedHerbs.length > 0) {
-      const imagePromises = fetchedHerbs.map((herb) =>
-        http
-          .get<any>(`/herb/herbs/${herb.id}/images`)
-          .catch(() => ({ data: { data: [] } }))
-      )
-
-      const imageResults = await Promise.all(imagePromises)
-
-      herbList.value = fetchedHerbs.map((herb, index) => {
-        const images = imageResults[index]?.data?.data
-        if (images && images.length > 0) {
-          herb.imageUrl = images[0]
-        }
-        return herb
-      })
-    } else {
-      herbList.value = []
-    }
   } catch (error) {
     console.error('获取药材数据失败:', error)
     snackbarStore.showErrorMessage('数据加载失败')
@@ -175,7 +154,7 @@ const fetchHerbs = async ({ page, itemsPerPage }: { page: number; itemsPerPage: 
   }
 }
 
-// 执行搜索
+
 const performSearch = () => {
   if (options.value.page !== 1) {
     options.value.page = 1
@@ -184,7 +163,6 @@ const performSearch = () => {
   }
 }
 
-// 重置所有筛选条件
 const resetSearch = () => {
   searchParams.value = {
     name: '',
@@ -198,7 +176,6 @@ const resetSearch = () => {
   performSearch()
 }
 
-// 侦听分页和每页数量的变化
 watch(
   options,
   (newOptions, oldOptions) => {
@@ -211,12 +188,10 @@ watch(
   { deep: true }
 )
 
-// 组件挂载时首次加载数据
 onMounted(() => {
   fetchHerbs(options.value)
 })
 
-// 编辑和删除操作
 const editHerb = (herb: Herb) => {
   router.push(`/herbs/edit/${herb.id}`)
 }
@@ -233,7 +208,6 @@ const deleteHerb = async (herb: Herb) => {
   }
 }
 </script>
-
 <template>
   <v-container fluid class="pa-md-6 pa-4">
     <v-card class="mb-6 pa-4" rounded="lg" flat border>

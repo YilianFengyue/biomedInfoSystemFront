@@ -1,212 +1,134 @@
-<!--
-* @Component: ToolbarNotifications
-* @Maintainer: J.K. Yang
-* @Description: 通知栏组件，显示用户收到的消息
--->
-<script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useProfileStore } from "@/stores/profileStore";
-import { useRouter } from 'vue-router'; // 新增：引入路由
+// src/components/toolbar/ToolbarNotifications.vue
 
-// const profileStore = useProfileStore();
-// const username = profileStore.user.name;
-const router = useRouter(); // 新增：初始化路由
+<script setup lang="ts">
+import { computed } from 'vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+import { useWebSocket } from '@/utils/websocket'; // 确保路径正确，可能是 @/utils/websocket
 
 // 定义消息类型
 interface Message {
-  message_id: number;
+  id: number;
   content: string;
-  sender_username: string;
-  receiver_username: string;
-  timestamp: string;
-  channel_id: number;
+  from: string; // 后端推送的可能是 from 或 senderId，我们需要兼容
+  senderId?: string;
+  readStatus: number; // 【已修复】将 status 修改为 readStatus
+  timestamp?: string;
+  sendTime?: string;
 }
 
-// 转换后的消息类型，用于前端显示
-interface DisplayMessage {
-  title: string;
-  color: string;
-  icon: string;
-  subtitle: string;
-  time: string;
-  originalMessage: Message; // 新增：存储原始消息
-}
+const router = useRouter();
+const { isConnected, messages } = useWebSocket();
 
-const props = defineProps({
-  username: {
-    type: String,
-    required: true
-  }
+// 计算未读消息数量
+const unreadCount = computed(() => {
+  // 【已修复】根据 message.readStatus 进行过滤
+  return messages.value.filter(m => m.readStatus === 0).length;
 });
 
-const messages = ref<DisplayMessage[]>([]);
-const unreadCount = ref(0);
-const loading = ref(false);
-const error = ref(null);
-
-// 统一图标和颜色
-const colorMap = ['primary']; // 统一为primary
-const iconMap = ['mdi-account-circle']; // 统一为mdi-account-circle
-
-// 获取消息
-const fetchMessages = async () => {
+// 标记为已读
+const markAsRead = async (message: Message) => {
+  if (message.readStatus === 1) return;
   try {
-    loading.value = true;
-    error.value = null;
+    const params = new URLSearchParams();
+    params.append('messageId', String(message.id));
+    await axios.post('/api/messages/read', params); // 建议加上 /api 前缀，与 http.ts 保持一致
     
-    const response = await axios.get(`http://localhost:5000/comments/messages/receiver/${username}`);
-    
-    if (
-      response.data &&
-      response.data.data &&
-      Array.isArray(response.data.data.messages)
-    ) {
-      messages.value = response.data.data.messages.map((msg: Message) => ({
-        title: `来自 ${msg.sender_username} 的消息`,
-        color: colorMap[0], // 使用统一颜色
-        icon: iconMap[0], // 使用统一图标
-        subtitle: msg.content,
-        time: formatTime(msg.timestamp),
-        originalMessage: msg // 存储原始消息
-      }));
-      
-      unreadCount.value = messages.value.length;
-    } else {
-      console.warn('接收到的消息数据结构不符合预期:', response.data);
-      messages.value = [];
-      unreadCount.value = 0;
+    const msgInStore = messages.value.find(m => m.id === message.id);
+    if(msgInStore) {
+        // 【已修复】更新正确的字段
+        msgInStore.readStatus = 1; 
     }
   } catch (err) {
-    error.value = err;
-    console.error('获取消息失败:', err);
-  } finally {
-    loading.value = false;
+    console.error(`标记消息 ${message.id} 为已读失败:`, err);
   }
 };
 
-// 格式化时间显示
-const formatTime = (timestamp: string) => {
+const handleMessageClick = (message: Message) => {
+  // 我们不再需要在这里调用 markAsRead，因为进入聊天页面后会自动处理
+  
+  // 【核心修改】
+  // 从消息中获取发件人ID
+  const contactId = message.from || message.senderId;
+  // 跳转到对应的聊天页面
+  router.push({ name: 'ChatPage', params: { contactId: contactId } });
+};
+
+const formatTime = (message: Message) => {
+  const timestamp = message.timestamp || message.sendTime;
+  if (!timestamp) return '';
   const now = new Date();
   const msgTime = new Date(timestamp);
   const diffInMinutes = Math.floor((now.getTime() - msgTime.getTime()) / (1000 * 60));
-  
+
   if (diffInMinutes < 1) return '刚刚';
   if (diffInMinutes < 60) return `${diffInMinutes} 分钟前`;
   if (diffInMinutes < 24 * 60) return `${Math.floor(diffInMinutes / 60)} 小时前`;
   return `${Math.floor(diffInMinutes / (60 * 24))} 天前`;
 };
-
-// 组件挂载时获取消息
-onMounted(() => {
-  fetchMessages();
-});
-
-// 点击消息时的处理
-const handleMessageClick = (message: DisplayMessage) => {
-  // 标记消息为已读
-  router.push({
-    path: '/chat',
-    query: { landlord: message.originalMessage.sender_username } // 传递发送者用户名
-  });
-  
-  // 更新未读计数
-  unreadCount.value = Math.max(0, unreadCount.value - 1);
-};
-
-// 关闭菜单
-const closeMenu = () => {
-  // 使用refs获取v-menu并关闭
-  const menu = defineExpose({
-    closeMenu: () => {
-      // 实际实现需要根据Vuetify的API调整
-      // 例如：menuRef.value.close()
-    }
-  });
-};
 </script>
 
 <template>
-  <v-menu location="bottom right" transition="slide-y-transition">
-    <!-- Activator Btn -->
+  <v-menu location="bottom right" transition="slide-y-transition" :close-on-content-click="false">
     <template v-slot:activator="{ props }">
       <v-btn icon v-bind="props" class="text-none">
-        <v-badge :content="unreadCount" color="error">
+        <v-badge :content="unreadCount" color="error" :model-value="unreadCount > 0">
           <v-icon>mdi-bell-outline</v-icon>
         </v-badge>
       </v-btn>
     </template>
     
     <v-list elevation="1" lines="three" density="compact" width="400">
-      <v-list-subheader class="font-weight-bold pl-2" >消息列表</v-list-subheader>
+      <v-list-subheader class="font-weight-bold pl-2">消息列表</v-list-subheader>
+      <v-divider />
       
-      <template v-if="loading">
-        <v-list-item>
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
-        </v-list-item>
-      </template>
+      <div v-if="!isConnected" class="pa-4 text-center text-grey">
+        消息服务未连接
+      </div>
+      <div v-else-if="messages.length === 0" class="pa-4 text-center text-grey">
+        暂无消息
+      </div>
       
-      <template v-else-if="error">
-        <v-list-item>
-          <v-alert type="error">加载消息失败</v-alert>
-        </v-list-item>
-      </template>
-      
-      <template v-else-if="messages.length === 0">
-        <v-list-item>
-          <v-list-item-title class="font-weight-bold pl-2 d-flex justify-center">暂无消息</v-list-item-title>
-        </v-list-item>
-      </template>
-      
-      <template v-else>
+      <div v-else class="message-list-container">
         <v-list-item 
-          v-for="(message, i) in messages" 
-          :key="message.originalMessage.message_id" 
+          v-for="message in messages" 
+          :key="message.id" 
           @click="handleMessageClick(message)"
+          link
+           :class="{'unread-message': message.readStatus === 0}"
         >
-          <!-- Prepend -->
           <template v-slot:prepend>
-            <v-avatar size="40" :color="message.color">
-              <v-icon color="white">{{ message.icon }}</v-icon>
-            </v-avatar>
+             <v-badge dot :color="message.readStatus === 0 ? 'error' : 'transparent'" offset-x="-5">
+                <v-avatar color="primary" size="40">
+                  <span class="white--text text-h6">{{ String(message.from || message.senderId || 'S').charAt(0).toUpperCase() }}</span>
+                </v-avatar>
+             </v-badge>
           </template>
           
-          <!-- Append -->
-          <template v-slot:append>
-            <div class="full-h d-flex align-center">
-              <span class="text-body-2 text-grey">{{ message.time }}</span>
-            </div>
-          </template>
-          
-          <!-- Main Content -->
-          <div>
-            <v-list-item-title class="font-weight-bold text-primary">
-              {{ message.title }}
-            </v-list-item-title>
-            <v-list-item-subtitle>{{ message.subtitle }}</v-list-item-subtitle>
-          </div>
+          <v-list-item-title class="font-weight-bold">
+            来自用户 {{ message.from || message.senderId }}
+          </v-list-item-title>
+          <v-list-item-subtitle class="text-truncate">{{ message.content }}</v-list-item-subtitle>
+           <template v-slot:append>
+            <div class="text-caption text-grey">{{ formatTime(message) }}</div>
+           </template>
         </v-list-item>
-      </template>
-      
-      <!-- Close Btn -->
-      <div class="text-center py-5">
-        <v-btn 
-          prepend-icon="mdi-close"
-          variant="outlined"
-          elevation="4"
-          @click="closeMenu"
-          color="red-darken-4"
-        >
-          关闭
-        </v-btn>
       </div>
     </v-list>
   </v-menu>
 </template>
 
-<style scoped lang="scss">
-// ::v-deep .v-list-item__append,
-// ::v-deep .v-list-item__prepend {
-//   height: 100%;
-// }
-</style>  
+<style scoped>
+.message-list-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.unread-message {
+  background-color: rgba(var(--v-theme-primary), 0.05);
+}
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
