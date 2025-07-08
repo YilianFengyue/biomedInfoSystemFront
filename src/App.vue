@@ -35,6 +35,7 @@ const appStore = useAppStore();
 // live2d
 import Live2d from "@/components/Live2d.vue";
 import { useProfileStore } from "@/stores/profileStore";
+import { useInspirationStore } from '@/stores/inspirationStore'
 const customizeTheme = useCustomizeThemeStore();
 const route = useRoute();
 
@@ -63,6 +64,8 @@ onMounted(() => {
   theme.global.name.value = appStore.theme;
   const profileStore = useProfileStore();
   profileStore.fetchUserProfile();
+  const inspirationStore = useInspirationStore()
+  inspirationStore.loadFromLocalStorage()
 });
 </script>
 

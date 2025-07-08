@@ -4,103 +4,43 @@
 * @Description: 灵感整理板 - 收藏药材、文献、图表等内容
 -->
 <script setup lang="ts">
-import { useDisplay } from "vuetify";
-import { useSnackbarStore } from "@/stores/snackbarStore";
-import CopyBtn from "@/components/common/CopyBtn.vue";
-import { Icon } from "@iconify/vue";
+import { ref, computed, onMounted } from 'vue'
+import { useDisplay } from "vuetify"
+import { useInspirationStore } from "@/stores/inspirationStore"
+import CopyBtn from "@/components/common/CopyBtn.vue"
+import { Icon } from "@iconify/vue"
 
-const snackbarStore = useSnackbarStore();
+const inspirationStore = useInspirationStore()
+const { xs } = useDisplay()
 
-// 模拟数据 - 后续替换为真实数据
-const categories = [
-  { label: "全部", value: "all", count: 12 },
-  { label: "药材", value: "herb", count: 5 },
-  { label: "文献", value: "paper", count: 3 },
-  { label: "图表", value: "chart", count: 4 }
-];
+// 组件状态
+const dialog = ref(false)
+const currentCategory = ref("all")
+const searchKeyword = ref("")
 
-const currentCategory = ref("all");
-
-// 模拟收藏的内容
-const inspirationItems = ref([
-  {
-    id: "1",
-    type: "herb",
-    title: "人参",
-    subtitle: "Panax ginseng",
-    content: "补气固脱，健脾益肺，宁心益智，养血生津",
-    image: "https://example.com/ginseng.jpg",
-    tags: ["五加科", "多年生草本", "栽培"],
-    timestamp: Date.now() - 86400000,
-    metadata: {
-      family: "五加科",
-      properties: "甘、微苦，微温"
-    }
-  },
-  {
-    id: "2", 
-    type: "paper",
-    title: "中医药现代化研究",
-    subtitle: "Traditional Chinese Medicine Modernization",
-    content: "探讨中医药现代化发展的机遇与挑战，分析传统医学与现代科技的融合路径",
-    image: null,
-    tags: ["中医药", "现代化", "研究"],
-    timestamp: Date.now() - 172800000,
-    metadata: {
-      authors: "张三, 李四",
-      journal: "中医药学报"
-    }
-  },
-  {
-    id: "3",
-    type: "chart", 
-    title: "血府逐瘀汤关系图谱",
-    subtitle: "Blood Stasis Formula Network",
-    content: "显示血府逐瘀汤中各药材的相互关系和药理作用机制",
-    image: "https://example.com/chart.png",
-    tags: ["知识图谱", "方剂", "血瘀证"],
-    timestamp: Date.now() - 259200000,
-    metadata: {
-      nodeCount: 13,
-      relationCount: 12
-    }
-  },
-  {
-    id: "4",
-    type: "herb",
-    title: "使君子",
-    subtitle: "Quisqualis indica L.",
-    content: "杀虫消积，健脾",
-    image: "https://example.com/shijunzi.jpg", 
-    tags: ["使君子科", "多年生藤本植物", "野生"],
-    timestamp: Date.now() - 345600000,
-    metadata: {
-      family: "使君子科",
-      properties: "甘，温"
-    }
-  }
-]);
+// 从 store 获取数据
+const categories = computed(() => inspirationStore.categories)
+const inspirationItems = computed(() => inspirationStore.items)
 
 // 过滤后的内容
 const filteredItems = computed(() => {
-  if (currentCategory.value === "all") {
-    return inspirationItems.value;
-  }
-  return inspirationItems.value.filter(item => item.type === currentCategory.value);
-});
+  return inspirationStore.getItemsByType(currentCategory.value)
+})
 
-// 搜索功能
-const searchKeyword = ref("");
+// 搜索后的内容
 const searchedItems = computed(() => {
   if (!searchKeyword.value.trim()) {
-    return filteredItems.value;
+    return filteredItems.value
   }
+  
+  const keyword = searchKeyword.value.toLowerCase()
   return filteredItems.value.filter(item => 
-    item.title.includes(searchKeyword.value) ||
-    item.content.includes(searchKeyword.value) ||
-    item.tags.some(tag => tag.includes(searchKeyword.value))
-  );
-});
+    item.title.toLowerCase().includes(keyword) ||
+    item.content.toLowerCase().includes(keyword) ||
+    item.subtitle?.toLowerCase().includes(keyword) ||
+    item.tags.some(tag => tag.toLowerCase().includes(keyword))
+  )
+})
 
 // 获取类型图标
 const getTypeIcon = (type: string) => {
@@ -108,10 +48,11 @@ const getTypeIcon = (type: string) => {
     herb: "mdi-leaf",
     paper: "mdi-file-document",
     chart: "mdi-chart-scatter-plot",
-    text: "mdi-text"
-  };
-  return icons[type] || "mdi-bookmark";
-};
+    text: "mdi-text",
+    video: "mdi-play-circle"
+  }
+  return icons[type] || "mdi-bookmark"
+}
 
 // 获取类型颜色
 const getTypeColor = (type: string) => {
@@ -119,45 +60,91 @@ const getTypeColor = (type: string) => {
     herb: "green",
     paper: "blue", 
     chart: "orange",
-    text: "purple"
-  };
-  return colors[type] || "grey";
-};
+    text: "purple",
+    video: "red"
+  }
+  return colors[type] || "grey"
+}
 
 // 格式化时间
 const formatTime = (timestamp: number) => {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (24 * 60 * 60 * 1000))
   
-  if (days === 0) return "今天";
-  if (days === 1) return "昨天";
-  if (days < 7) return `${days}天前`;
-  return new Date(timestamp).toLocaleDateString();
-};
+  if (days === 0) return "今天"
+  if (days === 1) return "昨天"
+  if (days < 7) return `${days}天前`
+  if (days < 30) return `${Math.floor(days / 7)}周前`
+  if (days < 365) return `${Math.floor(days / 30)}个月前`
+  return new Date(timestamp).toLocaleDateString()
+}
 
 // 删除项目
 const deleteItem = (id: string) => {
-  const index = inspirationItems.value.findIndex(item => item.id === id);
-  if (index > -1) {
-    inspirationItems.value.splice(index, 1);
-    snackbarStore.showSuccessMessage("已删除");
-  }
-};
+  inspirationStore.removeItem(id)
+}
 
 // 清空所有
 const clearAll = () => {
-  inspirationItems.value = [];
-  snackbarStore.showSuccessMessage("已清空所有内容");
-};
+    inspirationStore.clearAll()
+}
 
-const dialog = ref(false);
-const { xs } = useDisplay();
+// 查看详情
+const viewDetail = (item: any) => {
+  // 这里可以实现详情查看功能
+  console.log('查看详情:', item)
+  
+  // 如果有原始URL，可以跳转
+  if (item.sourceUrl) {
+    window.open(item.sourceUrl, '_blank')
+  }
+}
+
+// 分享功能
+const shareItem = (item: any) => {
+  // 实现分享功能
+  if (navigator.share) {
+    navigator.share({
+      title: item.title,
+      text: item.content,
+      url: item.sourceUrl || window.location.href
+    }).catch(console.error)
+  } else {
+    // 降级到复制链接
+    const shareText = `${item.title}\n${item.content}\n${item.sourceUrl || window.location.href}`
+    navigator.clipboard.writeText(shareText).then(() => {
+      // 这里可以显示成功提示
+      console.log('已复制分享内容')
+    }).catch(console.error)
+  }
+}
+
+// 导出数据
+const exportData = () => {
+  inspirationStore.exportData()
+}
+
+// 导入数据
+const importData = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file) {
+    inspirationStore.importData(file)
+  }
+  // 重置 input 值，允许重复选择同一文件
+  target.value = ''
+}
+
+// 组件挂载时加载数据
+onMounted(() => {
+  inspirationStore.loadFromLocalStorage()
+})
 </script>
 
 <template>
   <v-btn size="50" @click="dialog = !dialog">
-    <v-icon size="30">mdi-pin-outline</v-icon>
+    <v-icon size="30">mdi-lightbulb-outline</v-icon>
     <v-tooltip
       activator="parent"
       location="left"
@@ -175,13 +162,36 @@ const { xs } = useDisplay();
       >
         <!-- 标题栏 -->
         <v-card-title>
-          <span class="flex-fill">
-            <v-avatar size="40">
+          <span class="flex-fill d-flex align-center">
+            <v-avatar size="40" class="mr-3">
               <v-icon size="24" color="primary">mdi-lightbulb</v-icon>
             </v-avatar>
-            灵感整理板
+            <div>
+              <div class="text-h6">灵感整理板</div>
+              <div class="text-caption text-grey">
+                共 {{ inspirationItems.length }} 项收藏
+              </div>
+            </div>
           </span>
           <v-spacer></v-spacer>
+          
+          <!-- 操作按钮 -->
+          <v-btn icon size="small" @click="exportData" class="mr-1">
+            <v-icon>mdi-download</v-icon>
+            <v-tooltip activator="parent" text="导出数据" />
+          </v-btn>
+          
+          <v-btn icon size="small" class="mr-1">
+            <v-icon>mdi-upload</v-icon>
+            <input 
+              type="file" 
+              accept=".json"
+              @change="importData"
+              style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer;"
+            />
+            <v-tooltip activator="parent" text="导入数据" />
+          </v-btn>
+          
           <v-btn icon @click.stop="dialog = false">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -248,12 +258,14 @@ const { xs } = useDisplay();
           <perfect-scrollbar class="inspiration-container">
             <!-- 空状态 -->
             <div v-if="searchedItems.length === 0" class="empty-state">
-              <v-icon size="64" color="grey-lighten-2">mdi-bookmark-outline</v-icon>
+              <v-icon size="64" color="grey-lighten-2">
+                {{ searchKeyword ? 'mdi-file-search-outline' : 'mdi-bookmark-outline' }}
+              </v-icon>
               <p class="text-grey-lighten-1 mt-4">
                 {{ searchKeyword ? '未找到匹配内容' : '还没有收藏任何内容' }}
               </p>
               <p class="text-caption text-grey-lighten-2">
-                {{ searchKeyword ? '尝试其他关键词' : '在页面中选择内容并点击收藏按钮' }}
+                {{ searchKeyword ? '尝试其他关键词' : '在页面中悬停药材卡片并点击收藏按钮' }}
               </p>
             </div>
 
@@ -315,9 +327,9 @@ const { xs } = useDisplay();
                   </p>
                   
                   <!-- 标签 -->
-                  <div class="mb-2">
+                  <div class="mb-2" v-if="item.tags && item.tags.length">
                     <v-chip
-                      v-for="tag in item.tags"
+                      v-for="tag in item.tags.slice(0, 4)"
                       :key="tag"
                       size="x-small"
                       variant="outlined"
@@ -325,6 +337,14 @@ const { xs } = useDisplay();
                     >
                       {{ tag }}
                     </v-chip>
+                    <span v-if="item.tags.length > 4" class="text-caption text-grey">
+                      +{{ item.tags.length - 4 }}
+                    </span>
+                  </div>
+                  
+                  <!-- 来源信息 -->
+                  <div class="text-caption text-grey-darken-1" v-if="item.sourceType">
+                    来源：{{ item.sourceType }}
                   </div>
                 </v-card-text>
 
@@ -336,7 +356,7 @@ const { xs } = useDisplay();
                   <v-spacer />
                   
                   <!-- 查看详情 -->
-                  <v-btn size="small" variant="text" icon>
+                  <v-btn size="small" variant="text" icon @click="viewDetail(item)">
                     <v-icon size="16">mdi-eye</v-icon>
                     <v-tooltip activator="parent" location="top">
                       查看详情
@@ -347,7 +367,7 @@ const { xs } = useDisplay();
                   <CopyBtn :text="item.content" size="small" />
                   
                   <!-- 分享 -->
-                  <v-btn size="small" variant="text" icon>
+                  <v-btn size="small" variant="text" icon @click="shareItem(item)">
                     <v-icon size="16">mdi-share</v-icon>
                     <v-tooltip activator="parent" location="top">
                       分享
@@ -400,6 +420,28 @@ const { xs } = useDisplay();
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+// 滑入滑出动画
+.slide-y-enter-active,
+.slide-y-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.slide-y-enter-from {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.slide-y-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.slide-y-enter-to,
+.slide-y-leave-from {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 // 响应式调整

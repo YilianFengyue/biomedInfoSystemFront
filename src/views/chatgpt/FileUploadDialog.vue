@@ -4,7 +4,9 @@
 -->
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-
+import Snackbar from '~/src/components/common/Snackbar.vue';
+import { useSnackbarStore } from "@/stores/snackbarStore";
+const snackbarStore = useSnackbarStore();
 // Props 和 Emits
 const props = defineProps<{
   modelValue: boolean;
@@ -71,13 +73,15 @@ const handleDragLeave = () => {
 const processFile = (file: File) => {
   // 验证文件类型
   if (!supportedTypes.includes(file.type)) {
-    alert('不支持的文件类型！请选择 PDF、文本、Markdown 或图片文件。');
+    // alert('不支持的文件类型！请选择 PDF、文本、Markdown 或图片文件。');
+    snackbarStore.showErrorMessage("不支持的文件类型！请选择 PDF、文本、Markdown 或图片文件。");
     return;
   }
 
   // 验证文件大小
   if (file.size > maxFileSize) {
-    alert('文件大小不能超过 10MB！');
+    // alert('文件大小不能超过 10MB！');
+    snackbarStore.showErrorMessage("文件大小不能超过 10MB！");
     return;
   }
 

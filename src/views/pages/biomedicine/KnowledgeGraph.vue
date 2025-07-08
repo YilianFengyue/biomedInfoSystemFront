@@ -282,13 +282,26 @@
               <v-divider></v-divider>
               <v-card-text class="details-content">
                 <div v-if="selectedNode" class="node-details">
-                   <h3 class="text-h6 font-weight-bold mb-2">{{ selectedNode.name }}</h3>
-                   <v-chip :color="getEntityColor(selectedNode.category)" label size="small" class="mb-4">
-                      {{ selectedNode.category }}
-                   </v-chip>
-                   <p class="text-body-2">
-                     {{ selectedNode.description || '暂无详细描述。' }}
-                   </p>
+                    <!-- 1. 添加一个 div 作为 Flex 容器 -->
+                    <div class="d-flex justify-space-between align-center mb-2">
+                        <!-- 2. 把标题放进来 -->
+                        <h3 class="text-h6 font-weight-bold">{{ selectedNode.name }}</h3>
+
+                        <!-- 3. 把收藏按钮也放进来 -->
+                        <CollectBtn 
+                            :data="getNodeCollectData(selectedNode)"
+                            size="small"
+                            variant="tonal"
+                        />
+                    </div>
+
+                      <!-- 其他元素保持原样，它们会自动排在下面 -->
+                      <v-chip :color="getEntityColor(selectedNode.category)" label size="small" class="mb-4">
+                          {{ selectedNode.category }}
+                      </v-chip>
+                      <p class="text-body-2">
+                          {{ selectedNode.description || '暂无详细描述。' }}
+                      </p>
                 </div>
                 <div v-else class="placeholder-text">
                   <v-icon size="48" color="grey-lighten-2">mdi-cursor-default-click-outline</v-icon>
@@ -309,6 +322,7 @@ import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
 import http from '@/api/http'; 
 import { useSnackbarStore } from '@/stores/snackbarStore';
+import CollectBtn from '@/components/common/Pin/CollectBtn.vue';
 
 const chartContainer = ref<HTMLDivElement | null>(null);
 const chartInstance = shallowRef<echarts.ECharts | null>(null);
@@ -323,6 +337,7 @@ const viewMode = ref('force');
 
 // 新增：用于存储选中节点的信息
 const selectedNode = ref<any>(null);
+
 
 const entityTypes = [
   { label: '方剂', value: 'formula' },
@@ -352,6 +367,38 @@ const nodeCategories = [
   { name: '证候', itemStyle: { color: '#C2185B' } },
   { name: '核心节点', itemStyle: { color: '#424242' } },
 ];
+
+
+
+// 添加这个方法：把节点数据转为收藏格式
+const getNodeCollectData = (node: any) => {
+  return {
+    type: getNodeType(node.category), // 根据节点类别确定类型
+    title: node.name,
+    subtitle: `知识图谱 - ${node.category}`,
+    content: node.description || `${node.category}节点：${node.name}`,
+    sourceType: '知识图谱',
+    tags: ['知识图谱', node.category, searchKeyword.value].filter(Boolean),
+    metadata: {
+      originalData: node,
+      graphContext: {
+        searchKeyword: searchKeyword.value,
+        entityType: selectedEntityType.value
+      }
+    }
+  }
+}
+// 节点类别映射到收藏类型
+const getNodeType = (category: string) => {
+  const typeMap = {
+    '方剂': 'paper',
+    '药材': 'herb', 
+    '疾病': 'text',
+    '症状': 'text',
+    '证候': 'text'
+  }
+  return typeMap[category] || 'chart'
+}
 
 const activeCategories = computed(() => {
   const usedCategories = new Set(graphData.value.nodes.map(node => node.category));

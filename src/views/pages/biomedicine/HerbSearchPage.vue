@@ -5,7 +5,7 @@ import http from '@/api/http'
 import { useSnackbarStore } from '@/stores/snackbarStore'
 import { useProfileStore } from '@/stores/profileStore'
 import { useRouter } from 'vue-router'
-
+import HerbCardWrapper from '@/components/common/Pin/HerbCardWrapper.vue'
 // 导入一个预设的图片作为默认图
 import defaultHerbImage from '@/assets/edu/new.jpg'
 // 导入省份数据用于筛选
@@ -380,83 +380,85 @@ const deleteHerb = async (herb: Herb) => {
         <v-container fluid v-else class="pa-4">
           <v-row>
             <v-col v-for="item in herbList" :key="item.id" cols="12" sm="6" md="4" lg="3">
-              <v-card class="d-flex flex-column" style="height: 100%" outlined hover>
-                <v-img
-                  :src="item.imageUrl || defaultHerbImage"
-                  height="200px"
-                  cover
-                  class="image-preview-avatar"
-                  @click="showImagePreview(item.imageUrl || defaultHerbImage)"
-                >
-                  <template v-slot:placeholder>
-                    <div class="d-flex align-center justify-center fill-height">
-                      <v-progress-circular indeterminate color="grey-lighten-4"></v-progress-circular>
-                    </div>
-                  </template>
-                </v-img>
-
-                <v-card-title class="font-weight-bold text-grey-darken-3">{{ item.name }}</v-card-title>
-                <v-card-subtitle class="pb-2">
-                  <i>{{ item.scientificName || '暂无学名' }}</i>
-                </v-card-subtitle>
-
-                <v-card-text class="flex-grow-1">
-                  <div class="mb-3">
-                    <v-chip size="small" class="mr-2 mb-2" label>
-                      <v-icon start icon="mdi-leaf-maple"></v-icon>
-                      {{ item.familyName || 'N/A' }}
-                    </v-chip>
-                    <v-chip size="small" class="mr-2 mb-2" label>
-                      <v-icon start icon="mdi-sprout"></v-icon>
-                      {{ item.lifeForm || 'N/A' }}
-                    </v-chip>
-                    <v-chip
-                      :color="item.resourceType === '栽培' ? 'teal' : 'light-blue'"
-                      size="small"
-                      label
-                      class="font-weight-bold mb-2"
-                    >
-                      {{ item.resourceType }}
-                    </v-chip>
-                  </div>
-                  <v-tooltip location="top">
-                    <template #activator="{ props }">
-                      <p v-bind="props" class="description-cell text-grey-darken-1">
-                        {{ item.description || '暂无描述信息。' }}
-                      </p>
+              <HerbCardWrapper :herb="item">
+                <v-card class="d-flex flex-column" style="height: 100%" outlined hover>
+                  <v-img
+                    :src="item.imageUrl || defaultHerbImage"
+                    height="200px"
+                    cover
+                    class="image-preview-avatar"
+                    @click="showImagePreview(item.imageUrl || defaultHerbImage)"
+                  >
+                    <template v-slot:placeholder>
+                      <div class="d-flex align-center justify-center fill-height">
+                        <v-progress-circular indeterminate color="grey-lighten-4"></v-progress-circular>
+                      </div>
                     </template>
-                    <span>{{ item.description || '暂无描述' }}</span>
-                  </v-tooltip>
-                </v-card-text>
+                  </v-img>
 
-                <v-divider class="mx-4"></v-divider>
+                  <v-card-title class="font-weight-bold text-grey-darken-3">{{ item.name }}</v-card-title>
+                  <v-card-subtitle class="pb-2">
+                    <i>{{ item.scientificName || '暂无学名' }}</i>
+                  </v-card-subtitle>
 
-                <v-card-actions class="px-4">
-                  <div class="text-caption text-grey">
-                    <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
-                    {{ new Date(item.createdAt).toLocaleDateString() }}
-                  </div>
-                  <v-spacer></v-spacer>
-                  <div v-if="userType === 0 || userType === 2">
-                    <v-btn
-                      icon="mdi-pencil"
-                      variant="text"
-                      size="small"
-                      color="primary"
-                      @click.stop="editHerb(item)"
-                      title="编辑"
-                    />
-                    <v-btn
-                      icon="mdi-delete"
-                      variant="text"
-                      size="small"
-                      color="error"
-                      @click.stop="deleteHerb(item)"
-                      title="删除"
-                    />
-                  </div>
-                </v-card-actions>
-              </v-card>
+                  <v-card-text class="flex-grow-1">
+                    <div class="mb-3">
+                      <v-chip size="small" class="mr-2 mb-2" label>
+                        <v-icon start icon="mdi-leaf-maple"></v-icon>
+                        {{ item.familyName || 'N/A' }}
+                      </v-chip>
+                      <v-chip size="small" class="mr-2 mb-2" label>
+                        <v-icon start icon="mdi-sprout"></v-icon>
+                        {{ item.lifeForm || 'N/A' }}
+                      </v-chip>
+                      <v-chip
+                        :color="item.resourceType === '栽培' ? 'teal' : 'light-blue'"
+                        size="small"
+                        label
+                        class="font-weight-bold mb-2"
+                      >
+                        {{ item.resourceType }}
+                      </v-chip>
+                    </div>
+                    <v-tooltip location="top">
+                      <template #activator="{ props }">
+                        <p v-bind="props" class="description-cell text-grey-darken-1">
+                          {{ item.description || '暂无描述信息。' }}
+                        </p>
+                      </template>
+                      <span>{{ item.description || '暂无描述' }}</span>
+                    </v-tooltip>
+                  </v-card-text>
+
+                  <v-divider class="mx-4"></v-divider>
+
+                  <v-card-actions class="px-4">
+                    <div class="text-caption text-grey">
+                      <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
+                      {{ new Date(item.createdAt).toLocaleDateString() }}
+                    </div>
+                    <v-spacer></v-spacer>
+                    <div v-if="userType === 0 || userType === 2">
+                      <v-btn
+                        icon="mdi-pencil"
+                        variant="text"
+                        size="small"
+                        color="primary"
+                        @click.stop="editHerb(item)"
+                        title="编辑"
+                      />
+                      <v-btn
+                        icon="mdi-delete"
+                        variant="text"
+                        size="small"
+                        color="error"
+                        @click.stop="deleteHerb(item)"
+                        title="删除"
+                      />
+                    </div>
+                  </v-card-actions>
+                </v-card>
+              </HerbCardWrapper>
             </v-col>
           </v-row>
         </v-container>

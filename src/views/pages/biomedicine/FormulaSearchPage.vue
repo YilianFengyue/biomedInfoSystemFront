@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
-
+import FormulaCardWrapper from '@/components/common/Pin/FormulaCardWrapper.vue'
 // --- 类型定义 ---
 interface Formula {
   id: number;
@@ -114,27 +114,29 @@ onMounted(() => {
 
     <v-row v-if="!searchLoading">
       <v-col v-for="item in formulaList" :key="item.id" cols="12" md="6" lg="4">
-        <v-card class="formula-card glass-card" elevation="4" hover>
-          <v-card-title class="formula-title">
-            {{ item.name }}
-            <div v-if="item.alias" class="formula-alias">({{ item.alias }})</div>
-          </v-card-title>
-          <v-card-subtitle class="formula-subtitle">
-            <v-icon size="x-small" class="mr-1">mdi-book-open-variant</v-icon>
-            {{ item.source }} ({{ item.dynasty }})
-          </v-card-subtitle>
-          <v-divider class="my-2"></v-divider>
-          <v-card-text class="formula-content">
-            <div class="content-block">
-              <div class="content-label">功用</div>
-              <p class="content-text">{{ item.functionEffect }}</p>
-            </div>
-            <div class="content-block mt-3">
-              <div class="content-label">主治</div>
-              <p class="content-text">{{ item.mainTreatment }}</p>
-            </div>
-          </v-card-text>
-        </v-card>
+        <FormulaCardWrapper :formula="item">
+          <v-card class="formula-card glass-card" elevation="4" hover>
+            <v-card-title class="formula-title">
+              {{ item.name }}
+              <div v-if="item.alias" class="formula-alias">({{ item.alias }})</div>
+            </v-card-title>
+            <v-card-subtitle class="formula-subtitle">
+              <v-icon size="x-small" class="mr-1">mdi-book-open-variant</v-icon>
+              {{ item.source }} ({{ item.dynasty }})
+            </v-card-subtitle>
+            <v-divider class="my-2"></v-divider>
+            <v-card-text class="formula-content">
+              <div class="content-block">
+                <div class="content-label">功用</div>
+                <p class="content-text">{{ item.functionEffect }}</p>
+              </div>
+              <div class="content-block mt-3">
+                <div class="content-label">主治</div>
+                <p class="content-text">{{ item.mainTreatment }}</p>
+              </div>
+            </v-card-text>
+          </v-card>
+        </FormulaCardWrapper>
       </v-col>
     </v-row>
     <div v-if="searchLoading" class="loading-container">
