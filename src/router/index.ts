@@ -171,6 +171,17 @@ export const routes = [
     },
   },
   {
+    path: "/score",
+    component: () => import("@/views/pages/biomedicine/Scorejudge.vue"),
+    meta: {
+      layout: "ui",
+      title: "评分判定",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-up",
+    },
+  },
+  {
     path: "/biomedicine/video-List",
     component: () => import("@/views/pages/biomedicine/EduVideolist.vue"),
     meta: {

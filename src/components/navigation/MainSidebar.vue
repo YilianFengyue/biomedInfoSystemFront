@@ -15,6 +15,7 @@ import { onMounted, ref, watch } from 'vue';
 import navigationUserType0 from "@/configs/navigation0";
 import navigationUserType1 from "@/configs/navigation1";
 import navigationUserType2 from "@/configs/navigation2";
+import navigationUserType3 from "@/configs/navigation3";
 
 // 导入 i18n
 import { useI18n } from 'vue-i18n';
@@ -33,8 +34,10 @@ const getNavigationConfig = () => {
       return navigationUserType1;
     case 2:
       return navigationUserType2;
+    case 3:
+      return navigationUserType3;
     default:
-      return {};
+      return navigationUserType1;
   }
 };
 
