@@ -372,27 +372,6 @@ export const routes = [
       transition: "slide-fade",
     },
   },
-    {
-    path: "/send-message",
-    name: "SendMessage",
-    component: () => import("@/views/pages/message/SendMessage.vue"),
-    meta: {
-      requiresAuth: true,
-      layout: "ui", // 或者你希望使用的布局
-      title: "发送消息",
-      transition: "slide-fade",
-    },
-  },
-  {
-    path: "/chat/:contactId", // 使用动态路由参数来表示和谁聊天
-    name: "ChatPage",
-    component: () => import("@/views/pages/message/ChatPage.vue"),
-    meta: {
-      requiresAuth: true,
-      layout: "ui", // 或者你希望使用的布局
-      title: "聊天",
-    },
-  },
   {
     path: "/profile",
     name: "profile",

@@ -1,130 +1,204 @@
-// src/components/toolbar/ToolbarNotifications.vue
+<template>
+  <v-menu
+    location="bottom right"
+    transition="slide-y-transition"
+    :close-on-content-click="false"
+    width="400"
+  >
+    <template v-slot:activator="{ props }">
+      <v-btn icon v-bind="props" class="text-none">
+        <v-badge :content="totalUnreadCount" color="error" :model-value="totalUnreadCount > 0">
+          <v-icon>mdi-bell-outline</v-icon>
+        </v-badge>
+      </v-btn>
+    </template>
+
+    <v-card>
+      <v-list lines="two" density="compact">
+        <v-list-subheader class="font-weight-bold">消息中心</v-list-subheader>
+        <v-divider />
+
+        <div v-if="!isConnected" class="pa-8 text-center text-grey">
+          <v-icon size="48" class="mb-2">mdi-wifi-off</v-icon>
+          <p>消息服务未连接</p>
+        </div>
+        <div v-else-if="conversations.length === 0" class="pa-8 text-center text-grey">
+           <v-icon size="48" class="mb-2">mdi-message-text-outline</v-icon>
+          <p>暂无消息</p>
+        </div>
+
+        <div v-else class="message-list-container">
+          <v-list-item
+            v-for="convo in conversations"
+            :key="convo.contactId"
+            @click="handleConversationClick(convo)"
+            link
+            :class="{ 'unread-conversation': convo.unreadCount > 0 }"
+          >
+            <template v-slot:prepend>
+              <v-badge
+                :content="convo.unreadCount"
+                color="error"
+                :model-value="convo.unreadCount > 0"
+                offset-x="8"
+                offset-y="8"
+              >
+                <v-avatar color="primary">
+                  <span class="white--text text-h6">{{ String(convo.contactId).charAt(0).toUpperCase() }}</span>
+                </v-avatar>
+              </v-badge>
+            </template>
+
+            <v-list-item-title class="font-weight-bold">
+              用户 {{ convo.contactId }}
+            </v-list-item-title>
+            <v-list-item-subtitle class="text-truncate">
+              {{ convo.lastMessage.content }}
+            </v-list-item-subtitle>
+
+            <template v-slot:append>
+              <div class="text-caption text-grey">{{ formatTime(convo.lastMessage.sendTime) }}</div>
+            </template>
+          </v-list-item>
+        </div>
+      </v-list>
+    </v-card>
+  </v-menu>
+</template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import { useWebSocket } from '@/utils/websocket'; // 确保路径正确，可能是 @/utils/websocket
+import { useWebSocket, type MessagePayload } from '@/utils/websocket';
+import { useProfileStore } from '@/stores/profileStore';
 
-// 定义消息类型
-interface Message {
-  id: number;
-  content: string;
-  from: string; // 后端推送的可能是 from 或 senderId，我们需要兼容
-  senderId?: string;
-  readStatus: number; // 【已修复】将 status 修改为 readStatus
-  timestamp?: string;
-  sendTime?: string;
+interface Conversation {
+  contactId: string;
+  lastMessage: MessagePayload;
+  unreadCount: number;
 }
 
 const router = useRouter();
-const { isConnected, messages } = useWebSocket();
+const profileStore = useProfileStore();
+const { isConnected, messages: globalMessages } = useWebSocket();
 
-// 计算未读消息数量
-const unreadCount = computed(() => {
-  // 【已修复】根据 message.readStatus 进行过滤
-  return messages.value.filter(m => m.readStatus === 0).length;
+const currentUser = computed(() => profileStore.user);
+
+/**
+ * 【核心逻辑】将会话列表进行分组和排序
+ * 1. 从全局消息列表（globalMessages）中，找出所有与当前用户相关的对话。
+ * 2. 按“对方ID”进行分组。
+ * 3. 在每个分组内，找到最新的一条消息作为该会话的预览。
+ * 4. 计算每个会话的未读消息数。
+ * 5. 按最新消息的时间进行排序，确保最新的会话显示在最上面。
+ */
+const conversations = computed((): Conversation[] => {
+  if (!currentUser.value?.id) return [];
+
+  const conversationsMap = new Map<string, { messages: MessagePayload[] }>();
+
+  // 遍历所有消息，按对方ID进行分组
+  for (const msg of globalMessages.value) {
+    const contactId = msg.senderId === String(currentUser.value.id) ? msg.receiverId : msg.senderId;
+    if (!conversationsMap.has(contactId)) {
+      conversationsMap.set(contactId, { messages: [] });
+    }
+    conversationsMap.get(contactId)!.messages.push(msg);
+  }
+
+  const result: Conversation[] = [];
+
+  // 处理每个会话
+  for (const [contactId, data] of conversationsMap.entries()) {
+    // 按时间排序，找到最新的一条消息
+    const sortedMessages = [...data.messages].sort((a, b) => new Date(b.sendTime).getTime() - new Date(a.sendTime).getTime());
+    const lastMessage = sortedMessages[0];
+    
+    // 计算未读消息数
+    const unreadCount = data.messages.filter(m => m.senderId === contactId && m.readStatus === 0).length;
+
+    result.push({
+      contactId,
+      lastMessage,
+      unreadCount,
+    });
+  }
+
+  // 按最新消息时间对所有会话进行排序
+  return result.sort((a, b) => new Date(b.lastMessage.sendTime).getTime() - new Date(a.lastMessage.sendTime).getTime());
 });
 
-// 标记为已读
-const markAsRead = async (message: Message) => {
-  if (message.readStatus === 1) return;
-  try {
-    const params = new URLSearchParams();
-    params.append('messageId', String(message.id));
-    await axios.post('/api/messages/read', params); // 建议加上 /api 前缀，与 http.ts 保持一致
-    
-    const msgInStore = messages.value.find(m => m.id === message.id);
-    if(msgInStore) {
-        // 【已修复】更新正确的字段
-        msgInStore.readStatus = 1; 
+/**
+ * 计算所有会话的总未读数，用于显示在小铃铛上
+ */
+const totalUnreadCount = computed(() => {
+  return conversations.value.reduce((total, convo) => total + convo.unreadCount, 0);
+});
+
+/**
+ * 【核心功能】处理会话点击事件
+ * 1. 将该会话内的所有未读消息标记为已读。
+ * 2. 跳转到与该用户的完整聊天页面。
+ */
+const handleConversationClick = async (conversation: Conversation) => {
+  // 找出所有需要标记为已读的消息
+  const messagesToMark = globalMessages.value.filter(
+    m => m.senderId === conversation.contactId && m.readStatus === 0
+  );
+
+  // 异步发送所有标记为已读的请求
+  const markAsReadPromises = messagesToMark.map(async (msg) => {
+    try {
+      const params = new URLSearchParams();
+      params.append('messageId', String(msg.id));
+      await axios.post('/api/messages/read', params);
+      
+      // 直接更新全局状态，让界面实时响应
+      const msgInStore = globalMessages.value.find(m => m.id === msg.id);
+      if (msgInStore) {
+        msgInStore.readStatus = 1;
+      }
+    } catch (err) {
+      console.error(`标记消息 ${msg.id} 为已读失败:`, err);
     }
-  } catch (err) {
-    console.error(`标记消息 ${message.id} 为已读失败:`, err);
-  }
+  });
+
+  await Promise.all(markAsReadPromises);
+
+  // 跳转到与该用户的完整聊天页面
+  // 注意：我们仍然保留了 ChatPage，因为它是查看完整历史记录的最佳场所
+  // 如果你确认不需要，可以注释掉这行
+  router.push({ name: 'ChatPage', params: { contactId: conversation.contactId } });
 };
 
-const handleMessageClick = (message: Message) => {
-  // 我们不再需要在这里调用 markAsRead，因为进入聊天页面后会自动处理
-  
-  // 【核心修改】
-  // 从消息中获取发件人ID
-  const contactId = message.from || message.senderId;
-  // 跳转到对应的聊天页面
-  router.push({ name: 'ChatPage', params: { contactId: contactId } });
-};
 
-const formatTime = (message: Message) => {
-  const timestamp = message.timestamp || message.sendTime;
+/**
+ * 格式化时间戳，用于显示在消息预览上
+ */
+const formatTime = (timestamp?: string) => {
   if (!timestamp) return '';
   const now = new Date();
   const msgTime = new Date(timestamp);
-  const diffInMinutes = Math.floor((now.getTime() - msgTime.getTime()) / (1000 * 60));
+  const diffInSeconds = Math.floor((now.getTime() - msgTime.getTime()) / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
 
   if (diffInMinutes < 1) return '刚刚';
-  if (diffInMinutes < 60) return `${diffInMinutes} 分钟前`;
-  if (diffInMinutes < 24 * 60) return `${Math.floor(diffInMinutes / 60)} 小时前`;
-  return `${Math.floor(diffInMinutes / (60 * 24))} 天前`;
+  if (diffInMinutes < 60) return `${diffInMinutes}分钟前`;
+  if (diffInHours < 24) return `${diffInHours}小时前`;
+  return `${diffInDays}天前`;
 };
 </script>
 
-<template>
-  <v-menu location="bottom right" transition="slide-y-transition" :close-on-content-click="false">
-    <template v-slot:activator="{ props }">
-      <v-btn icon v-bind="props" class="text-none">
-        <v-badge :content="unreadCount" color="error" :model-value="unreadCount > 0">
-          <v-icon>mdi-bell-outline</v-icon>
-        </v-badge>
-      </v-btn>
-    </template>
-    
-    <v-list elevation="1" lines="three" density="compact" width="400">
-      <v-list-subheader class="font-weight-bold pl-2">消息列表</v-list-subheader>
-      <v-divider />
-      
-      <div v-if="!isConnected" class="pa-4 text-center text-grey">
-        消息服务未连接
-      </div>
-      <div v-else-if="messages.length === 0" class="pa-4 text-center text-grey">
-        暂无消息
-      </div>
-      
-      <div v-else class="message-list-container">
-        <v-list-item 
-          v-for="message in messages" 
-          :key="message.id" 
-          @click="handleMessageClick(message)"
-          link
-           :class="{'unread-message': message.readStatus === 0}"
-        >
-          <template v-slot:prepend>
-             <v-badge dot :color="message.readStatus === 0 ? 'error' : 'transparent'" offset-x="-5">
-                <v-avatar color="primary" size="40">
-                  <span class="white--text text-h6">{{ String(message.from || message.senderId || 'S').charAt(0).toUpperCase() }}</span>
-                </v-avatar>
-             </v-badge>
-          </template>
-          
-          <v-list-item-title class="font-weight-bold">
-            来自用户 {{ message.from || message.senderId }}
-          </v-list-item-title>
-          <v-list-item-subtitle class="text-truncate">{{ message.content }}</v-list-item-subtitle>
-           <template v-slot:append>
-            <div class="text-caption text-grey">{{ formatTime(message) }}</div>
-           </template>
-        </v-list-item>
-      </div>
-    </v-list>
-  </v-menu>
-</template>
-
 <style scoped>
 .message-list-container {
-  max-height: 400px;
+  max-height: 450px; /* 增加最大高度以容纳更多会话 */
   overflow-y: auto;
 }
-.unread-message {
-  background-color: rgba(var(--v-theme-primary), 0.05);
+.unread-conversation {
+  background-color: rgba(var(--v-theme-primary), 0.05); /* 未读会话的背景高亮 */
 }
 .text-truncate {
   white-space: nowrap;
