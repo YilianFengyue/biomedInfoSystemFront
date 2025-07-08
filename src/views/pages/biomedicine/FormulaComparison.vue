@@ -3,190 +3,195 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
 // --- 类型定义 ---
-// 方剂详情
-interface FormulaDetail {
+interface Formula {
   id: number;
   name: string;
-  alias: string | null;
-  source: string;
-  dynasty: string;
-  author: string;
-  composition: string;
-  functionEffect: string;
-  mainTreatment: string;
-  // ... 其他详细字段
 }
 
-// 接口返回的完整数据结构
 interface ComparisonData {
-  formulas: FormulaDetail[];
+  formulas: Formula[];
   comparisonPoints: Record<string, string[]>;
 }
 
-// --- 组件状态 ---
+// --- 方剂对比状态 ---
 const allFormulas = ref<{ id: number; name: string }[]>([]);
-const selectedFormulaIds = ref<number[]>([1, 2]); // 默认选中两个，方便演示
+const selectedFormulaIds = ref<number[]>([]);
 const comparisonData = ref<ComparisonData | null>(null);
-const loading = ref(false);
-const error = ref<string | null>(null);
+const compareLoading = ref(false);
+const compareError = ref<string | null>(null);
 
-// --- 方法 ---
-// 页面加载时，获取所有方剂用于选择器
-const fetchAllFormulas = async () => {
+// --- API 调用方法 ---
+const fetchAllFormulasForCompare = async () => {
   try {
-    // 调用分页接口获取方剂列表，这里简化为只取前100条作为示例
-    const response = await axios.get('/api/formula/page', {
-      params: { page: 1, size: 100 }
-    });
-    if (response.data && response.data.code === 20000) {
-      allFormulas.value = response.data.data.records.map((f: Formula) => ({
-        id: f.id,
-        name: f.name
-      }));
+    const response = await axios.get('/api/formula/page', { params: { page: 1, size: 200 } });
+    if (response.data?.code === 20000) {
+      allFormulas.value = response.data.data.records.map((f: Formula) => ({ id: f.id, name: f.name }));
     }
   } catch (err) {
     console.error("获取所有方剂列表失败:", err);
   }
 };
 
-// 执行对比
 const performComparison = async () => {
   if (selectedFormulaIds.value.length < 2) {
-    error.value = '请至少选择两个方剂进行对比。';
-    comparisonData.value = null;
+    compareError.value = '请至少选择两个方剂。';
     return;
   }
-
-  loading.value = true;
-  error.value = null;
+  compareLoading.value = true;
+  compareError.value = null;
   comparisonData.value = null;
-
   try {
     const response = await axios.post('/api/formula/compare', selectedFormulaIds.value);
-    
-    if (response.data && response.data.code === 20000) {
+    if (response.data?.code === 20000) {
       comparisonData.value = response.data.data;
     } else {
-      throw new Error(response.data.msg || '获取对比数据失败');
+      throw new Error(response.data.msg);
     }
   } catch (err: any) {
-    console.error('方剂对比请求出错:', err);
-    error.value = err.message || '网络请求失败，请检查后端服务是否可用。';
+    compareError.value = err.message || '请求失败';
   } finally {
-    loading.value = false;
+    compareLoading.value = false;
   }
 };
 
-// --- 生命周期钩子 ---
 onMounted(() => {
-  fetchAllFormulas();
+  fetchAllFormulasForCompare();
 });
 </script>
 
 <template>
-  <v-container class="py-8 px-6" fluid>
-    <v-row justify="center">
-      <v-col cols="12" md="11" lg="9">
-        <div class="text-center mb-8">
-          <v-icon size="48" color="primary" class="mb-4">mdi-compare-horizontal</v-icon>
-          <h1 class="text-h4 font-weight-bold">方剂对比分析</h1>
-          <p class="text-h6 text-grey-darken-1 font-weight-regular mt-2">
-            深入洞察不同方剂之间的异同
-          </p>
-        </div>
+  <div class="content-section">
+    <v-card class="compare-card glass-card" elevation="8">
+      <v-card-title class="section-title">
+        <v-icon class="section-icon">mdi-compare-horizontal</v-icon>
+        方剂对比
+      </v-card-title>
+      <v-card-text class="compare-content">
+        <v-select v-model="selectedFormulaIds" :items="allFormulas" item-title="name" item-value="id"
+          label="选择两个或更多方剂进行对比" variant="outlined" multiple chips clearable prepend-inner-icon="mdi-pill"
+          class="formula-select" density="comfortable" />
+        <v-btn :loading="compareLoading" :disabled="selectedFormulaIds.length < 2" color="primary" variant="flat"
+          size="large" @click="performComparison" block class="compare-btn">
+          <v-icon class="mr-2">mdi-compare</v-icon>
+          开始对比分析
+        </v-btn>
+      </v-card-text>
+    </v-card>
 
-        <v-card class="pa-4 pa-md-6 mb-8" elevation="5" rounded="xl">
-          <v-card-title class="text-h6 font-weight-medium mb-4">
-            选择要对比的方剂
-          </v-card-title>
-          <v-select
-            v-model="selectedFormulaIds"
-            :items="allFormulas"
-            item-title="name"
-            item-value="id"
-            label="选择两个或更多方剂"
-            variant="outlined"
-            multiple
-            chips
-            clearable
-            prepend-inner-icon="mdi-pill"
-          ></v-select>
-          <v-card-actions class="mt-4">
-            <v-spacer></v-spacer>
-            <v-btn
-              :loading="loading"
-              :disabled="selectedFormulaIds.length < 2"
-              color="primary"
-              variant="flat"
-              size="x-large"
-              @click="performComparison"
-              block
-            >
-              开始对比
-              <v-icon right>mdi-arrow-right-bold-box-outline</v-icon>
-            </v-btn>
-          </v-card-actions>
-        </v-card>
+    <div v-if="compareLoading" class="loading-section">
+      <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular>
+      <p class="loading-text">对比分析中...</p>
+    </div>
 
-        <div v-if="loading" class="text-center mt-12">
-          <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-          <p class="mt-4 text-grey-darken-1">正在生成对比报告，请稍候...</p>
-        </div>
+    <v-alert v-if="compareError" type="error" :text="compareError" variant="tonal" class="error-alert" />
 
-        <v-alert
-          v-if="error"
-          type="error"
-          :text="error"
-          variant="tonal"
-          class="mb-6"
-          border="start"
-        ></v-alert>
-
-        <v-card v-if="comparisonData" variant="outlined" rounded="lg">
-          <v-table class="comparison-table">
+    <v-card v-if="comparisonData" class="comparison-result glass-card" elevation="8">
+      <v-card-title class="comparison-title">
+        <v-icon class="mr-2">mdi-table</v-icon>
+        对比结果
+      </v-card-title>
+      <v-card-text class="comparison-content">
+        <div class="table-responsive-wrapper">
+          <v-table class="comparison-table elegant-table">
             <thead>
-              <tr>
-                <th class="text-left font-weight-bold" style="width: 15%;">对比项</th>
-                <th 
-                  v-for="formula in comparisonData.formulas" 
-                  :key="formula.id"
-                  class="text-left font-weight-bold text-primary"
-                >
+              <tr class="table-header">
+                <th class="comparison-label">对比项</th>
+                <th v-for="formula in comparisonData.formulas" :key="formula.id" class="formula-header">
                   {{ formula.name }}
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(values, key) in comparisonData.comparisonPoints" :key="key">
-                <td class="font-weight-medium text-grey-darken-2">{{ key }}</td>
-                <td v-for="(value, index) in values" :key="index">
+              <tr v-for="(values, key) in comparisonData.comparisonPoints" :key="key" class="comparison-row">
+                <td class="comparison-key">{{ key }}</td>
+                <td v-for="(value, index) in values" :key="index" class="comparison-value">
                   {{ value || '无' }}
                 </td>
               </tr>
             </tbody>
           </v-table>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+        </div>
+      </v-card-text>
+    </v-card>
+  </div>
 </template>
 
 <style scoped>
-.v-container {
-  background-color: #f5f5f5;
+/* 此处放置该组件特有的样式 */
+.content-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
-
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px 0 rgba(106, 114, 153, 0.2);
+}
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #3F51B5;
+  display: flex;
+  align-items: center;
+  padding-bottom: 1rem;
+}
+.section-icon {
+  margin-right: 0.75rem;
+}
+.elegant-table {
+  background-color: transparent;
+}
+:deep(thead) {
+  background-color: rgba(63, 81, 181, 0.08);
+}
+:deep(th) {
+  font-weight: bold !important;
+  color: #3F51B5 !important;
+}
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 1rem;
+  gap: 1rem;
+  text-align: center;
+}
+.loading-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #3F51B5;
+}
+.error-alert {
+  font-weight: 500;
+}
+.compare-card {
+  padding: 1rem;
+}
+.compare-btn {
+  font-weight: bold;
+}
+.table-responsive-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
 .comparison-table {
-  border-radius: 8px;
+  width: 100%;
+  table-layout: fixed;
 }
-
-.comparison-table th,
-.comparison-table td {
-  vertical-align: top;
-  padding: 16px !important;
+:deep(.comparison-table th),
+:deep(.comparison-table td) {
+  white-space: nowrap;
+  padding: 16px 20px !important;
 }
-
-.comparison-table tbody tr:hover {
-  background-color: #f9f9f9;
+:deep(.comparison-table .comparison-label) {
+  width: 140px;
+}
+:deep(.comparison-table .formula-header) {
+  min-width: 220px;
 }
 </style>

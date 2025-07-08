@@ -1425,6 +1425,18 @@
   dependencies:
     "@bufbuild/protobuf" "^1.10.0"
 
+"@lottiefiles/dotlottie-vue@^0.7.2":
+  version "0.7.2"
+  resolved "https://registry.npmmirror.com/@lottiefiles/dotlottie-vue/-/dotlottie-vue-0.7.2.tgz#95a01eb210fadea14e437aec3d379171ffd2d9dd"
+  integrity sha512-ePt8dBsmtCgNNTuf463YvM/kJgbQtPUgdwZaO7ODZPBdszrcA4YyiWmBFv31LB0bj+9FdyXLwTa+PDRLJ/+5WA==
+  dependencies:
+    "@lottiefiles/dotlottie-web" "0.47.0"
+
+"@lottiefiles/dotlottie-web@0.47.0":
+  version "0.47.0"
+  resolved "https://registry.npmmirror.com/@lottiefiles/dotlottie-web/-/dotlottie-web-0.47.0.tgz#f6e0f511230ffecbaf725940318c961f108d49b5"
+  integrity sha512-YN6wSB4iYZBYEAFKEs/taufrPH3rfNlUA632Ib61WoR58TALAJ1ZX8yDIGUBT28byMJhZR4+xdpRX4v7X8OeBQ==
+
 "@malept/cross-spawn-promise@^2.0.0":
   version "2.0.0"
   resolved "https://registry.npmmirror.com/@malept/cross-spawn-promise/-/cross-spawn-promise-2.0.0.tgz#d0772de1aa680a0bfb9ba2f32b4c828c7857cb9d"
