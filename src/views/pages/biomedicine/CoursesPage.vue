@@ -2,7 +2,7 @@
   <v-card flat class="main-card">
     <v-card-text class="px-6 pt-6">
       <div v-if="loading" class="loading-section">
-        <v-progress-circular indeterminate color="blue-darken-3" size="60"></v-progress-circular>
+        <v-progress-circular indeterminate color="#B0D183" size="60"></v-progress-circular>
         <p class="text-h6 mt-6 text-grey-darken-1">正在加载课程列表...</p>
       </div>
       <v-alert v-else-if="error" type="error" variant="tonal" class="error-alert">
@@ -25,19 +25,19 @@
                 <v-card-text class="py-4">
                   <v-row align="center">
                     <v-col cols="auto">
-                      <v-avatar size="56" color="blue-lighten-4">
-                        <v-icon color="blue-darken-3" size="32">mdi-book-open-page-variant</v-icon>
+                      <v-avatar size="56" color="#C1CBAD">
+                        <v-icon color="#BBC23F" size="32">mdi-book-open-page-variant</v-icon>
                       </v-avatar>
                     </v-col>
                     <v-col>
-                      <h3 class="text-h5 font-weight-bold text-blue-darken-4 mb-1">{{ course.title }}</h3>
+                      <h3 class="text-h5 font-weight-bold mb-1" style="color: #BBC23F;">{{ course.title }}</h3>
                       <p class="text-body-1 text-grey-darken-2 mb-0">
                         <v-icon size="16" class="mr-1">mdi-account-tie</v-icon>
                         {{ course.teacherName }}
                       </p>
                     </v-col>
                     <v-col cols="auto">
-                      <v-chip color="blue-lighten-2" variant="tonal" size="small">
+                      <v-chip color="#C1CBAD" variant="tonal" size="small">
                         <v-icon start size="16">mdi-school</v-icon>
                         课程
                       </v-chip>
@@ -48,7 +48,7 @@
             </template>
             <v-card class="chapter-container ml-4 mb-4" elevation="1">
               <div v-if="course.loadingDetails" class="loading-details">
-                <v-progress-circular indeterminate color="blue-darken-3" size="40"></v-progress-circular>
+                <v-progress-circular indeterminate color="#B0D183" size="40"></v-progress-circular>
                 <p class="text-body-2 mt-3 text-grey-darken-1">正在加载章节详情...</p>
               </div>
               <v-alert v-else-if="course.errorDetails" type="warning" variant="text" class="ma-3">
@@ -70,13 +70,13 @@
                     <template v-slot:activator="{ props }">
                       <v-list-item v-bind="props" class="chapter-item">
                         <template v-slot:prepend>
-                          <v-icon color="teal-darken-2" size="20">mdi-folder-open</v-icon>
+                          <v-icon color="#BBC23F" size="20">mdi-folder-open</v-icon>
                         </template>
                         <v-list-item-title class="text-subtitle-1 font-weight-medium">
                           {{ chapter.title }}
                         </v-list-item-title>
                         <template v-slot:append>
-                          <v-chip size="x-small" color="teal-lighten-3" variant="tonal">
+                          <v-chip size="x-small" color="#C1CBAD" variant="tonal">
                             {{ chapter.lessons?.length || 0 }} 节课
                           </v-chip>
                         </template>
@@ -219,9 +219,9 @@ const getContentTypeIcon = (type: string) => {
 
 const getIconColor = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'video': return 'red-darken-1';
-    case 'audio': return 'blue-darken-1';
-    case 'document': return 'green-darken-1';
+    case 'video': return '#D9A689';
+    case 'audio': return '#BCA881';
+    case 'document': return '#B0D183';
     default: return 'grey-darken-1';
   }
 }
@@ -281,7 +281,7 @@ onMounted(() => {
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-    border-color: #1976d2;
+    border-color: #BBC23F;
   }
 }
 
@@ -335,7 +335,7 @@ onMounted(() => {
 
   &:hover {
     background: #f8fdf8;
-    border-color: #4caf50;
+    border-color: #B0D183;
   }
 }
 
@@ -350,7 +350,7 @@ onMounted(() => {
 
   &:hover {
     background: rgba(33, 150, 243, 0.05);
-    border-color: #2196f3;
+    border-color: #B0D183;
     transform: translateX(4px);
   }
 }

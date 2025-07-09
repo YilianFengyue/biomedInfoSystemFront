@@ -3,8 +3,8 @@
     <v-app-bar app color="white" flat elevation="2">
       <v-container class="d-flex align-center py-0 px-2">
         <v-toolbar-title class="d-flex align-center font-weight-bold" style="cursor: pointer;">
-          <v-icon color="blue-darken-3" class="mr-2">mdi-leaf-circle</v-icon>
-          <span class="text-blue-darken-4">本草学堂</span>
+          <v-icon color="#BBC23F" class="mr-2">mdi-leaf-circle</v-icon>
+          <span style="color: #BBC23F;">本草学堂</span>
         </v-toolbar-title>
         <v-spacer></v-spacer>
         <div class="d-none d-md-flex">
@@ -51,7 +51,7 @@
                   <p class="text-h6 text-md-h5 font-weight-light text-white mb-8 hero-subtitle">
                     系统化学习中医药材知识，与名师一同辨识、理解、运用本草精华。
                   </p>
-                  <v-btn size="x-large" color="blue-lighten-1" elevation="4" @click="scrollTo('courses')">
+                  <v-btn size="x-large" color="#B0D183" elevation="4" @click="scrollTo('courses')">
                     <v-icon left class="mr-2">mdi-school</v-icon>
                     立即开始学习
                   </v-btn>
@@ -92,7 +92,7 @@
             <h2 class="text-h4 font-weight-bold">精选热门资源</h2>
             <v-spacer></v-spacer>
             <v-btn
-              color="primary"
+              color="#B0D183"
               variant="text"
               @click="router.push('/biomedicine/resource-list')"
             >
@@ -120,7 +120,7 @@
                   </v-img>
                 </v-avatar>
                 <h3 class="text-h6 font-weight-bold">{{ teacher.nickname || teacher.username }}</h3>
-                <p class="text-body-1 text-blue-darken-2 font-weight-medium">{{ teacher.bio || '资深中医药学专家' }}</p>
+                <p class="text-body-1 font-weight-medium" style="color: #BBC23F;">{{ teacher.bio || '资深中医药学专家' }}</p>
               </v-card>
             </v-col>
           </v-row>
@@ -130,7 +130,7 @@
 
     <v-footer class="pa-md-10 pa-5" color="grey-lighten-5">
   <v-container>
-    <h2 class="text-h4 font-weight-bold text-center mb-8 text-primary">
+    <h2 class="text-h4 font-weight-bold text-center mb-8" style="color: #B0D183;">
       开发团队
     </h2>
 
@@ -238,20 +238,20 @@ const features = ref([
   { title: '教学资源上传',
   description: '上传您的个人课程，相互交流学术问题。',
   icon: 'mdi-human-male-board',
-  color: 'blue-darken-2' ,
+  color: '#B0D183' ,
   clickHandler: () => { router.push('/biomedicine/eduupload'); }
   },
   {
     title: '海量药材图谱',
     description: '高清、多角度的药材图片库，辅助精准辨识。',
     icon: 'mdi-image-multiple',
-    color: 'teal-darken-2',
+    color: '#BBC23F',
     clickHandler: () => { router.push('/herb-search'); }
   },
   { title: '系统化学习路径',
     description: '从入门到精通，为您规划最科学的学习方案。',
     icon: 'mdi-sitemap',
-    color: 'orange-darken-2' ,
+    color: '#BCA881' ,
     clickHandler: () => { router.push('/biomedicine/eduplan'); }
   }
 ]);

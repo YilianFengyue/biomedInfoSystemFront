@@ -12,13 +12,13 @@
           <v-card-title class="d-flex align-center">
             <v-icon
               class="mr-2"
-              color="primary"
+              color="#B0D183"
             >mdi-map-marker-radius</v-icon>
             {{ t('dataCenter.main') }}
             <v-spacer></v-spacer>
             <v-chip
               v-if="weatherInfo"
-              color="blue"
+              color="#BCA881"
               variant="tonal"
               label
               size="small"
@@ -39,14 +39,14 @@
               >
                 <v-progress-circular
                   indeterminate
-                  color="primary"
+                  color="#B0D183"
                 ></v-progress-circular>
                 <div class="mt-2">{{ t('dataCenter.map_load') }}</div>
               </div>
                <v-fab-transition>
                 <v-btn
                   v-if="isDetailView"
-                  color="primary"
+                  color="#B0D183"
                   elevation="8"
                   icon="mdi-arrow-left"
                   @click="showProvinceView"
@@ -70,7 +70,7 @@
           <v-card-title class="d-flex align-center">
             <v-icon
               class="mr-2"
-              color="primary"
+              color="#B0D183"
             >mdi-chart-pie</v-icon>
             {{ t('dataCenter.med_dis') }}
             <v-spacer></v-spacer>
@@ -140,7 +140,7 @@
           <v-card-title class="d-flex align-center">
             <v-icon
               class="mr-2"
-              color="primary"
+              color="#B0D183"
             >mdi-image-multiple</v-icon>
             {{ t('dataCenter.comparison') }}
           </v-card-title>
@@ -234,7 +234,7 @@
           <v-card-title class="d-flex align-center">
             <v-icon
               class="mr-2"
-              color="primary"
+              color="#B0D183"
             >mdi-source-branch</v-icon>
             {{ t('dataCenter.data_ma') }}
             <v-spacer></v-spacer>
@@ -261,7 +261,7 @@
             >
               <v-progress-circular
                 indeterminate
-                color="primary"
+                color="#B0D183"
               ></v-progress-circular>
             </div>
             <v-timeline
@@ -411,8 +411,8 @@ const filteredDataHistory = computed(() => {
 });
 const formatHistoryTimestamp = (timestamp: string) => new Date(timestamp).toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
 const getHistoryActionColor = (action: string) => {
-    if (action.toUpperCase() === 'UPDATE') return 'orange';
-    if (action.toUpperCase() === 'CREATE') return 'success';
+    if (action.toUpperCase() === 'UPDATE') return '#BCA881';
+    if (action.toUpperCase() === 'CREATE') return '#B0D183';
     return 'grey';
 }
 const calculateProvinceDistribution = (data: HerbDistribution[]) => {
@@ -497,7 +497,7 @@ const initMapAndMarkers = (AMap: any) => {
       });
 
       provinceClusterMarkers = Object.values(provinceAggregates).map(agg => {
-        const markerContent = `<div style="background-color: #0093FF; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); cursor: pointer;">${agg.count}</div>`;
+        const markerContent = `<div style="background-color: #B0D183; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); cursor: pointer;">${agg.count}</div>`;
         const marker = new AMap.Marker({
           position: [agg.lng, agg.lat],
           content: markerContent,
@@ -557,6 +557,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
+.text-primary {
+  color: #B0D183 !important;
+}
+
 .map-container {
   width: 100%;
   height: 60vh;
