@@ -1,121 +1,75 @@
 <template>
   <v-card flat class="main-card">
-    <v-card-text class="px-6 pt-6">
-      <div v-if="loading" class="loading-section">
-        <v-progress-circular indeterminate color="blue-darken-3" size="60"></v-progress-circular>
-        <p class="text-h6 mt-6 text-grey-darken-1">正在加载课程列表...</p>
-      </div>
-      <v-alert v-else-if="error" type="error" variant="tonal" class="error-alert">
-        <template v-slot:prepend>
-          <v-icon>mdi-alert-circle</v-icon>
-        </template>
-        <v-alert-title>加载失败</v-alert-title>
-        <div>{{ error }}</div>
-      </v-alert>
-      <div v-else class="courses-content">
-        <v-list class="courses-list" v-model:opened="openCourses">
-          <v-list-group
-            v-for="course in courses"
-            :key="course.id"
-            :value="course.id"
-            class="course-group"
-          >
-            <template v-slot:activator="{ props }">
-              <v-card v-bind="props" class="course-card mb-4" elevation="2" hover>
-                <v-card-text class="py-4">
-                  <v-row align="center">
-                    <v-col cols="auto">
-                      <v-avatar size="56" color="blue-lighten-4">
-                        <v-icon color="blue-darken-3" size="32">mdi-book-open-page-variant</v-icon>
-                      </v-avatar>
-                    </v-col>
-                    <v-col>
-                      <h3 class="text-h5 font-weight-bold text-blue-darken-4 mb-1">{{ course.title }}</h3>
-                      <p class="text-body-1 text-grey-darken-2 mb-0">
-                        <v-icon size="16" class="mr-1">mdi-account-tie</v-icon>
-                        {{ course.teacherName }}
-                      </p>
-                    </v-col>
-                    <v-col cols="auto">
-                      <v-chip color="blue-lighten-2" variant="tonal" size="small">
-                        <v-icon start size="16">mdi-school</v-icon>
-                        课程
-                      </v-chip>
-                    </v-col>
-                  </v-row>
-                </v-card-text>
-              </v-card>
+    <div v-if="loading" class="loading-section">
+      <v-progress-circular indeterminate color="#B0D183" size="60"></v-progress-circular>
+      <p class="text-h6 mt-6 text-grey-darken-1">正在加载课程列表...</p>
+    </div>
+
+    <v-alert v-else-if="error" type="error" variant="tonal" class="ma-4">
+      <template v-slot:prepend>
+        <v-icon>mdi-alert-circle</v-icon>
+      </template>
+      <v-alert-title>加载失败</v-alert-title>
+      <div>{{ error }}</div>
+    </v-alert>
+
+    <v-list v-else v-model:opened="openCourses" lines="two">
+      <v-list-subheader inset>所有课程</v-list-subheader>
+
+      <v-list-group v-for="course in courses" :key="course.id" :value="course.id">
+        <template v-slot:activator="{ props }">
+          <v-list-item v-bind="props" :title="course.title" :subtitle="course.teacherName" class="course-item">
+            <template v-slot:prepend>
+              <v-avatar color="#C1CBAD">
+                <v-icon color="white">mdi-book-open-page-variant</v-icon>
+              </v-avatar>
             </template>
-            <v-card class="chapter-container ml-4 mb-4" elevation="1">
-              <div v-if="course.loadingDetails" class="loading-details">
-                <v-progress-circular indeterminate color="blue-darken-3" size="40"></v-progress-circular>
-                <p class="text-body-2 mt-3 text-grey-darken-1">正在加载章节详情...</p>
-              </div>
-              <v-alert v-else-if="course.errorDetails" type="warning" variant="text" class="ma-3">
-                {{ course.errorDetails }}
-              </v-alert>
-              <div v-else-if="course.chapters" class="chapters-content">
-                <div v-if="course.chapters.length === 0" class="empty-chapters">
-                  <v-icon color="grey-lighten-1" size="48">mdi-book-off</v-icon>
-                  <p class="text-body-1 text-grey-darken-1 mt-2">本课程暂无章节内容</p>
-                </div>
-                <v-list v-else class="chapters-list">
-                  <v-list-group
-                    v-for="chapter in course.chapters"
-                    :key="chapter.id"
-                    :value="`${course.id}-${chapter.id}`"
-                    subgroup
-                    class="chapter-group"
-                  >
-                    <template v-slot:activator="{ props }">
-                      <v-list-item v-bind="props" class="chapter-item">
-                        <template v-slot:prepend>
-                          <v-icon color="teal-darken-2" size="20">mdi-folder-open</v-icon>
-                        </template>
-                        <v-list-item-title class="text-subtitle-1 font-weight-medium">
-                          {{ chapter.title }}
-                        </v-list-item-title>
-                        <template v-slot:append>
-                          <v-chip size="x-small" color="teal-lighten-3" variant="tonal">
-                            {{ chapter.lessons?.length || 0 }} 节课
-                          </v-chip>
-                        </template>
-                      </v-list-item>
-                    </template>
-                    <div v-if="!chapter.lessons || chapter.lessons.length === 0" class="empty-lessons">
-                      <v-icon color="grey-lighten-2" size="24">mdi-playlist-remove</v-icon>
-                      <span class="text-body-2 text-grey ml-2">本章节暂无内容</span>
-                    </div>
-                    <v-list-item
-                      v-else
-                      v-for="lesson in chapter.lessons"
-                      :key="lesson.id"
-                      @click="playResource(lesson.resourceUrl)"
-                      class="lesson-item"
-                    >
-                      <template v-slot:prepend>
-                        <v-avatar size="32" :color="getIconColor(lesson.contentType)" variant="tonal">
-                          <v-icon size="16" :color="getIconColor(lesson.contentType)">
-                            {{ getContentTypeIcon(lesson.contentType) }}
-                          </v-icon>
-                        </v-avatar>
-                      </template>
-                      <v-list-item-title class="text-subtitle-2">{{ lesson.title }}</v-list-item-title>
-                      <template v-slot:append>
-                        <v-chip size="small" variant="outlined" :color="getIconColor(lesson.contentType)">
-                          <v-icon start size="14">mdi-clock-outline</v-icon>
-                          {{ formatDuration(lesson.duration) }}
-                        </v-chip>
-                      </template>
-                    </v-list-item>
-                  </v-list-group>
-                </v-list>
-              </div>
-            </v-card>
-          </v-list-group>
-        </v-list>
-      </div>
-    </v-card-text>
+          </v-list-item>
+        </template>
+
+        <div v-if="course.loadingDetails" class="loading-details">
+          <v-progress-circular indeterminate color="#B0D183" size="30"></v-progress-circular>
+          <p class="text-body-2 ml-4 text-grey-darken-1">正在加载章节详情...</p>
+        </div>
+
+        <v-alert v-else-if="course.errorDetails" type="warning" variant="text" class="mx-4 my-2">
+          {{ course.errorDetails }}
+        </v-alert>
+
+        <div v-else-if="course.chapters">
+          <div v-if="course.chapters.length === 0" class="empty-content">
+            <v-icon color="grey-lighten-1" size="36">mdi-book-off</v-icon>
+            <p class="text-body-1 text-grey-darken-1 mt-2">本课程暂无章节内容</p>
+          </div>
+
+          <template v-for="chapter in course.chapters" :key="chapter.id">
+            <v-list-subheader v-if="chapter.lessons && chapter.lessons.length > 0" class="chapter-subheader">
+              {{ chapter.title }}
+            </v-list-subheader>
+
+            <v-list-item
+              v-for="lesson in chapter.lessons"
+              :key="lesson.id"
+              :title="lesson.title"
+              @click="playResource(lesson.resourceUrl)"
+              class="lesson-item"
+            >
+              <template v-slot:prepend>
+                <v-avatar size="32" :color="getIconColor(lesson.contentType)" variant="tonal">
+                  <v-icon size="16">{{ getContentTypeIcon(lesson.contentType) }}</v-icon>
+                </v-avatar>
+              </template>
+              <template v-slot:append>
+                <v-chip size="small" variant="text" :color="getIconColor(lesson.contentType)">
+                  <v-icon start size="14">mdi-clock-outline</v-icon>
+                  {{ formatDuration(lesson.duration) }}
+                </v-chip>
+              </template>
+            </v-list-item>
+          </template>
+        </div>
+      </v-list-group>
+    </v-list>
   </v-card>
 </template>
 
@@ -152,7 +106,7 @@ interface Course {
 const courses = ref<Course[]>([]);
 const loading = ref<boolean>(true);
 const error = ref<string | null>(null);
-const openCourses = ref<number[]>([]);
+const openCourses = ref<string[]>([]); // Note: v-list-group with string/number values works best if the array type matches
 
 const fetchCourses = async () => {
   loading.value = true;
@@ -160,7 +114,7 @@ const fetchCourses = async () => {
   try {
     const response = await axios.get('http://localhost:81/api/courses');
     if (response.data.code === 20000) {
-      courses.value = response.data.data;
+      courses.value = response.data.data.map((c: Course) => ({ ...c, id: String(c.id) })); // Ensure ID is string for v-model
     } else {
       throw new Error(response.data.msg || '无法加载课程列表');
     }
@@ -190,15 +144,16 @@ const fetchCourseDetails = async (course: Course) => {
   }
 };
 
-watch(openCourses, (newIds, oldIds) => {
-  const addedId = newIds.find(id => !oldIds.includes(id));
-  if (addedId) {
-    const courseToLoad = courses.value.find(c => c.id === addedId);
-    if (courseToLoad) {
+watch(openCourses, (newIds) => {
+  const latestId = newIds[newIds.length - 1]; // Get the last opened item
+  if (latestId) {
+    const courseToLoad = courses.value.find(c => c.id === latestId);
+    if (courseToLoad && !courseToLoad.chapters) {
       fetchCourseDetails(courseToLoad);
     }
   }
 }, { deep: true });
+
 
 const playResource = (url: string) => {
   if (url) {
@@ -219,9 +174,9 @@ const getContentTypeIcon = (type: string) => {
 
 const getIconColor = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'video': return 'red-darken-1';
-    case 'audio': return 'blue-darken-1';
-    case 'document': return 'green-darken-1';
+    case 'video': return '#D9A689';
+    case 'audio': return '#BCA881';
+    case 'document': return '#B0D183';
     default: return 'grey-darken-1';
   }
 }
@@ -239,135 +194,60 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* .courses-container 及其样式已被移除 */
-
 .main-card {
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  /* 如果希望卡片在页面中有边距，可以添加 margin */
-  margin: 2rem;
+  border-radius: 0; // No border-radius for a full-width look
+  margin: 0; // Ensure no margin
+  background-color: #f9f9f9;
 }
 
-.loading-section {
+.loading-section, .empty-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  min-height: 300px;
   text-align: center;
-}
-
-.error-alert {
-  margin: 2rem 0;
-}
-
-/* .courses-hint 及其样式已被移除 */
-
-.courses-list {
-  background: transparent;
-}
-
-.course-group {
-  margin-bottom: 1.5rem;
-}
-
-.course-card {
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: 2px solid transparent;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-    border-color: #1976d2;
-  }
-}
-
-.chapter-container {
-  border-radius: 12px;
-  background: #fafafa;
-  border: 1px solid #e0e0e0;
 }
 
 .loading-details {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  text-align: center;
-}
-
-.empty-chapters, .empty-lessons {
-  display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  padding: 2rem;
-  text-align: center;
+  padding: 1.5rem;
 }
 
-.empty-lessons {
-  flex-direction: row;
-  padding: 1rem;
-  margin-left: 2rem;
-}
+.course-item {
+  border-bottom: 1px solid #e0e0e0;
 
-.chapters-content {
-  padding: 1rem;
-}
-
-.chapters-list {
-  background: transparent;
-}
-
-.chapter-group {
-  margin-bottom: 0.5rem;
-}
-
-.chapter-item {
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-  border: 1px solid #e8f5e8;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #f8fdf8;
-    border-color: #4caf50;
+  &:last-child {
+    border-bottom: none;
   }
+}
+
+.chapter-subheader {
+  font-weight: bold;
+  color: #555;
+  margin-left: 1rem;
+  margin-top: 0.5rem;
 }
 
 .lesson-item {
-  cursor: pointer;
-  border-radius: 6px;
-  margin: 0.25rem 0;
-  margin-left: 1rem;
-  padding: 0.75rem 1rem;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
+  margin-left: 2rem;
+  margin-right: 1rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  padding-left: 1rem;
 
   &:hover {
-    background: rgba(33, 150, 243, 0.05);
-    border-color: #2196f3;
-    transform: translateX(4px);
+    background-color: rgba(176, 209, 131, 0.1);
   }
 }
 
-// 响应式设计
+// Responsive design
 @media (max-width: 768px) {
-  .main-card {
-    margin: 1rem; /* 在小屏幕上调整边距 */
-  }
-
-  .chapter-container {
-    margin-left: 0.5rem;
-  }
-
   .lesson-item {
     margin-left: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    margin-right: 0.5rem;
   }
 }
 </style>

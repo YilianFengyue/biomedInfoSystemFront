@@ -25,7 +25,7 @@ const props = defineProps({
     type: Array,
     default: () => [
       {
-        name: "Sales",
+        name: "Data Points",
         data: [11, 32, 45, 13],
       },
     ],
@@ -114,15 +114,13 @@ onMounted(() => {
 </script>
 <template>
   <v-card class="d-flex flex-grow-1 bg-primary-darken-4 pa-3" theme="dark">
-    <!-- loading spinner -->
     <div v-if="loading" class="d-flex flex-grow-1 align-center justify-center">
       <v-progress-circular indeterminate color="primary"></v-progress-circular>
     </div>
 
-    <!-- information -->
     <div v-else class="d-flex flex-column flex-grow-1">
       <v-card-title class="d-flex">
-        <div class="font-weight-bold">{{ $t(label) }}</div>
+        <div class="font-weight-bold">核心数据概览</div>
         <v-spacer></v-spacer>
         <v-btn
           variant="text"
@@ -136,23 +134,21 @@ onMounted(() => {
       <div class="d-flex flex-column flex-grow-1">
         <div class="pa-2">
           <div class="text-h4">
-            {{ formatCurrency(12145.49) }}
+            1,286
           </div>
           <div class="text-primary mt-1">
-            {{ formatCurrency(4275.21) }}
-            {{ $t("dashboard.lastweek") }}
+            427
+            上周新增文献
           </div>
         </div>
 
         <v-spacer></v-spacer>
 
         <div class="px-2 pb-2">
-          <div class="title mb-1 font-weight-bold">
-            {{ $t("dashboard.weeklySales") }}
-          </div>
+          <div class="title mb-1 font-weight-bold">本周数据提交</div>
           <div class="d-flex align-center">
             <div class="text-h4">
-              {{ formatCurrency(value) }}
+              {{ value }}
             </div>
             <v-spacer></v-spacer>
             <div class="d-flex flex-column text-right">

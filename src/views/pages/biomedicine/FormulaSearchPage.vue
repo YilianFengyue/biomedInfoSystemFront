@@ -98,11 +98,12 @@ onMounted(() => {
           </v-col>
           <v-col cols="12" md="3" class="text-md-right">
             <div class="button-group">
-              <v-btn @click="resetSearch" variant="outlined" color="primary" class="action-btn reset-btn">
+              <!--修改主色调---->
+              <v-btn @click="resetSearch" variant="outlined" color="#BBC23F" class="action-btn reset-btn">
                 <v-icon class="mr-1">mdi-refresh</v-icon>
                 重置
               </v-btn>
-              <v-btn @click="performSearch" color="primary" variant="flat" class="action-btn search-btn">
+              <v-btn @click="performSearch" color="#B0D183" variant="flat" class="action-btn search-btn">
                 <v-icon class="mr-1">mdi-magnify</v-icon>
                 搜索
               </v-btn>
@@ -140,7 +141,8 @@ onMounted(() => {
       </v-col>
     </v-row>
     <div v-if="searchLoading" class="loading-container">
-      <v-progress-circular indeterminate color="primary" size="50"></v-progress-circular>
+      <!--修改主色调-->
+      <v-progress-circular indeterminate color="#B0D183" size="50"></v-progress-circular>
     </div>
     <v-pagination v-if="totalItems > searchOptions.itemsPerPage" v-model="searchOptions.page"
       :length="Math.ceil(totalItems / searchOptions.itemsPerPage)" @update:modelValue="fetchFormulas"
@@ -155,23 +157,24 @@ onMounted(() => {
     flex-direction: column;
     gap: 1.5rem;
 }
+/*修改主色调*/
 .glass-card {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px !important;
+  border-radius: 8px !important;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 32px 0 rgba(106, 114, 153, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(188, 194, 63, 0.2);
 }
 .glass-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 40px 0 rgba(106, 114, 153, 0.3);
+ transform: translateY(-5px);
+  box-shadow: 0 12px 40px 0 rgba(188, 194, 63, 0.3);
 }
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #3F51B5;
+   color: #BBC23F;
   display: flex;
   align-items: center;
   padding-bottom: 1rem;
@@ -185,7 +188,7 @@ onMounted(() => {
   height: 100%;
 }
 .formula-title {
-  color: #3F51B5;
+  color: #B0D183;
   font-weight: bold;
 }
 .formula-alias {
@@ -219,7 +222,7 @@ onMounted(() => {
   letter-spacing: 0.5px;
 }
 .search-btn {
-  box-shadow: 0 2px 5px rgba(63, 81, 181, 0.3);
+  box-shadow: 0 2px 5px rgba(176, 209, 131, 0.4);
 }
 .button-group {
     display: flex;

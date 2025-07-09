@@ -15,7 +15,6 @@ import { debounce } from 'lodash-es';
 import provinces from '@/data/provinces.json';
 import http from '@/api/http';
 import { useProfileStore } from '@/stores/profileStore';
-// 引入 Axios 用于带进度的上传
 import axios from 'axios';
 
 // --- State ---
@@ -33,8 +32,6 @@ const step = ref(1);
 const manualLocationEntry = ref(false);
 const selectedHerb = ref<Herb | null>(null);
 const searchedHerbs = ref<Herb[]>([]);
-
-// **新增：上传进度状态**
 const uploadProgress = ref(0);
 
 const locationData = ref({
@@ -47,6 +44,7 @@ const locationData = ref({
 
 const selectedFiles = ref<File[]>([]);
 const primaryImageIndex = ref<number>(0);
+const imagePreviewUrls = ref<string[]>([]);
 
 const newHerb = ref<HerbCreatePayload>({
     name: '',
@@ -76,7 +74,6 @@ watch(() => growthData.value.metricName, (newName) => {
     growthData.value.metricUnit = metricUnitOptions.value[0] || '';
 });
 
-
 const cities = computed(() => {
     if (locationData.value.province) {
         const province = provinces.find(p => p.name === locationData.value.province);
@@ -88,6 +85,30 @@ const cities = computed(() => {
 watch(() => locationData.value.province, () => {
   locationData.value.city = '';
 });
+
+watch(selectedFiles, (newFiles) => {
+  imagePreviewUrls.value.forEach(url => URL.revokeObjectURL(url));
+  
+  if (newFiles && newFiles.length > 0) {
+    imagePreviewUrls.value = newFiles.map(file => URL.createObjectURL(file));
+  } else {
+    imagePreviewUrls.value = [];
+  }
+}, { deep: true });
+
+// --- 新增：移除图片的方法 ---
+const removeImage = (indexToRemove: number) => {
+    // 从 selectedFiles 数组中移除文件
+    selectedFiles.value = selectedFiles.value.filter((_, index) => index !== indexToRemove);
+
+    // 移除文件后，需要调整主图索引
+    if (primaryImageIndex.value === indexToRemove) {
+        primaryImageIndex.value = 0; // 如果主图被移除，重置为第一个
+    } else if (primaryImageIndex.value > indexToRemove) {
+        primaryImageIndex.value--; // 如果移除的是主图前面的图片，索引减一
+    }
+    // selectedFiles 的侦听器会自动更新预览 URL
+};
 
 const rules = {
   required: (v: any) => !!v || '此字段为必填项',
@@ -108,7 +129,6 @@ const locationDisplay = computed(() => {
   return latitude ? `经纬度: ${longitude?.toFixed(6)}, ${latitude?.toFixed(6)}` : '尚未获取地理位置';
 });
 
-// --- **新增：带进度的上传函数** ---
 const uploadFileWithProgress = async (file: File, onProgress: (percent: number) => void): Promise<string> => {
   if (!file) return '';
 
@@ -146,9 +166,6 @@ const uploadFileWithProgress = async (file: File, onProgress: (percent: number) 
     return '';
   }
 };
-
-
-// --- Methods ---
 
 const handleStepperAction = async (nextFn: () => void) => {
     if (step.value === 1) {
@@ -216,7 +233,7 @@ const resetForm = () => {
 
 const submit = async () => {
   isSubmitting.value = true;
-  uploadProgress.value = 0; // **重置进度条**
+  uploadProgress.value = 0; 
 
   try {
     let herbIdToUse: number;
@@ -272,14 +289,12 @@ const submit = async () => {
     if (selectedFiles.value.length > 0) {
       const imageUrls = [];
       for (const file of selectedFiles.value) {
-          // **核心修改：使用带进度的上传函数**
           const url = await uploadFileWithProgress(file, (percent) => {
               uploadProgress.value = percent;
           });
           if (url) {
               imageUrls.push(url);
           } else {
-              // 如果一个文件上传失败，可以选择中断或继续
               throw new Error(`文件 ${file.name} 上传失败，操作已中断。`);
           }
       }
@@ -302,7 +317,7 @@ const submit = async () => {
     snackbarStore.showErrorMessage(errorMessage);
   } finally {
     isSubmitting.value = false;
-    uploadProgress.value = 0; // **完成后隐藏进度条**
+    uploadProgress.value = 0; 
   }
 };
 </script>
@@ -489,17 +504,45 @@ const submit = async () => {
                   prepend-inner-icon="mdi-camera" variant="outlined"
                   chips show-size counter class="mt-4"
                 ></v-file-input>
+                
+                <div v-if="imagePreviewUrls.length > 0" class="mt-4 pa-3 rounded-lg preview-area">
+                    <p class="text-subtitle-1 font-weight-medium mb-3">图片预览 ({{ imagePreviewUrls.length }} 张)</p>
+                    <v-row dense>
+                        <v-col
+                            v-for="(url, index) in imagePreviewUrls"
+                            :key="index"
+                            cols="6" sm="4" md="3"
+                            class="pa-1"
+                        >
+                            <v-card class="image-preview-container" elevation="0" rounded="md" border>
+                                <v-img :src="url" aspect-ratio="1" cover class="rounded-md"></v-img>
+                                <v-btn
+                                    icon="mdi-close-circle"
+                                    size="small"
+                                    variant="text"
+                                    class="remove-image-btn"
+                                    @click.stop="removeImage(index)"
+                                    title="移除图片"
+                                >
+                                </v-btn>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </div>
+
+
                 <v-card v-if="isCreatingNewHerb && selectedFiles.length > 0" variant="tonal" class="mt-4 pa-3">
                     <p class="text-subtitle-1 font-weight-medium mb-3">请为新药材选择一张主图：</p>
                     <v-radio-group v-model="primaryImageIndex" inline>
                         <v-row dense>
-                            <v-col v-for="(file, index) in selectedFiles" :key="index" cols="6" sm="4" md="3">
+                            <v-col v-for="(file, index) in selectedFiles" :key="index" cols="6" sm="4" md="3" class="pa-1">
                                 <v-card
                                     class="image-preview-card"
                                     :class="{ 'border-primary': primaryImageIndex === index }"
                                     @click="primaryImageIndex = index"
+                                    rounded="md"
                                 >
-                                    <v-img :src="URL.createObjectURL(file)" height="120" cover>
+                                    <v-img :src="imagePreviewUrls[index]" aspect-ratio="1" cover>
                                         <v-radio :value="index" class="radio-on-image"></v-radio>
                                     </v-img>
                                 </v-card>
@@ -599,7 +642,7 @@ const submit = async () => {
     }
 }
 .border-primary {
-  border: 2px solid #1976D2;
+  border-color: #1976D2;
   box-shadow: 0 0 8px rgba(25, 118, 210, 0.4);
 }
 .radio-on-image {
@@ -616,5 +659,64 @@ const submit = async () => {
 .white-text {
   color: white !important;
   font-weight: 600;
+}
+
+/* --- 新增的预览区样式 --- */
+.preview-area {
+  background-color: #f5f5f5;
+  border: 1px dashed #ddd;
+}
+
+.image-preview-container {
+  position: relative;
+  overflow: hidden; 
+  
+  &:hover .remove-image-btn {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: rgba(255, 0, 0, 0.7) !important;
+  }
+}
+
+.data-collection-container {
+  background-color: #f4f6f9;
+  padding: 24px;
+}
+
+.control-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+}
+
+.collect-btn {
+  background-color: #B0D183 !important;
+  color: white !important;
+  margin-right: 12px;
+}
+
+.stop-btn {
+  background-color: #BCA881 !important;
+  color: white !important;
+}
+
+.log-area {
+  background-color: #333;
+  color: #C1CBAD;
+  border-radius: 8px;
 }
 </style>

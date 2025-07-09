@@ -18,7 +18,7 @@
             <v-spacer></v-spacer>
             <v-chip
               v-if="weatherInfo"
-              color="blue"
+              color="#BCA881"
               variant="tonal"
               label
               size="small"
@@ -337,10 +337,10 @@ import { useChart, RenderType } from "@/plugins/echarts";
 import type { EChartsOption } from "echarts";
 import { useI18n } from 'vue-i18n';
 
-// 【关键修改】导入新的 weatherStore
 import { useWeatherStore } from '@/stores/weatherStore';
 
 const { t } = useI18n();
+const theme = useTheme(); // <--- **关键修改点 1**: 获取主题对象
 
 // --- Map State ---
 let map: any = null;
@@ -359,12 +359,11 @@ const allDataHistory = ref<any[]>([]);
 const isHistoryLoading = ref(false);
 const historySearchQuery = ref('');
 
-// 【关键修改】使用 weatherStore
 const weatherStore = useWeatherStore();
 const weatherInfo = computed(() => weatherStore.weatherInfo);
 
 
-// --- 数据处理与图表函数 (这部分代码保持不变) ---
+// --- 数据处理与图表函数 ---
 const fetchImagesForLocation = async (locationId: number) => {
   try {
     const response = await axios.get(`/api/herb/locations/${locationId}/images`);
@@ -411,8 +410,8 @@ const filteredDataHistory = computed(() => {
 });
 const formatHistoryTimestamp = (timestamp: string) => new Date(timestamp).toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
 const getHistoryActionColor = (action: string) => {
-    if (action.toUpperCase() === 'UPDATE') return 'orange';
-    if (action.toUpperCase() === 'CREATE') return 'success';
+    if (action.toUpperCase() === 'UPDATE') return '#BCA881';
+    if (action.toUpperCase() === 'CREATE') return 'primary';
     return 'grey';
 }
 const calculateProvinceDistribution = (data: HerbDistribution[]) => {
@@ -434,7 +433,7 @@ const logTransformedData = computed(() => {
       originalValue: item.value,
   }));
 });
-const { theming } = useTheme();
+
 const chartOption = computed<EChartsOption>(() => ({
     backgroundColor: 'transparent',
     color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'],
@@ -449,7 +448,7 @@ const chartOption = computed<EChartsOption>(() => ({
 const { setOption } = useChart(pieChartRef as Ref<HTMLDivElement>, true, false, RenderType.SVGRenderer);
 
 
-// --- **视图切换函数 (保持不变)** ---
+// --- **视图切换函数** ---
 const showProvinceView = () => {
     if (!map) return;
     allIndividualMarkers.forEach(marker => marker.hide());
@@ -458,7 +457,7 @@ const showProvinceView = () => {
     isDetailView.value = false;
 };
 
-// --- **地图初始化核心函数 (保持不变)** ---
+// --- **地图初始化核心函数** ---
 const initMapAndMarkers = (AMap: any) => {
   if (!mapContainerRef.value) return;
   map = new AMap.Map(mapContainerRef.value, {
@@ -496,8 +495,12 @@ const initMapAndMarkers = (AMap: any) => {
         provinceAggregates[province].items.push(allIndividualMarkers[index]);
       });
 
+      // <--- **关键修改点 2**: 在创建标记点前，获取主题色的具体值
+      const primaryColorValue = theme.current.value.colors.primary;
+
       provinceClusterMarkers = Object.values(provinceAggregates).map(agg => {
-        const markerContent = `<div style="background-color: #0093FF; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); cursor: pointer;">${agg.count}</div>`;
+        // <--- **关键修改点 3**: 在style中直接使用获取到的颜色变量
+        const markerContent = `<div style="background-color: ${primaryColorValue}; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.4); cursor: pointer;">${agg.count}</div>`;
         const marker = new AMap.Marker({
           position: [agg.lng, agg.lat],
           content: markerContent,
@@ -522,23 +525,18 @@ const initMapAndMarkers = (AMap: any) => {
   });
 };
 
-// --- **生命周期钩子 (核心修改)** ---
+// --- **生命周期钩子** ---
 onMounted(() => {
-  // 1. 触发天气数据的获取（如果需要）
   weatherStore.fetchWeatherIfNeeded();
 
-  // 2. 检查地图SDK是否已加载
   if ((window as any).AMap) {
-    // 如果已加载，直接初始化地图
     initMapAndMarkers((window as any).AMap);
   } else {
-    // 否则，等待加载完成后再初始化
     aMapLoaderInstance.then(AMap => {
       initMapAndMarkers(AMap);
     });
   }
   
-  // 3. 其他数据获取保持不变
   fetchAllDataHistory();
 
   watch(provinceDistributionData, (newData) => {
@@ -557,6 +555,11 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
+.text-primary {
+  color: rgb(var(--v-theme-primary)) !important;
+}
+
 .map-container {
   width: 100%;
   height: 60vh;

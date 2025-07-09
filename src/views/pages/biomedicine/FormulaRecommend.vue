@@ -80,9 +80,9 @@ const fetchAllFormulaDetails = async () => {
 
 // --- 工具函数 ---
 const getScoreColor = (score: number) => {
-  if (score > 0.7) return 'success';
-  if (score > 0.5) return 'primary';
-  return 'grey';
+   if (score > 0.7) return '#B0D183'; // 高匹配度使用主色调绿色
+  if (score > 0.5) return '#BBC23F'; // 中等匹配度使用深绿色
+  return '#BCA881'; // 低匹配度使用棕色
 };
 </script>
 
@@ -97,8 +97,7 @@ const getScoreColor = (score: number) => {
         <v-combobox v-model="symptoms" :items="commonSymptoms" label="输入症状后按回车键确认，可输入多个" variant="outlined" multiple
           chips clearable prepend-inner-icon="mdi-clipboard-text-search-outline" class="symptoms-input"
           density="comfortable" />
-        <v-btn :loading="recommendLoading" color="primary" variant="flat" size="large" @click="getRecommendations" block
-          class="recommend-btn">
+        <v-btn :loading="recommendLoading" color="#B0D183" variant="flat" size="large" @click="getRecommendations" block class="recommend-btn">
           <v-icon class="mr-2">mdi-brain</v-icon>
           获取方剂推荐
         </v-btn>
@@ -106,7 +105,7 @@ const getScoreColor = (score: number) => {
     </v-card>
 
     <div v-if="recommendLoading" class="loading-section">
-      <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular>
+      <v-progress-circular indeterminate color="#B0D183" size="60" width="6"></v-progress-circular>
       <p class="loading-text">AI辨证分析中...</p>
     </div>
 
@@ -125,7 +124,7 @@ const getScoreColor = (score: number) => {
             <v-progress-linear :model-value="rec.score * 100" :color="getScoreColor(rec.score)" height="8" rounded
               class="score-progress" />
             <div v-if="rec.loadingDetails" class="loading-details">
-              <v-progress-circular indeterminate size="20" width="2" color="primary"></v-progress-circular>
+              <v-progress-circular indeterminate size="20" width="2" color="#B0D183"></v-progress-circular>
               <span class="loading-text-small">加载详情...</span>
             </div>
             <div v-if="rec.details && !rec.loadingDetails" class="formula-details">
@@ -155,13 +154,13 @@ const getScoreColor = (score: number) => {
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px !important;
-  box-shadow: 0 8px 32px 0 rgba(106, 114, 153, 0.2);
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px 0 rgba(188, 194, 63, 0.2); 
 }
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #3F51B5;
+  color: #BBC23F;
   display: flex;
   align-items: center;
   padding-bottom: 1rem;
@@ -181,7 +180,7 @@ const getScoreColor = (score: number) => {
 .loading-text {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #3F51B5;
+  color: #BBC23F;
 }
 .error-alert {
   font-weight: 500;
@@ -202,7 +201,7 @@ const getScoreColor = (score: number) => {
 }
 .recommendation-name {
   font-weight: 600;
-  color: #3F51B5;
+  color: #B0D183; /* 改为主色调绿色 */
 }
 .score-chip {
   font-weight: 600;

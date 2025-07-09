@@ -4,8 +4,8 @@
       <v-col cols="12" md="6">
         <v-card class="fill-height">
           <v-card-title class="d-flex align-center">
-            <Icon icon="streamline-stickies-color:library-research" />&nbsp;
-            <span class="text-h5">资源类型分布</span>
+            <v-icon class="mr-2" color="#B0D183">mdi-chart-donut</v-icon>
+            <span class="text-h5" style="color: #BBC23F;">资源类型分布</span>
           </v-card-title>
           <v-divider></v-divider>
           <div ref="pieChartRef" style="height: 400px;"></div>
@@ -14,8 +14,8 @@
       <v-col cols="12" md="6">
         <v-card class="fill-height">
           <v-card-title class="d-flex align-center">
-            <Icon icon="streamline-ultimate-color:ranking-people-first" />&nbsp;
-            <span class="text-h5">教师业绩排行</span>
+            <v-icon class="mr-2" color="#B0D183">mdi-trophy-variant-outline</v-icon>
+            <span class="text-h5" style="color: #BBC23F;">教师业绩排行</span>
           </v-card-title>
           <v-divider></v-divider>
           <v-data-table
@@ -26,7 +26,7 @@
             items-per-page="5"
           >
             <template v-slot:item.score="{ item }">
-              <v-chip color="green" dark>{{ item.score.toFixed(1) }}</v-chip>
+              <v-chip color="#BBC23F">{{ item.score.toFixed(1) }}</v-chip>
             </template>
              <template v-slot:item.totalVideoDuration="{ item }">
               <span>{{ formatDuration(item.totalVideoDuration) }}</span>
@@ -40,12 +40,12 @@
       <v-col cols="12">
         <v-card>
            <v-card-title class="d-flex align-center">
-            <Icon icon="vscode-icons:folder-type-library-opened" />&nbsp;
-            <span class="text-h5">我上传的资源</span>
+            <v-icon class="mr-2" color="#B0D183">mdi-cloud-upload-outline</v-icon>
+            <span class="text-h5" style="color: #BBC23F;">我上传的资源</span>
           </v-card-title>
            <v-divider></v-divider>
           <div v-if="resourceLoading" class="text-center pa-10">
-            <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+            <v-progress-circular indeterminate color="#B0D183" size="64"></v-progress-circular>
           </div>
           <div v-else>
             <ResourceCardList :resources="userResources" />
@@ -63,7 +63,7 @@ import { useSnackbarStore } from '@/stores/snackbarStore';
 import { useProfileStore } from '@/stores/profileStore';
 import { useChart, RenderType } from "@/plugins/echarts";
 import type { EChartsOption } from "echarts";
-import { Icon } from "@iconify/vue";
+import { Icon } from "@iconify/vue";
 import ResourceCardList from '@/views/pages/biomedicine/ResourceCardList.vue'; // 复用这个组件
 
 // --- Store & Utils ---
@@ -147,7 +147,7 @@ const fetchAllTeachersScores = async () => {
     } else {
       console.warn('无法获取评定分数，将使用默认分数。');
     }
-    
+
     // 合并数据：用评定分数覆盖原有的考核分数
     const mergedTeachers = baseScores.map(teacher => {
       const evaluation = evaluationScores.find(e => e.userId === teacher.teacherId);
@@ -228,6 +228,7 @@ const updatePieChart = (data: { value: number, name: string }[]) => {
       orient: 'vertical',
       left: 'left',
     },
+    color: ['#C1CBAD', '#B084CC'],
     series: [
       {
         name: '资源类型',
@@ -268,5 +269,11 @@ onMounted(() => {
 <style scoped>
 .fill-height {
   height: 100%;
+}
+
+:deep(.v-data-table-header th) {
+  background-color: #C1CBAD !important; /* 使用浅绿色作为背景 */
+  color: #BBC23F !important; /* 使用深绿色作为文字颜色 */
+  font-weight: bold !important;
 }
 </style>

@@ -9,6 +9,7 @@ import defaultHerbImage from '@/assets/edu/new.jpg'
 import provinces from '@/data/provinces.json'
 // 导入 herbStore
 import { useHerbStore } from '@/stores/herbStore'
+import http from '@/api/http'
 
 // --- 状态管理和路由 ---
 const router = useRouter()
@@ -454,12 +455,15 @@ const deleteHerb = async (herb: Herb) => {
       </div>
     </v-card>
 
-    <v-dialog v-model="isPreviewingImage" max-width="600px">
-      <v-card @click="isPreviewingImage = false">
-        <v-img :src="previewImageUrl" contain max-height="80vh" />
-        <v-card-actions class="justify-center">
-          <v-btn color="primary" variant="text" @click="isPreviewingImage = false">关闭</v-btn>
-        </v-card-actions>
+    <v-dialog v-model="isPreviewingImage" max-width="85vw" max-height="90vh">
+      <v-card elevation="0" color="transparent" @click="isPreviewingImage = false">
+        <v-img
+          :src="previewImageUrl"
+          contain
+          max-height="85vh"
+          max-width="85vw"
+          style="object-fit: contain;"
+        ></v-img>
       </v-card>
     </v-dialog>
   </v-container>
@@ -502,5 +506,30 @@ const deleteHerb = async (herb: Herb) => {
   color: #616161;
   padding-right: 12px;
   white-space: nowrap;
+}
+
+.herb-search-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.custom-card {
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.custom-toolbar {
+  background: linear-gradient(135deg, #B0D183 0%, #C1CBAD 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.search-btn {
+  background-color: #BCA881 !important;
+  color: white !important;
+}
+
+.v-data-table {
+  background-color: #FFFFFF;
 }
 </style>

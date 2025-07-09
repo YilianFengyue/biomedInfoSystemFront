@@ -360,10 +360,10 @@ const selectedEntityTypeLabel = computed(() => {
 });
 
 const nodeCategories = [
-  { name: '方剂', itemStyle: { color: '#1976D2' } },
-  { name: '药材', itemStyle: { color: '#388E3C' } },
-  { name: '疾病', itemStyle: { color: '#F57C00' } },
-  { name: '症状', itemStyle: { color: '#7B1FA2' } },
+  { name: '方剂', itemStyle: { color: '#B0D183' } },
+  { name: '药材', itemStyle: { color: '#C1CBAD' } },
+  { name: '疾病', itemStyle: { color: '#BBC23F' } },
+  { name: '症状', itemStyle: { color: '#BCA881' } },
   { name: '证候', itemStyle: { color: '#C2185B' } },
   { name: '核心节点', itemStyle: { color: '#424242' } },
 ];
@@ -918,4 +918,24 @@ onMounted(() => {
   }
 }
 
+.knowledge-graph-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+}
+
+.main-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.header-section {
+  background: linear-gradient(135deg, #B0D183 0%, #C1CBAD 100%);
+  color: white;
+  padding: 32px 40px;
+}
 </style>

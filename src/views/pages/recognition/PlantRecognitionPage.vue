@@ -8,7 +8,7 @@ import { useStorage } from '@vueuse/core';
 // 定义历史记录的类型
 interface HistoryEntry {
   id: string;
-  image: string; // 使用base64存储图片预览
+  image: string;
   topResult: string;
   timestamp: string;
   results: any[];
@@ -23,10 +23,8 @@ const isPlant = ref(true);
 const snackbarStore = useSnackbarStore();
 const isDragging = ref(false);
 
-// ---- 新增功能：识别历史 ----
-// 使用@vueuse/core的useStorage，方便地实现与localStorage的响应式同步
+// 识别历史
 const identificationHistory = useStorage<HistoryEntry[]>('plant-recognition-history', []);
-// -----------------------------
 
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -41,7 +39,7 @@ const resetState = () => {
   }
 };
 
-// 将File对象转换为Base64，用于历史记录存储
+// 将File对象转换为Base64
 const toBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -50,11 +48,9 @@ const toBase64 = (file: File): Promise<string> =>
     reader.onerror = (error) => reject(error);
   });
 
-
-// 辅助函数：处理文件
+// 处理文件
 const processFile = (file: File | null) => {
   if (!file) return;
-
   if (!file.type.startsWith('image/')) {
     snackbarStore.showErrorMessage('请上传正确的图片格式 (JPG, PNG, WEBP)');
     return;
@@ -77,8 +73,7 @@ const onDrop = (event: DragEvent) => {
   processFile(event.dataTransfer?.files?.[0] as File);
 };
 
-
-// ---- 修改：识别逻辑，增加历史记录保存 ----
+// 识别逻辑
 const handleRecognition = async () => {
   if (!selectedFile.value) {
     snackbarStore.showErrorMessage('请先选择一张图片');
@@ -101,7 +96,7 @@ const handleRecognition = async () => {
         recognitionResults.value = responseData.result;
         snackbarStore.showSuccessMessage('识别成功！');
         
-        // --- 新增：保存到历史记录 ---
+        // 保存到历史记录
         const imageBase64 = await toBase64(selectedFile.value);
         const newEntry: HistoryEntry = {
           id: `history-${Date.now()}`,
@@ -110,12 +105,10 @@ const handleRecognition = async () => {
           timestamp: new Date().toLocaleString('zh-CN'),
           results: responseData.result,
         };
-        identificationHistory.value.unshift(newEntry); // 添加到数组开头
-        // 保持最多20条历史记录
+        identificationHistory.value.unshift(newEntry);
         if (identificationHistory.value.length > 20) {
           identificationHistory.value.pop();
         }
-        // -------------------------
       }
     } else {
       throw new Error(response.data.msg || '识别失败，请稍后重试');
@@ -128,203 +121,237 @@ const handleRecognition = async () => {
   }
 };
 
-// ---- 新增功能：从历史记录加载 ----
+// 从历史记录加载
 const loadFromHistory = (entry: HistoryEntry) => {
   imagePreviewUrl.value = entry.image;
   recognitionResults.value = entry.results;
-  isPlant.value = true; // 假设历史记录都是植物
-  selectedFile.value = null; // 从历史加载时，不保留文件对象
+  isPlant.value = true;
+  selectedFile.value = null;
   snackbarStore.showInfoMessage(`已加载历史记录：${entry.topResult}`);
 };
 
 const clearHistory = () => {
-    if(confirm('确定要清空所有历史记录吗？')){
-        identificationHistory.value = [];
-        snackbarStore.showSuccessMessage('历史记录已清空');
-    }
+  if(confirm('确定要清空所有历史记录吗？')){
+    identificationHistory.value = [];
+    snackbarStore.showSuccessMessage('历史记录已清空');
+  }
 }
 </script>
 
 <template>
-  <v-container fluid class="pa-md-6 pa-4">
-    <div class="page-header">
-      <h1 class="page-title text-h4 font-weight-bold d-flex align-center">
-        <v-icon size="40" class="mr-4" color="teal">mdi-camera-iris</v-icon>
-        <span>智能识花</span>
-      </h1>
-      <p class="page-subtitle text-body-1 text-grey-darken-1 mt-2">
-        上传植物照片，即刻知晓它的名字与故事
-      </p>
+  <v-container fluid class="pa-6 bg-gradient">
+    <!-- 页面标题 -->
+    <div class="text-center mb-8">
+      <div class="title-container">
+        <v-icon size="48" class="mr-4 title-icon">mdi-camera-iris</v-icon>
+        <h1 class="page-title">智能识花</h1>
+      </div>
+      <p class="page-subtitle">上传植物照片，即刻知晓它的名字与故事</p>
     </div>
 
-    <v-row class="mt-4">
-      <v-col cols="12" md="5">
-        <v-card
-          class="upload-card pa-2"
-          :class="{ 'is-dragging': isDragging }"
-          @click="fileInput?.click()"
-          @dragover.prevent="isDragging = true"
-          @dragleave.prevent="isDragging = false"
-          @drop.prevent="onDrop"
-          variant="outlined"
-        >
-          <v-fade-transition hide-on-leave>
-            <div v-if="!imagePreviewUrl" class="upload-placeholder">
-              <Vue3Lottie
-                animationLink="https://assets7.lottiefiles.com/packages/lf20_m6a2s5kh.json"
-                :height="200"
-                :width="200"
-              />
-              <p class="text-h6 text-grey-darken-2 font-weight-medium">点击或拖拽图片到此</p>
-              <p class="text-caption text-grey">支持JPG, PNG, WEBP等格式</p>
-            </div>
-            <div v-else class="preview-container">
-              <v-img :src="imagePreviewUrl" class="preview-img" aspect-ratio="1" cover>
-                 <template v-slot:placeholder>
-                  <div class="d-flex align-center justify-center fill-height">
-                    <v-progress-circular color="grey-lighten-4" indeterminate></v-progress-circular>
+    <v-row class="justify-center" no-gutters>
+      <!-- 左侧上传卡片 -->
+      <v-col cols="12" lg="5" class="pa-2">
+        <v-card class="upload-main-card" elevation="8">
+          <v-card-title class="card-header">
+            <v-icon class="mr-2">mdi-cloud-upload</v-icon>
+            图片上传
+          </v-card-title>
+          
+          <v-card-text class="pa-4">
+            <v-card
+              class="upload-area"
+              :class="{ 'is-dragging': isDragging }"
+              @click="fileInput?.click()"
+              @dragover.prevent="isDragging = true"
+              @dragleave.prevent="isDragging = false"
+              @drop.prevent="onDrop"
+              variant="outlined"
+            >
+              <v-fade-transition>
+                <div v-if="!imagePreviewUrl" class="upload-placeholder">
+                  <Vue3Lottie
+                    animationLink="https://assets7.lottiefiles.com/packages/lf20_m6a2s5kh.json"
+                    :height="180"
+                    :width="180"
+                  />
+                  <h3 class="upload-title">点击或拖拽图片到此</h3>
+                  <p class="upload-subtitle">支持JPG, PNG, WEBP等格式</p>
+                </div>
+                <div v-else class="preview-container">
+                  <v-img :src="imagePreviewUrl" class="preview-img" aspect-ratio="1" cover>
+                    <template v-slot:placeholder>
+                      <div class="d-flex align-center justify-center fill-height">
+                        <v-progress-circular color="primary" indeterminate></v-progress-circular>
+                      </div>
+                    </template>
+                  </v-img>
+                  <div class="preview-overlay">
+                    <v-btn variant="elevated" color="white" prepend-icon="mdi-image-edit">更换图片</v-btn>
                   </div>
-                </template>
-              </v-img>
-              <div class="preview-overlay">
-                <v-btn variant="tonal" size="large" prepend-icon="mdi-image-edit-outline">更换图片</v-btn>
-              </div>
+                </div>
+              </v-fade-transition>
+            </v-card>
+            
+            <input ref="fileInput" type="file" accept="image/*" @change="onFileSelected" style="display: none" />
+            
+            <div class="mt-4">
+              <v-btn 
+                :loading="isLoading" 
+                :disabled="!selectedFile || isLoading" 
+                block 
+                color="primary" 
+                size="x-large" 
+                @click="handleRecognition" 
+                class="recognize-btn"
+                variant="elevated"
+                style="background: linear-gradient(135deg, #B0D183 0%, #BBC23F 100%); color: white;"
+              >
+                <v-icon left>mdi-magnify-scan</v-icon>
+                开始识别
+              </v-btn>
+              <v-btn 
+                v-if="selectedFile || imagePreviewUrl" 
+                class="mt-3" 
+                @click="resetState" 
+                block 
+                variant="outlined"
+                color="grey"
+              >
+                清空当前选择
+              </v-btn>
             </div>
-          </v-fade-transition>
-        </v-card>
-        
-        <input ref="fileInput" type="file" accept="image/*" @change="onFileSelected" style="display: none" />
-        
-        <div class="mt-4">
-          <v-btn :loading="isLoading" :disabled="!selectedFile || isLoading" block color="teal" size="x-large" @click="handleRecognition" class="recognize-button">
-            <v-icon left>mdi-magnify-scan</v-icon>
-            开始识别
-          </v-btn>
-          <v-btn v-if="selectedFile || imagePreviewUrl" class="mt-3" @click="resetState" block variant="text">
-            清空当前选择
-          </v-btn>
-        </div>
-        
-        <v-expansion-panels class="mt-6" variant="accordion">
-            <v-expansion-panel>
-                <v-expansion-panel-title class="font-weight-medium">
-                    <v-icon class="mr-2">mdi-history</v-icon>
-                    识别历史
-                     <v-chip v-if="identificationHistory.length > 0" class="ml-2" color="teal" size="small" label>{{ identificationHistory.length }}</v-chip>
-                </v-expansion-panel-title>
-                <v-expansion-panel-text class="pa-0">
-                     <div v-if="identificationHistory.length === 0" class="text-center pa-4 text-grey">
-                        暂无历史记录
-                    </div>
-                    <perfect-scrollbar v-else style="max-height: 200px;">
-                        <v-list-item
-                            v-for="entry in identificationHistory"
-                            :key="entry.id"
-                            @click="loadFromHistory(entry)"
-                            link
-                            lines="two"
-                        >
-                            <template v-slot:prepend>
-                                <v-avatar size="40" rounded="sm" class="mr-3">
-                                    <v-img :src="entry.image" cover></v-img>
-                                </v-avatar>
-                            </template>
-                            <v-list-item-title class="font-weight-bold">{{ entry.topResult }}</v-list-item-title>
-                            <v-list-item-subtitle>{{ entry.timestamp }}</v-list-item-subtitle>
-                        </v-list-item>
-                    </perfect-scrollbar>
-                    <v-divider v-if="identificationHistory.length > 0"></v-divider>
-                     <v-card-actions v-if="identificationHistory.length > 0">
-                        <v-spacer></v-spacer>
-                        <v-btn variant="text" color="error" size="small" @click="clearHistory">清空历史</v-btn>
-                    </v-card-actions>
-                </v-expansion-panel-text>
-            </v-expansion-panel>
-        </v-expansion-panels>
+          </v-card-text>
 
+          <!-- 历史记录 -->
+          <v-expansion-panels class="ma-4 mt-0" variant="accordion">
+            <v-expansion-panel class="history-panel">
+              <v-expansion-panel-title class="history-title">
+                <v-icon class="mr-2">mdi-history</v-icon>
+                识别历史
+                <v-chip v-if="identificationHistory.length > 0" class="ml-2" color="success" size="small" style="background: #BBC23F; color: white;">
+                  {{ identificationHistory.length }}
+                </v-chip>
+              </v-expansion-panel-title>
+              <v-expansion-panel-text class="pa-0">
+                <div v-if="identificationHistory.length === 0" class="text-center pa-4 text-grey">
+                  暂无历史记录
+                </div>
+                <perfect-scrollbar v-else style="max-height: 200px;">
+                  <v-list-item
+                    v-for="entry in identificationHistory"
+                    :key="entry.id"
+                    @click="loadFromHistory(entry)"
+                    class="history-item"
+                  >
+                    <template v-slot:prepend>
+                      <v-avatar size="40" class="mr-3">
+                        <v-img :src="entry.image" cover></v-img>
+                      </v-avatar>
+                    </template>
+                    <v-list-item-title class="font-weight-bold">{{ entry.topResult }}</v-list-item-title>
+                    <v-list-item-subtitle>{{ entry.timestamp }}</v-list-item-subtitle>
+                  </v-list-item>
+                </perfect-scrollbar>
+                <v-divider v-if="identificationHistory.length > 0"></v-divider>
+                <v-card-actions v-if="identificationHistory.length > 0">
+                  <v-spacer></v-spacer>
+                  <v-btn variant="text" color="error" size="small" @click="clearHistory">清空历史</v-btn>
+                </v-card-actions>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </v-card>
       </v-col>
 
-      <v-col cols="12" md="7">
-        <v-card class="results-card" variant="outlined" min-height="600">
-           <v-fade-transition hide-on-leave>
-             <div v-if="isLoading" class="d-flex flex-column justify-center align-center fill-height pa-4">
+      <!-- 右侧结果卡片 -->
+      <v-col cols="12" lg="7" class="pa-2">
+        <v-card class="results-main-card" elevation="8">
+          <v-card-title class="card-header">
+            <v-icon class="mr-2">mdi-flower</v-icon>
+            识别结果
+          </v-card-title>
+          
+          <v-card-text class="pa-0 results-content">
+            <v-fade-transition>
+              <div v-if="isLoading" class="loading-container">
                 <Vue3Lottie
-                animationLink="https://assets1.lottiefiles.com/packages/lf20_p8bfn5to.json"
-                :height="250"
-                :width="250"
+                  animationLink="https://assets1.lottiefiles.com/packages/lf20_p8bfn5to.json"
+                  :height="200"
+                  :width="200"
                 />
-                <p class="mt-4 text-h6 text-grey-darken-1">正在玩命识别中...</p>
-            </div>
-            <div v-else class="fill-height">
-              <div v-if="!isPlant" class="d-flex flex-column justify-center align-center fill-height pa-4 text-center">
-                <v-icon size="80" color="orange-lighten-2" class="mb-4">mdi-emoticon-confused-outline</v-icon>
-                <h3 class="text-h5 font-weight-medium">这似乎不是植物哦</h3>
-                <p class="text-body-1 text-grey-darken-1 mt-2">请换一张包含清晰植物主体的图片再试试吧。</p>
+                <p class="loading-text">正在玩命识别中...</p>
               </div>
-
-              <div v-else-if="recognitionResults.length > 0" class="fill-height">
-                <h3 class="text-h6 pa-4 font-weight-medium">识别结果</h3>
-                <v-divider></v-divider>
-                <perfect-scrollbar style="height: calc(100% - 65px);">
-                  <v-list lines="three" class="pa-0">
+              <div v-else-if="!isPlant" class="not-plant-container">
+                <v-icon size="80" color="warning" class="mb-4">mdi-emoticon-confused</v-icon>
+                <h3 class="not-plant-title">这似乎不是植物哦</h3>
+                <p class="not-plant-subtitle">请换一张包含清晰植物主体的图片再试试吧</p>
+              </div>
+              <div v-else-if="recognitionResults.length > 0">
+                <perfect-scrollbar style="height: 500px;">
+                  <v-list class="pa-0">
                     <v-list-item
                       v-for="(item, index) in recognitionResults"
                       :key="index"
                       class="result-item"
                     >
                       <template v-slot:prepend>
-                        <v-avatar size="64" rounded="lg" class="mr-4">
-                           <v-img :src="item.baike_info?.image_url" cover>
+                        <v-avatar size="64" class="mr-4 result-avatar">
+                          <v-img :src="item.baike_info?.image_url" cover>
                             <template v-slot:placeholder>
-                                <v-icon color="grey-lighten-2">mdi-flower</v-icon>
+                              <v-icon color="grey-lighten-2">mdi-flower</v-icon>
                             </template>
-                           </v-img>
+                          </v-img>
                         </v-avatar>
                       </template>
 
-                      <v-list-item-title class="text-h6 font-weight-bold mb-1 d-flex align-center">
+                      <v-list-item-title class="result-title">
                         {{ item.name }}
-                        <v-chip v-if="index === 0" color="light-green" size="small" label class="ml-3 font-weight-bold">最可能</v-chip>
+                        <v-chip v-if="index === 0" color="success" size="small" class="ml-2" style="background: #BBC23F; color: white;">最可能</v-chip>
                       </v-list-item-title>
-                      <v-list-item-subtitle class="d-flex align-center mb-2">
-                        <span class="font-weight-medium mr-2 text-caption text-grey-darken-1">可信度</span>
+                      
+                      <v-list-item-subtitle class="result-confidence">
+                        <span class="confidence-label">可信度</span>
                         <v-progress-linear
                           :model-value="item.score * 100"
-                          color="light-green"
+                          color="success"
                           height="8"
                           rounded
-                          class="flex-grow-1"
+                          class="confidence-bar"
+                          style="color: #BBC23F;"
                         ></v-progress-linear>
-                        <span class="font-weight-bold text-light-green-darken-2 ml-3" style="min-width: 45px; text-align: right;">{{ (item.score * 100).toFixed(1) }}%</span>
+                        <span class="confidence-value">{{ (item.score * 100).toFixed(1) }}%</span>
                       </v-list-item-subtitle>
-                      <p class="text-body-2 text-grey-darken-3 description-text">
+                      
+                      <p class="result-description">
                         {{ item.baike_info?.description || '暂无详细描述。' }}
                       </p>
-                       <template v-slot:append>
+                      
+                      <template v-slot:append>
                         <v-btn
                           v-if="item.baike_info?.baike_url"
                           :href="item.baike_info.baike_url"
                           target="_blank"
                           icon="mdi-open-in-new"
                           variant="text"
-                          color="grey"
-                          title="查看百科详情"
+                          color="primary"
+                          style="color: #B0D183;"
                         ></v-btn>
                       </template>
                     </v-list-item>
                   </v-list>
                 </perfect-scrollbar>
               </div>
-              <div v-else class="d-flex flex-column justify-center align-center fill-height pa-4">
+              <div v-else class="empty-container">
                 <Vue3Lottie
-                    animationLink="https://assets1.lottiefiles.com/packages/lf20_1bpq22eb.json"
-                    :height="280"
-                    :width="280"
+                  animationLink="https://assets1.lottiefiles.com/packages/lf20_1bpq22eb.json"
+                  :height="200"
+                  :width="200"
                 />
-                <p class="text-h6 text-grey-darken-1">识别结果将在这里呈现</p>
+                <p class="empty-text">识别结果将在这里呈现</p>
               </div>
-            </div>
-          </v-fade-transition>
+            </v-fade-transition>
+          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
@@ -332,35 +359,75 @@ const clearHistory = () => {
 </template>
 
 <style scoped lang="scss">
-// 页面标题区
-.page-header {
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e0e0e0;
+.bg-gradient {
+  background: #ffffff;
+  min-height: 100vh;
 }
 
-// 上传卡片
-.upload-card {
-  border: 2px dashed #d0d0d0;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  background-color: #fafcff;
-  cursor: pointer;
-  height: 400px;
+.title-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.title-icon {
+  background: linear-gradient(45deg, #B0D183, #BBC23F);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #BCA881;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: #8B9B7D;
+  margin-top: 8px;
+}
+
+.upload-main-card, .results-main-card {
+  border-radius: 5px; /* 从16px改为8px */
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #C1CBAD;
+  box-shadow: 0 6px 24px rgba(176, 209, 131, 0.12);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #B0D183 0%, #BBC23F 100%);
+  color: white;
+  font-weight: 600;
+  border-radius: 5px 5px 0 0; /* 从16px改为8px */
+}
+
+.upload-area {
+  border: 2px dashed #C1CBAD;
+  border-radius: 5px; /* 从12px改为6px */
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(193, 203, 173, 0.05);
 
   &:hover {
-    border-color: #4db6ac; /* teal lighten-2 */
-    transform: translateY(-4px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    border-color: #B0D183;
+    background: rgba(176, 209, 131, 0.08);
+    transform: translateY(-1px);
   }
-  
+
   &.is-dragging {
-    border-color: #00796b; /* teal darken-2 */
+    border-color: #BBC23F;
     border-style: solid;
-    background-color: #e0f2f1; /* teal lighten-5 */
-    transform: scale(1.02);
+    background: rgba(187, 194, 63, 0.12);
+    transform: scale(1.01);
   }
 }
 
@@ -370,21 +437,29 @@ const clearHistory = () => {
   pointer-events: none;
 }
 
-// 预览容器
+.upload-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #BCA881;
+  margin-bottom: 8px;
+}
+
+.upload-subtitle {
+  color: #8B9B7D;
+  font-size: 0.9rem;
+}
+
 .preview-container {
   width: 100%;
   height: 100%;
   position: relative;
-  border-radius: inherit;
+  border-radius: 5px; /* 从12px改为6px */
+  overflow: hidden;
 
-  .preview-img {
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-  
   .preview-overlay {
     position: absolute;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.4);
+    background: rgba(0,0,0,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -392,61 +467,163 @@ const clearHistory = () => {
     transition: opacity 0.3s ease;
   }
 
-  &:hover {
-    .preview-img {
-      transform: scale(1.05);
-    }
-    .preview-overlay {
-      opacity: 1;
-    }
+  &:hover .preview-overlay {
+    opacity: 1;
   }
 }
 
-// 识别按钮
-.recognize-button {
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  transition: all 0.2s ease-in-out;
+.recognize-btn {
+  font-weight: 600;
+  background: linear-gradient(135deg, #B0D183 0%, #BBC23F 100%);
+  box-shadow: 0 3px 12px rgba(176, 209, 131, 0.3);
+  border-radius: 5px;
   
   &:hover {
-      box-shadow: 0 4px 12px rgba(0, 150, 136, 0.3);
+    box-shadow: 0 4px 16px rgba(176, 209, 131, 0.4);
+    transform: translateY(-1px);
   }
 }
 
-// 结果卡片
-.results-card {
-  border-radius: 12px;
+.history-panel {
+  border-radius: 5px; /* 从12px改为6px */
+  overflow: hidden;
+  border: 1px solid #C1CBAD;
+}
+
+.history-title {
+  font-weight: 600;
+  color: #BCA881;
+}
+
+.history-item {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    background: rgba(193, 203, 173, 0.08);
+  }
+}
+
+.results-content {
+  height: 580px;
   display: flex;
   flex-direction: column;
 }
 
+.loading-container, .not-plant-container, .empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-text, .empty-text {
+  font-size: 1.2rem;
+  color: #8B9B7D;
+  margin-top: 1rem;
+}
+
+.not-plant-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #BCA881;
+  margin-bottom: 1rem;
+}
+
+.not-plant-subtitle {
+  color: #8B9B7D;
+  font-size: 1rem;
+}
+
 .result-item {
-  border-bottom: 1px solid #f0f0f0;
-  padding: 20px 16px !important;
+  padding: 20px 16px;
+  border-bottom: 1px solid rgba(193, 203, 173, 0.2);
   transition: background-color 0.2s ease;
   
-  &:last-child {
-    border-bottom: none;
-  }
-  
   &:hover {
-    background-color: #f7f9fc;
+    background: rgba(193, 203, 173, 0.05);
   }
 }
 
-.description-text {
+.result-avatar {
+  border-radius: 5px; /* 从12px改为6px */
+  box-shadow: 0 2px 8px rgba(176, 209, 131, 0.15);
+}
+
+.result-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #BCA881;
+  margin-bottom: 8px;
+}
+
+.result-confidence {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.confidence-label {
+  font-size: 0.85rem;
+  color: #8B9B7D;
+  margin-right: 12px;
+  min-width: 50px;
+}
+
+.confidence-bar {
+  flex: 1;
+  margin-right: 12px;
+  border-radius: 4px;
+}
+
+.confidence-value {
+  font-weight: 600;
+  color: #BBC23F;
+  min-width: 50px;
+  text-align: right;
+}
+
+.result-description {
+  color: #7A8A6D;
+  line-height: 1.6;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.6;
-  max-height: 3.2em; /* 1.6 * 2 */
-  color: #616161;
 }
 
-// 确保容器高度足够
-.fill-height {
-    height: 100%;
+/* 增强按钮样式 */
+.v-btn {
+  border-radius: 5px;
+}
+
+.v-chip {
+  border-radius: 4px;
+}
+
+/* 微调卡片间距 */
+.v-card-text {
+  padding: 20px;
+}
+
+/* 优化滚动条 */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(193, 203, 173, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(176, 209, 131, 0.3);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(176, 209, 131, 0.5);
 }
 </style>
