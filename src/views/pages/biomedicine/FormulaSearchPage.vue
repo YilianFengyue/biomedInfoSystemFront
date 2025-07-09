@@ -163,7 +163,7 @@ onMounted(() => {
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px !important;
+  border-radius: 8px !important;
   transition: all 0.3s ease;
   box-shadow: 0 8px 32px 0 rgba(188, 194, 63, 0.2);
 }

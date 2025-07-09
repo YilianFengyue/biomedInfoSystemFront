@@ -128,7 +128,7 @@
       </section>
     </v-main>
 
-    <v-footer class="pa-md-10 pa-5" color="grey-lighten-5">
+    <!--<v-footer class="pa-md-10 pa-5" color="grey-lighten-5">
   <v-container>
     <h2 class="text-h4 font-weight-bold text-center mb-8" style="color: #B0D183;">
       开发团队
@@ -172,7 +172,7 @@
       &copy; {{ new Date().getFullYear() }} 本草学堂. 保留所有权利.
     </div>
   </v-container>
-</v-footer>
+</v-footer>-->
 
     
   </v-app>

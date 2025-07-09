@@ -118,7 +118,7 @@ const tabs = [
 /* --- 精美的头部 --- */
 .header-card {
   background: url('https://images.unsplash.com/photo-1558985250-2d89b5355ac2?q=80&w=2070&auto=format&fit=crop') center center/cover;
-  border-radius: 24px !important;
+  border-radius: 10px !important;
   color: white;
   position: relative;
   overflow: hidden;

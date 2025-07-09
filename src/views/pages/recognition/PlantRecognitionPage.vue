@@ -149,7 +149,7 @@ const clearHistory = () => {
   <v-container fluid class="pa-md-6 pa-4">
     <div class="page-header">
       <h1 class="page-title text-h4 font-weight-bold d-flex align-center">
-        <v-icon size="40" class="mr-4" color="teal">mdi-camera-iris</v-icon>
+        <v-icon size="40" class="mr-4" color="#65B484">mdi-camera-iris</v-icon>
         <span>智能识花</span>
       </h1>
       <p class="page-subtitle text-body-1 text-grey-darken-1 mt-2">
@@ -196,7 +196,7 @@ const clearHistory = () => {
         <input ref="fileInput" type="file" accept="image/*" @change="onFileSelected" style="display: none" />
         
         <div class="mt-4">
-          <v-btn :loading="isLoading" :disabled="!selectedFile || isLoading" block color="teal" size="x-large" @click="handleRecognition" class="recognize-button">
+          <v-btn :loading="isLoading" :disabled="!selectedFile || isLoading" block color="#65B484" size="x-large" @click="handleRecognition" class="recognize-button">
             <v-icon left>mdi-magnify-scan</v-icon>
             开始识别
           </v-btn>
@@ -210,7 +210,7 @@ const clearHistory = () => {
                 <v-expansion-panel-title class="font-weight-medium">
                     <v-icon class="mr-2">mdi-history</v-icon>
                     识别历史
-                     <v-chip v-if="identificationHistory.length > 0" class="ml-2" color="teal" size="small" label>{{ identificationHistory.length }}</v-chip>
+                     <v-chip v-if="identificationHistory.length > 0" class="ml-2" color="#65B484" size="small" label>{{ identificationHistory.length }}</v-chip>
                 </v-expansion-panel-title>
                 <v-expansion-panel-text class="pa-0">
                      <div v-if="identificationHistory.length === 0" class="text-center pa-4 text-grey">
@@ -236,7 +236,7 @@ const clearHistory = () => {
                     <v-divider v-if="identificationHistory.length > 0"></v-divider>
                      <v-card-actions v-if="identificationHistory.length > 0">
                         <v-spacer></v-spacer>
-                        <v-btn variant="text" color="error" size="small" @click="clearHistory">清空历史</v-btn>
+                        <v-btn variant="text" color="#BCA881" size="small" @click="clearHistory">清空历史</v-btn>
                     </v-card-actions>
                 </v-expansion-panel-text>
             </v-expansion-panel>
@@ -257,7 +257,7 @@ const clearHistory = () => {
             </div>
             <div v-else class="fill-height">
               <div v-if="!isPlant" class="d-flex flex-column justify-center align-center fill-height pa-4 text-center">
-                <v-icon size="80" color="orange-lighten-2" class="mb-4">mdi-emoticon-confused-outline</v-icon>
+                <v-icon size="80" color="#E0C870" class="mb-4">mdi-emoticon-confused-outline</v-icon>
                 <h3 class="text-h5 font-weight-medium">这似乎不是植物哦</h3>
                 <p class="text-body-1 text-grey-darken-1 mt-2">请换一张包含清晰植物主体的图片再试试吧。</p>
               </div>
@@ -284,18 +284,18 @@ const clearHistory = () => {
 
                       <v-list-item-title class="text-h6 font-weight-bold mb-1 d-flex align-center">
                         {{ item.name }}
-                        <v-chip v-if="index === 0" color="light-green" size="small" label class="ml-3 font-weight-bold">最可能</v-chip>
+                        <v-chip v-if="index === 0" color="#B0D183" size="small" label class="ml-3 font-weight-bold">最可能</v-chip>
                       </v-list-item-title>
                       <v-list-item-subtitle class="d-flex align-center mb-2">
                         <span class="font-weight-medium mr-2 text-caption text-grey-darken-1">可信度</span>
                         <v-progress-linear
                           :model-value="item.score * 100"
-                          color="light-green"
+                          color="#B0D183"
                           height="8"
                           rounded
                           class="flex-grow-1"
                         ></v-progress-linear>
-                        <span class="font-weight-bold text-light-green-darken-2 ml-3" style="min-width: 45px; text-align: right;">{{ (item.score * 100).toFixed(1) }}%</span>
+                        <span class="font-weight-bold ml-3" style="min-width: 45px; text-align: right; color: #BBC23F;">{{ (item.score * 100).toFixed(1) }}%</span>
                       </v-list-item-subtitle>
                       <p class="text-body-2 text-grey-darken-3 description-text">
                         {{ item.baike_info?.description || '暂无详细描述。' }}
@@ -351,15 +351,15 @@ const clearHistory = () => {
   overflow: hidden;
 
   &:hover {
-    border-color: #4db6ac; /* teal lighten-2 */
+    border-color: #65B484;
     transform: translateY(-4px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   }
   
   &.is-dragging {
-    border-color: #00796b; /* teal darken-2 */
+    border-color: #4A8E6A;
     border-style: solid;
-    background-color: #e0f2f1; /* teal lighten-5 */
+    background-color: #E8F5E9;
     transform: scale(1.02);
   }
 }
@@ -409,7 +409,7 @@ const clearHistory = () => {
   transition: all 0.2s ease-in-out;
   
   &:hover {
-      box-shadow: 0 4px 12px rgba(0, 150, 136, 0.3);
+      box-shadow: 0 4px 12px rgba(101, 180, 132, 0.4);
   }
 }
 
@@ -430,7 +430,7 @@ const clearHistory = () => {
   }
   
   &:hover {
-    background-color: #f7f9fc;
+    background-color: #E8F5E9;
   }
 }
 
