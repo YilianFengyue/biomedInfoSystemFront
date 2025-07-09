@@ -80,6 +80,12 @@ interface TeacherScore {
   totalResources: number;
 }
 
+// 新增：用于匹配的评价数据类型
+interface EvaluationScore {
+  userId: number;
+  totalScore: number;
+}
+
 interface UserResource {
   id: number;
   title: string;
@@ -122,14 +128,40 @@ const sortedTeachers = computed(() => {
 const fetchAllTeachersScores = async () => {
   teacherLoading.value = true;
   try {
-    const response = await axios.get('/api/teachers/scores');
-    if (response.data.code === 20041) {
-      teachers.value = response.data.data;
+    // 并行获取教师的业绩数据和评定分数数据
+    const [scoresResponse, evaluationsResponse] = await Promise.all([
+      axios.get('/api/teachers/scores'),
+      axios.get('/api/evaluations') // 从Scorejudge.vue引用的数据源
+    ]);
+
+    let baseScores: TeacherScore[] = [];
+    if (scoresResponse.data.code === 20041) {
+      baseScores = scoresResponse.data.data;
     } else {
-      snackbarStore.showErrorMessage('获取教师列表失败: ' + response.data.msg);
+      snackbarStore.showErrorMessage('获取教师列表失败: ' + scoresResponse.data.msg);
     }
+
+    let evaluationScores: EvaluationScore[] = [];
+    if (evaluationsResponse.data && Array.isArray(evaluationsResponse.data.data)) {
+      evaluationScores = evaluationsResponse.data.data;
+    } else {
+      console.warn('无法获取评定分数，将使用默认分数。');
+    }
+    
+    // 合并数据：用评定分数覆盖原有的考核分数
+    const mergedTeachers = baseScores.map(teacher => {
+      const evaluation = evaluationScores.find(e => e.userId === teacher.teacherId);
+      return {
+        ...teacher,
+        // 如果找到了对应的评定分数，则使用它；否则，使用原有的分数或默认为0
+        score: evaluation ? evaluation.totalScore : (teacher.score || 0),
+      };
+    });
+
+    teachers.value = mergedTeachers;
+
   } catch (error) {
-    snackbarStore.showErrorMessage('请求教师列表失败');
+    snackbarStore.showErrorMessage('请求教师业绩数据失败');
     console.error(error);
   } finally {
     teacherLoading.value = false;

@@ -13,6 +13,9 @@ interface DisplayResource {
   id: number;
   type: 'text' | 'video';
   title: string;
+  detailUrl?: string; 
+  authorName?: string;
+  createdAt?: string;
 }
 
 interface Lesson {
@@ -37,7 +40,6 @@ interface Course {
   loadingDetails: boolean;
 }
 
-// NEW: Interface for evaluation records from the backend
 interface Evaluation {
   id: number;
   userId: number;
@@ -60,9 +62,7 @@ interface Teacher {
   };
   courses?: Course[];
   resources?: DisplayResource[];
-  // This will be synced with the evaluation object
   performanceScore: number; 
-  // This will hold the full evaluation record for a teacher
   evaluation: Evaluation | null;
   detailsLoaded: boolean;
   loadingDetails: boolean;
@@ -72,7 +72,7 @@ interface Teacher {
 // --- Component State ---
 const teachers = ref<Teacher[]>([]);
 const allCourses = ref<Course[]>([]);
-const allEvaluations = ref<Evaluation[]>([]); // Store all evaluation records
+const allEvaluations = ref<Evaluation[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const teacherPanel = ref<number | undefined>(undefined);
@@ -87,24 +87,27 @@ const canEvaluate = computed(() => currentUserRole.value === 3);
 const fetchTeachers = async () => {
   try {
     const response = await axios.get('/api/users/teachers');
-    if (response.data && Array.isArray(response.data.data)) {
+    // MODIFIED: Added a more robust check for the success code from the backend API.
+    if (response.data && response.data.code === 20000 && Array.isArray(response.data.data)) {
       teachers.value = response.data.data.map((teacher: any) => ({
         id: teacher.id,
         username: teacher.username,
-        avatar: teacher.avatar,
-        profile: teacher.profile || {},
-        performanceScore: 80, // Default score
-        evaluation: null, // Initialize evaluation as null
+        avatar: teacher.avatarUrl, // Keep the correct mapping for avatarUrl.
+        profile: { bio: teacher.bio }, // Keep the correct mapping for bio.
+        performanceScore: 80, 
+        evaluation: null, 
         detailsLoaded: false,
         loadingDetails: false,
         errorDetails: null,
       }));
     } else {
-      throw new Error('教师数据格式不正确。');
+      // If the check fails, throw a more specific error using the message from the API.
+      throw new Error(response.data?.msg || '教师数据格式不正确或获取失败。');
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("Failed to fetch teachers:", err);
-    throw new Error('无法加载教师列表。');
+    // Re-throw the error so the calling function (loadInitialData) can catch it and display it.
+    throw new Error(err.message || '无法加载教师列表。');
   }
 };
 
@@ -126,7 +129,6 @@ const fetchAllCourses = async () => {
   }
 };
 
-// NEW: Fetch all existing evaluation records
 const fetchEvaluations = async () => {
     try {
         const response = await axios.get('/api/evaluations');
@@ -141,13 +143,11 @@ const fetchEvaluations = async () => {
     }
 }
 
-// NEW: Merge evaluation data into teacher objects
 const mergeEvaluationData = () => {
     teachers.value.forEach(teacher => {
         const foundEvaluation = allEvaluations.value.find(e => e.userId === teacher.id);
         if (foundEvaluation) {
             teacher.evaluation = { ...foundEvaluation };
-            // Sync the slider with the fetched score
             teacher.performanceScore = foundEvaluation.totalScore;
         }
     });
@@ -210,9 +210,7 @@ const loadInitialData = async () => {
   loading.value = true;
   error.value = null;
   try {
-    // Fetch all base data in parallel
     await Promise.all([fetchTeachers(), fetchAllCourses(), fetchEvaluations()]);
-    // After all data is ready, merge evaluations into teachers
     mergeEvaluationData();
   } catch (err: any) {
     error.value = err.message || '初始化页面数据时发生错误。';
@@ -222,33 +220,27 @@ const loadInitialData = async () => {
   }
 };
 
-// REFACTORED: Handles both creating and updating evaluations
 const submitSingleScore = async (teacher: Teacher) => {
-    // Prepare the payload. Use existing evaluation data or create new.
     const comments = teacher.evaluation?.comments || '';
     const payload = {
         userId: teacher.id,
-        periodId: teacher.evaluation?.periodId || 2, // Use existing or default to 2
+        periodId: teacher.evaluation?.periodId || 2,
         evaluatorId: profileStore.user?.id || 0,
         totalScore: teacher.performanceScore,
         comments: comments,
-        // You can add default values for other fields if needed by the backend
-        weightedScore: teacher.performanceScore * 0.95, // Example
+        weightedScore: teacher.performanceScore * 0.95, 
         level: teacher.performanceScore >= 90 ? '优秀' : (teacher.performanceScore >= 80 ? '良好' : '合格'),
         status: 'submitted',
     };
 
     try {
-        // If an evaluation ID exists, it's an UPDATE (PUT)
         if (teacher.evaluation && teacher.evaluation.id) {
             const response = await axios.put(`/api/evaluations/${teacher.evaluation.id}`, payload);
             snackbarStore.showSuccessMessage(response.data.msg || '评价更新成功！');
-            // Optionally update local data with response
-            teacher.evaluation.status = 'submitted'; // Reflect status change
-        } else { // No ID, it's a CREATE (POST)
+            teacher.evaluation.status = 'submitted';
+        } else { 
             const response = await axios.post('/api/evaluations', payload);
             snackbarStore.showSuccessMessage(response.data.msg || '评价创建成功！');
-            // After creating, refetch all evaluations to get the new ID and update the state
             await fetchEvaluations();
             mergeEvaluationData();
         }
@@ -292,7 +284,6 @@ onMounted(() => {
   }
 });
 
-// Helper to get color for status chip
 const getStatusColor = (status: string | undefined) => {
     if (!status) return 'grey';
     switch (status) {
@@ -443,7 +434,6 @@ const getStatusColor = (status: string | undefined) => {
                       </template>
                     </v-slider>
                 </div>
-                <!-- NEW: Comments Textarea -->
                 <v-textarea
                     v-model="teacher.evaluation.comments"
                     label="评语"
@@ -455,7 +445,6 @@ const getStatusColor = (status: string | undefined) => {
                 ></v-textarea>
 
               <div class="d-flex justify-space-between align-center mt-2">
-                 <!-- NEW: Status Chip -->
                  <v-chip
                     v-if="teacher.evaluation && teacher.evaluation.id"
                     :color="getStatusColor(teacher.evaluation.status)"
