@@ -253,3 +253,188 @@ jre\bin\java.exe -jar BiomedInfoSystem-0.0.1-SNAPSHOT.jar来测试是否打包�
     }
   }
 ````
+
+```
+biomedInfoSystemFront
+├─ auto-imports.d.ts
+├─ index.html
+├─ package-lock.json
+├─ package.json
+├─ public
+│  ├─
+├─ README.md
+├─ src
+│  ├─ api
+│  │  ├
+│  ├─ App.vue
+│  ├─ assets
+│  │  
+│  ├─ components
+│  │  ├─ Administrator
+│  │  │  ├─ 
+│  │  ├─ ai
+│  │  │  ├─ ChatAssistant.vue
+│  │  │  └─ TranslationAssistant.vue
+│  │  ├─ animations
+│  │  │  ├─ AnimationBot1.vue
+│  │  │  └─ AnimationChat1.vue
+│  │  ├─ ApiKeyDialog.vue
+│  │  ├─ Breadcrumb.vue
+│  │  ├─ common
+│  │  │  ├─ BackToTop.vue
+│  │  │  ├─ CopyBtn.vue
+│  │  │  ├─ CopyLabel.vue
+│  │  │  ├─ PercentTrend.vue
+│  │  │  ├─ Pin
+│  │  │  │  ├─ CollectBtn.vue
+│  │  │  │  ├─ FormulaCardWrapper.vue
+│  │  │  │  ├─ HerbCardWrapper.vue
+│  │  │  │  └─ HoverCollectIcon.vue
+│  │  │  └─ Snackbar.vue
+│  │  ├─ CustomizationMenu.vue
+│  │  ├─ dashboard
+│  │  │  ├─ BannerPage.vue
+│  │  │  ├─ CategoryCard.vue
+│  │  │  ├─ itemTable.vue
+│  │  │  ├─ SalesCard.vue
+│  │  │  ├─ SearchBar.vue
+│  │  │  └─ TicketsCard.vue
+│  │  ├─ FeatureCard.vue
+│  │  ├─ footer
+│  │  │  └─ Footer1.vue
+│  │  ├─ GlobalLoading.vue
+│  │  ├─ HomePage
+│  │  ├─ houseDetail
+│  │  │  ├─ 
+│  │  ├─ HouseList
+│  │  │  └─ HouseList.vue
+│  │  ├─ ImagePreview.vue
+│  │  ├─ InspirationBoard.vue
+│  │  ├─ Live2d.vue
+│  │  ├─ LoadingView.vue
+│  │  ├─ navigation
+│  │  │  ├─ MainMenu.vue
+│  │  │  └─ MainSidebar.vue
+│  │  ├─ PageTitle.vue
+│  │  ├─ pricing
+│  │  │  ├─ Pricing1.vue
+│  │  │  └─ Pricing2.vue
+│  │  ├─ RichEditorMenubar.vue
+│  │  ├─ SecondHandHouse.vue
+│  │  ├─ toolbar
+│  │  │  ├─
+│  │  ├─ Toolbox.vue
+│  │  └─ User
+│  │     └─ AvatarCropper.vue
+│  ├─ configs
+│  │  ├─ currencies.ts
+│  │  ├─ index.ts
+│  │  ├─ locales.ts
+│  │  ├─ menus
+│  │  │  ├─ landing.menu.ts
+│  │  │  ├─ pages.menu.ts
+│  │  │  └─ ui.menu.ts
+│  │  ├─ 
+│  ├─ data
+│  │  ├─ ai
+│  │  │  ├─ 
+│  │  ├─ eagle.ts
+│  │  ├─ logos.ts
+│  │  ├─ members.ts
+│  │  ├─ provinces.json
+│  │  └─ users.ts
+│  ├─ layouts
+│  │ 
+│  ├─ main.ts
+│  ├─ plugins
+│  │  ├─ echarts.ts
+│  │  ├─ i18n.ts
+│  │  ├─ plantuml.ts
+│  │  └─ vuetify.ts
+│  ├─ router
+│  │  ├─ auth.routes.ts
+│  │  ├─ index.ts
+│  │  └─ landing.routes.ts
+│  ├─ stores
+│  │  ├─ 
+│  │  ├─ profileStore.ts
+│  │  ├─ snackbarStore.ts
+│  │  ├─ speechStore.ts
+│  │  ├─ stableDiffusionStore.ts
+│  │  ├─ tokenStore.ts
+│  │  └─ weatherStore.ts
+│  ├─ styles
+│  │  ├─ common
+│  │  │  ├─
+│  │  ├─ main.scss
+│  │  ├─ pages
+│  │  │  └
+│  ├─ test
+│  │  ├─ demo.test.ts
+│  │  ├─ demo.ts
+│  │  └─ Demo.vue
+│  ├─ types
+│  │  ├─ config.d.ts
+│  │  ├─ env.d.ts
+│  │  └─ type.ts
+│  ├─ utils
+│  │  ├─ ，，/
+│  │  └─ websocket.ts
+│  └─ views
+│     ├─ auth
+│     │  ├─ ForgotPage.vue
+│     │  ├─ ResetPage.vue
+│     │  ├─ SigninPage.vue
+│     │  ├─ SignupPage.vue
+│     │  └─ VerifyEmailPage.vue
+│     ├─ chatgpt
+│     │  ├─ ChatBotV1.vue
+│     │  └─ FileUploadDialog.vue
+│     ├─ errors
+│     │  ├─ NotFoundPage.vue
+│     │  └─ UnexpectedPage.vue
+│     ├─ landing
+│     │  ├─ HomePage.vue
+│     │  └─ toolbar
+│     │     ├─ components
+│     │     │  ├─ Toolbar1.vue
+│     │     │  ├─ Toolbar2.vue
+│     │     │  ├─ Toolbar3.vue
+│     │     │  ├─ Toolbar4.vue
+│     │     │  └─ Toolbar5.vue
+│     │     └─ ToolbarPage.vue
+│     ├─ pages
+│     │  ├─ Admin
+│     │  │  ├─ AdministratorPanel.vue
+│     │  │  └─ UserManagePage.vue
+│     │  ├─ biomedicine
+│     │  │  ├─
+│     │  ├─ DashBoard.vue
+│     │  ├─ DashBoardcopy.vue
+│     │  ├─ ImageBot.vue
+│     │  ├─ landlord
+│     │  │  ├─ MyHouse.vue
+│     │  │  └─ SDComponents
+│     │  │     └─ AnimationUpload.vue
+│     │  ├─ News
+│     │  │  └─ editor
+│     │  │     ├─ MdEditorCard.vue
+│     │  │     ├─ NewsDetailPage.vue
+│     │  │     ├─ NewsListPage.vue
+│     │  │     ├─ NewsPreviewCard.vue
+│     │  │     └─ RichTextEditorPage.vue
+│     │  ├─ ProfilePage.vue
+│     │  ├─ recognition
+│     │  │  └─ PlantRecognitionPage.vue
+│     │  ├─ SciEduPlatform
+│     │  ├─ SDComponents
+│     │  │  ├─ ImageToImage.vue
+│     │  │  └─ TextToImage.vue
+│     │  └─ Test
+│     └─ ui
+│        └─ LottieAnimationPage.vue
+├─ tsconfig.json
+├─ vite.config.ts
+└─ yarn.lock
+
+```

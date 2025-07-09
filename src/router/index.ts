@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 
 import LandingRoutes from "./landing.routes";
 import AuthRoutes from "./auth.routes";
-
+import researchRoutes from "./research.routes";
 export const routes = [
   {
     path: "/",
@@ -20,6 +20,19 @@ export const routes = [
       layout: "ui",
       transition: "slide-fade", // 主要页面切换
     },
+  },
+  //科研平台
+  {
+    path: "/research", // 这是父路径
+    meta: {
+      requiresAuth: true,
+      layout: "ui",
+      title: "科研平台",
+    },
+    // 加载我们在第1步创建的容器
+    component: () => import('@/views/ResearchHub/ResearchPlatform.vue'),
+    // 告诉它，子路由用我们刚创建的那个文件
+    children: [...researchRoutes],
   },
   {
     path: "/dataCenter",
