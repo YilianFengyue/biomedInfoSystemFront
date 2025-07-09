@@ -25,8 +25,8 @@ const chartData = ref({
   datasets: [
     {
       label: '配伍次数',
-      backgroundColor: 'rgba(63, 81, 181, 0.8)',
-      borderColor: 'rgba(63, 81, 181, 1)',
+      backgroundColor: 'rgba(176, 209, 131, 0.8)',
+      borderColor: '#B0D183',
       borderWidth: 2,
       borderRadius: 8,
       data: [] as number[],
@@ -44,7 +44,7 @@ const chartOptions = ref({
       display: true,
       text: 'Top 10 配伍药材',
       font: { size: 16, weight: 'bold' },
-      color: '#3F51B5',
+      color: '#BBC23F',
       padding: 20
     },
   },
@@ -75,7 +75,7 @@ const performAnalysis = async () => {
       analysisResult.value = response.data.data;
       if (analysisResult.value.length === 0) {
         analysisError.value = `未找到关于"${searchHerb.value}"的配伍数据。`;
-        chartData.value = { labels: [], datasets: [{ data: [], label: '配伍次数', backgroundColor: 'rgba(63, 81, 181, 0.8)' }] };
+        chartData.value = { labels: [], datasets: [{ data: [], label: '配伍次数', backgroundColor: 'rgba(176, 209, 131, 0.8)' }] };
       } else {
         const top10 = [...analysisResult.value].slice(0, 10).reverse();
         chartData.value.labels = top10.map(item => item.herbName);
@@ -103,7 +103,7 @@ const performAnalysis = async () => {
       <v-card-text class="analysis-content">
         <v-text-field v-model="searchHerb" label="输入核心药材进行配伍分析" variant="outlined" clearable
           prepend-inner-icon="mdi-leaf" class="herb-input" density="comfortable" @keydown.enter="performAnalysis" />
-        <v-btn :loading="analysisLoading" color="primary" variant="flat" size="large" @click="performAnalysis" block
+        <v-btn :loading="analysisLoading" color="#B0D183" variant="flat" size="large" @click="performAnalysis" block
           class="analysis-btn">
           <v-icon class="mr-2">mdi-chart-bar</v-icon>
           开始配伍分析
@@ -112,7 +112,7 @@ const performAnalysis = async () => {
     </v-card>
 
     <div v-if="analysisLoading" class="loading-section">
-      <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular>
+      <v-progress-circular indeterminate color="#B0D183" size="60" width="6"></v-progress-circular>
       <p class="loading-text">配伍分析中...</p>
     </div>
 
@@ -175,12 +175,12 @@ const performAnalysis = async () => {
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 16px !important;
-  box-shadow: 0 8px 32px 0 rgba(106, 114, 153, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(188, 194, 63, 0.2);
 }
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #3F51B5;
+  color: #BBC23F;
   display: flex;
   align-items: center;
   padding-bottom: 1rem;
@@ -192,14 +192,14 @@ const performAnalysis = async () => {
   background-color: transparent;
 }
 :deep(thead) {
-  background-color: rgba(63, 81, 181, 0.08);
+  background-color: rgba(176, 209, 131, 0.1);
 }
 :deep(th) {
   font-weight: bold !important;
-  color: #3F51B5 !important;
+  color: #BBC23F !important;
 }
 :deep(tbody tr:hover) {
-  background-color: rgba(63, 81, 181, 0.04) !important;
+  background-color: rgba(176, 209, 131, 0.05) !important;
 }
 .loading-section {
   display: flex;
@@ -213,7 +213,7 @@ const performAnalysis = async () => {
 .loading-text {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #3F51B5;
+  color: #BBC23F;
 }
 .error-alert {
   font-weight: 500;

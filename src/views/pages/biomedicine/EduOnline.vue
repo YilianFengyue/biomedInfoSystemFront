@@ -128,22 +128,53 @@
       </section>
     </v-main>
 
-    <v-footer color="grey-darken-4" class="py-6">
-       <v-container class="text-center">
-        <div class="mb-4">
-          <v-btn v-for="icon in footerIcons" :key="icon" class="mx-2" icon variant="text" color="white">
-            <v-icon size="24px">{{ icon }}</v-icon>
-          </v-btn>
-        </div>
-        <div class="text-white mb-4">
-          致力于提供专业、系统的中医药材在线教育服务
-        </div>
-        <v-divider></v-divider>
-        <div class="text-grey-lighten-1 pt-4">
-          &copy; {{ new Date().getFullYear() }} 本草学堂. 保留所有权利.
-        </div>
-      </v-container>
-    </v-footer>
+    <v-footer class="pa-md-10 pa-5" color="grey-lighten-5">
+  <v-container>
+    <h2 class="text-h4 font-weight-bold text-center mb-8 text-primary">
+      开发团队
+    </h2>
+
+    <v-row justify="center">
+      <v-col
+        v-for="member in team"
+        :key="member.name"
+        cols="12"
+        sm="6"
+        md="4"
+        lg="2"
+      >
+        <v-card class="text-center pa-4" flat color="transparent">
+          <v-avatar size="100" class="mb-3">
+            <v-img :src="member.avatar" :alt="member.name" cover></v-img>
+          </v-avatar>
+          <div class="text-h6 font-weight-bold">{{ member.name }}</div>
+          <div class="text-body-2 text-grey-darken-1 mb-2">{{ member.role }}</div>
+          <div>
+            <v-btn
+              v-for="social in member.socials"
+              :key="social.icon"
+              :href="social.link"
+              target="_blank"
+              icon
+              variant="text"
+              size="small"
+              color="grey-darken-1"
+            >
+              <v-icon :icon="social.icon"></v-icon>
+            </v-btn>
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-divider class="my-6"></v-divider>
+    <div class="text-center text-caption text-grey">
+      &copy; {{ new Date().getFullYear() }} 本草学堂. 保留所有权利.
+    </div>
+  </v-container>
+</v-footer>
+
+    
   </v-app>
 </template>
 
@@ -225,11 +256,63 @@ const features = ref([
   }
 ]);
 
-const footerIcons = ref([
+/*const footerIcons = ref([
   'mdi-wechat',
   'mdi-qqchat',
   'mdi-sina-weibo',
   'mdi-youtube'
+]);*/
+import Lin from '@/assets/images/avatars/Lin.jpg';
+import Wang from '@/assets/images/avatars/Wang.jpg';
+import Lu from '@/assets/images/avatars/Lu.jpg';
+import Shang from '@/assets/images/avatars/Shang.jpg';
+import Zhang from '@/assets/images/avatars/Zhang.jpg';
+const team = ref([
+  {
+    name: '王银波',
+    role: '项目经理 & 全栈开发',
+    avatar: Wang,
+    socials: [
+      { icon: 'mdi-github', link: 'https://github.com/YilianFengyue' },
+      { icon: 'mdi-linkedin', link: 'https://linkedin.com' },
+    ],
+  },
+  {
+    name: '陆岳',
+    role: '前端架构师 & UI设计',
+    avatar: Lu,
+    socials: [
+      { icon: 'mdi-github', link: 'https://github.com/rg2304luyue' },
+      { icon: 'mdi-linkedin', link: 'https://linkedin.com' },
+    ],
+  },
+  {
+    name: '林文浩',
+    role: '安卓开发&前端工程师',
+    avatar: Lin,
+    socials: [
+      { icon: 'mdi-github', link: 'https://github.com/Andyiscpp' },
+      { icon: 'mdi-linkedin', link: 'https://linkedin.com' },
+    ],
+  },
+  {
+    name: '张家豪',
+    role: '后端工程师 & 运维',
+    avatar: Zhang,
+    socials: [
+      { icon: 'mdi-github', link: 'https://github.com/ewewrttt' },
+      { icon: 'mdi-linkedin', link: 'https://linkedin.com' },
+    ],
+  },
+  {
+    name: '尚思宇',
+    role: '后端工程师 & WinUI',
+    avatar: Shang,
+    socials: [
+      { icon: 'mdi-github', link: 'https://github.com/dashboard' },
+      { icon: 'mdi-linkedin', link: 'https://linkedin.com' },
+    ],
+  },
 ]);
 
 const fetchTeachers = async () => {

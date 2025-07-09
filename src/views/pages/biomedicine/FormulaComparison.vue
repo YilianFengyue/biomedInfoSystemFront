@@ -70,7 +70,7 @@ onMounted(() => {
         <v-select v-model="selectedFormulaIds" :items="allFormulas" item-title="name" item-value="id"
           label="选择两个或更多方剂进行对比" variant="outlined" multiple chips clearable prepend-inner-icon="mdi-pill"
           class="formula-select" density="comfortable" />
-        <v-btn :loading="compareLoading" :disabled="selectedFormulaIds.length < 2" color="primary" variant="flat"
+        <v-btn :loading="compareLoading" :disabled="selectedFormulaIds.length < 2" color="#B0D183" variant="flat"
           size="large" @click="performComparison" block class="compare-btn">
           <v-icon class="mr-2">mdi-compare</v-icon>
           开始对比分析
@@ -79,7 +79,7 @@ onMounted(() => {
     </v-card>
 
     <div v-if="compareLoading" class="loading-section">
-      <v-progress-circular indeterminate color="primary" size="60" width="6"></v-progress-circular>
+      <v-progress-circular indeterminate color="#B0D183" size="60" width="6"></v-progress-circular>
       <p class="loading-text">对比分析中...</p>
     </div>
 
@@ -129,12 +129,12 @@ onMounted(() => {
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 16px !important;
-  box-shadow: 0 8px 32px 0 rgba(106, 114, 153, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(188, 194, 63, 0.2);
 }
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #3F51B5;
+  color: #BBC23F;
   display: flex;
   align-items: center;
   padding-bottom: 1rem;
@@ -146,11 +146,11 @@ onMounted(() => {
   background-color: transparent;
 }
 :deep(thead) {
-  background-color: rgba(63, 81, 181, 0.08);
+  background-color: rgba(176, 209, 131, 0.1);
 }
 :deep(th) {
   font-weight: bold !important;
-  color: #3F51B5 !important;
+  color: #BBC23F !important;
 }
 .loading-section {
   display: flex;
@@ -164,7 +164,7 @@ onMounted(() => {
 .loading-text {
   font-size: 1.1rem;
   font-weight: 500;
-  color: #3F51B5;
+  color: #BBC23F;
 }
 .error-alert {
   font-weight: 500;

@@ -287,9 +287,9 @@ onMounted(() => {
 const getStatusColor = (status: string | undefined) => {
     if (!status) return 'grey';
     switch (status) {
-        case 'approved': return 'success';
-        case 'submitted': return 'warning';
-        case 'draft': return 'info';
+        case 'approved': return '#B0D183';
+        case 'submitted': return '#BCA881';
+        case 'draft': return '#BBC23F';
         default: return 'grey';
     }
 }
@@ -304,14 +304,14 @@ const getStatusColor = (status: string | undefined) => {
     <div v-else>
       <v-card class="mb-5">
         <v-card-title class="d-flex align-center">
-          <v-icon color="primary" class="mr-3">mdi-chart-bar</v-icon>
+          <v-icon color="#B0D183" class="mr-3">mdi-chart-bar</v-icon>
           <span class="text-h5">教师业绩评定</span>
         </v-card-title>
         <v-card-subtitle>对各位老师的教学成果进行综合评价与打分。</v-card-subtitle>
       </v-card>
 
       <div v-if="loading" class="text-center pa-10">
-        <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+        <v-progress-circular indeterminate color="#B0D183" size="64"></v-progress-circular>
         <p class="mt-4 text-grey-darken-1">正在加载基础数据...</p>
       </div>
       <v-alert v-if="error" type="warning" variant="tonal">{{ error }}</v-alert>
@@ -333,7 +333,7 @@ const getStatusColor = (status: string | undefined) => {
           </v-expansion-panel-title>
           <v-expansion-panel-text>
             <div v-if="teacher.loadingDetails" class="text-center py-4">
-              <v-progress-circular indeterminate color="primary"></v-progress-circular>
+              <v-progress-circular indeterminate color="#B0D183"></v-progress-circular>
               <p class="mt-2 text-caption">正在加载教师详情...</p>
             </div>
             <v-alert v-else-if="teacher.errorDetails" type="error" variant="text" density="compact">{{ teacher.errorDetails }}</v-alert>
@@ -350,7 +350,7 @@ const getStatusColor = (status: string | undefined) => {
                     @group:selected="({ value }) => value && fetchCourseDetails(course)"
                   >
                    <v-expansion-panel-title color="transparent">
-                      <v-icon color="indigo" class="mr-3">mdi-book-open-variant</v-icon>
+                      <v-icon color="#BBC23F" class="mr-3">mdi-book-open-variant</v-icon>
                       {{ course.title }}
                    </v-expansion-panel-title>
 
@@ -371,7 +371,7 @@ const getStatusColor = (status: string | undefined) => {
                             @click="viewLesson(lesson)"
                           >
                              <template v-slot:prepend>
-                              <v-icon size="small" :color="lesson.contentType === 'video' ? 'red' : 'grey-darken-1'">
+                              <v-icon size="small" :color="lesson.contentType === 'video' ? '#BCA881' : 'grey-darken-1'">
                                 {{ lesson.contentType === 'video' ? 'mdi-play-circle-outline' : 'mdi-file-document-outline' }}
                               </v-icon>
                             </template>
@@ -400,7 +400,7 @@ const getStatusColor = (status: string | undefined) => {
                   <v-card-item>
                      <div>
                        <div class="text-overline mb-1">
-                          <v-icon size="small" :color="resource.type === 'video' ? 'blue' : 'green'" class="mr-1">
+                          <v-icon size="small" :color="resource.type === 'video' ? '#BBC23F' : '#B0D183'" class="mr-1">
                              {{ resource.type === 'video' ? 'mdi-movie-outline' : 'mdi-text-box-outline' }}
                           </v-icon>
                           {{ resource.type === 'video' ? '视频资源' : '图文资源' }}
@@ -455,7 +455,7 @@ const getStatusColor = (status: string | undefined) => {
                  </v-chip>
                  <v-spacer></v-spacer>
                  <v-btn
-                    color="primary"
+                    color="#B0D183"
                     variant="tonal"
                     size="small"
                     @click="submitSingleScore(teacher)"

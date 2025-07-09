@@ -54,7 +54,8 @@ const tabs = [
 
       <v-container class="main-container">
         <v-card class="navigation-card elevation-8" flat>
-          <v-tabs v-model="activeTab" color="primary" align-tabs="center" class="elegant-tabs" slider-color="primary">
+          <!--修改主色调-->
+          <v-tabs v-model="activeTab" color="#B0D183" align-tabs="center" class="elegant-tabs" slider-color="#BBC23F">
             <v-tab v-for="tab in tabs" :key="tab.value" :value="tab.value" class="tab-item">
               <template v-if="typeof tab.icon === 'string'">
                 <v-icon :icon="tab.icon" class="tab-icon"></v-icon>
@@ -89,8 +90,9 @@ const tabs = [
 <style scoped>
 /* 此处保留所有通用样式，例如 .app-container, .header-card, .glass-card, .section-title, .elegant-table 等 */
 /* --- 全局与布局 --- */
+/* 修改主色调 */
 .app-container {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf2 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #C1CBAD 100%); /* 使用浅绿作为背景渐变色 */
   font-family: 'Helvetica Neue', Arial, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -124,13 +126,15 @@ const tabs = [
   padding: 2rem 0;
 }
 
+/* 修改主色调 */
 .header-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, rgba(46, 59, 118, 0.9) 0%, rgba(63, 81, 181, 0.7) 100%);
+  /* 使用深绿 (#BBC23F) 到 主色绿 (#B0D183) 的渐变 */
+  background: linear-gradient(90deg, rgba(187, 194, 63, 0.9) 0%, rgba(176, 209, 131, 0.8) 100%);
 }
 
 .header-content {
@@ -152,10 +156,11 @@ const tabs = [
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
+/* 修改主色调 */
 .decorative-line {
   width: 80px;
   height: 4px;
-  background-color: #fdd835;
+  background-color: #BCA881; /* 改为棕色 */
   border-radius: 2px;
   margin-top: 1rem;
 }
@@ -170,13 +175,10 @@ const tabs = [
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-.tab-item {
-  text-transform: none;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0 24px;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
+/* 修改主色调 */
+.tab-item:hover {
+  /* 使用主色调绿色的低透明度作为背景 */
+  background-color: rgba(176, 209, 131, 0.1);
 }
 
 .tab-item:hover {

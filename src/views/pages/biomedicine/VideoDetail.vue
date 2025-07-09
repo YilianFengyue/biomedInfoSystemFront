@@ -304,7 +304,7 @@ onMounted(() => {
 
 <style scoped>
 .v-container {
-  max-width: 1000px;
+  max-width: 1500px;
   padding-top: 2rem;
   padding-bottom: 2rem;
 }

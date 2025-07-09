@@ -4,7 +4,8 @@
       <v-col cols="12" md="6">
         <v-card class="fill-height">
           <v-card-title class="d-flex align-center">
-            <Icon icon="streamline-stickies-color:library-research" />&nbsp;
+            <v-icon class="mr-2" color="#B0D183">mdi-chart-donut</v-icon>
+            <!--<Icon icon="streamline-stickies-color:library-research" />&nbsp;-->
             <span class="text-h5">资源类型分布</span>
           </v-card-title>
           <v-divider></v-divider>
@@ -14,7 +15,8 @@
       <v-col cols="12" md="6">
         <v-card class="fill-height">
           <v-card-title class="d-flex align-center">
-            <Icon icon="streamline-ultimate-color:ranking-people-first" />&nbsp;
+            <v-icon class="mr-2" color="#B0D183">mdi-trophy-variant-outline</v-icon>
+            <!--<Icon icon="streamline-ultimate-color:ranking-people-first" />&nbsp;-->
             <span class="text-h5">教师业绩排行</span>
           </v-card-title>
           <v-divider></v-divider>
@@ -40,12 +42,13 @@
       <v-col cols="12">
         <v-card>
            <v-card-title class="d-flex align-center">
-            <Icon icon="vscode-icons:folder-type-library-opened" />&nbsp;
+            <v-icon class="mr-2" color="#B0D183">mdi-cloud-upload-outline</v-icon>
+            <!--<Icon icon="vscode-icons:folder-type-library-opened" />&nbsp;-->
             <span class="text-h5">我上传的资源</span>
           </v-card-title>
            <v-divider></v-divider>
           <div v-if="resourceLoading" class="text-center pa-10">
-            <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+            <v-progress-circular indeterminate color="#B0D183" size="64"></v-progress-circular>
           </div>
           <div v-else>
             <ResourceCardList :resources="userResources" />
@@ -228,6 +231,7 @@ const updatePieChart = (data: { value: number, name: string }[]) => {
       orient: 'vertical',
       left: 'left',
     },
+    color: ['#B0D183', '#BBC23F'], 
     series: [
       {
         name: '资源类型',
