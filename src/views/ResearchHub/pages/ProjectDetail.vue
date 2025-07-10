@@ -34,6 +34,31 @@ const loading = ref(false);
 const applyDialog = ref(false);
 const applicationReason = ref('');
 
+// 添加 loading 状态
+const applyLoading = ref(false);
+
+//申请状态检查
+const hasApplied = ref(false);
+const applicationStatus = ref('');
+
+// 检查是否已申请过该课题
+const checkApplicationStatus = async () => {
+  if (userRole.value === 'student') {
+    try {
+      const { data } = await researchStore.studentApi.projects.getApplications();
+      if (data.code === 20000) {
+        const existingApp = data.data.find(app => app.projectId === projectId.value);
+        if (existingApp) {
+          hasApplied.value = true;
+          applicationStatus.value = existingApp.status;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check application status:', error);
+    }
+  }
+};
+
 // 加载项目详情
 const loadProject = async () => {
   loading.value = true;
@@ -41,6 +66,9 @@ const loadProject = async () => {
     const role = userRole.value === 'teacher' ? 'teacher' : 'student';
     researchStore.setUserRole(role);
     await researchStore.fetchProjectDetail(projectId.value);
+    // 加载完项目后检查申请状态
+    
+    await checkApplicationStatus();
   } catch (error) {
     console.error('Failed to load project:', error);
     snackbarStore.showErrorMessage('加载项目详情失败');
@@ -56,13 +84,20 @@ const applyForProject = async () => {
     return;
   }
   
+  applyLoading.value = true;
   try {
     await researchStore.applyForProject(projectId.value, applicationReason.value);
     snackbarStore.showSuccessMessage('申请已提交');
     applyDialog.value = false;
     applicationReason.value = '';
+    
+    // 更新申请状态
+    hasApplied.value = true;
+    applicationStatus.value = 'pending';
   } catch (error) {
     console.error('Failed to apply for project:', error);
+  } finally {
+    applyLoading.value = false;
   }
 };
 
@@ -122,13 +157,24 @@ onMounted(() => {
       <v-spacer></v-spacer>
       
       <!-- 学生申请按钮 -->
-      <v-btn
-        v-if="userRole === 'student' && project"
-        color="primary"
-        @click="applyDialog = true"
-      >
-        申请加入
-      </v-btn>
+        <template v-if="userRole === 'student'">
+          <v-btn
+            v-if="!hasApplied"
+            color="primary"
+            @click="applyDialog = true"
+          >
+            申请加入
+          </v-btn>
+          <v-chip
+            v-else
+            :color="applicationStatus === 'approved' ? 'success' : 
+                  applicationStatus === 'rejected' ? 'error' : 'warning'"
+            label
+          >
+            {{ applicationStatus === 'approved' ? '已通过' : 
+              applicationStatus === 'rejected' ? '已拒绝' : '待审核' }}
+          </v-chip>
+        </template>
     </v-toolbar>
     
     <v-divider></v-divider>
@@ -300,6 +346,7 @@ onMounted(() => {
             color="primary"
             variant="elevated"
             @click="applyForProject"
+            :loading="applyLoading"
             :disabled="!applicationReason"
           >
             提交申请

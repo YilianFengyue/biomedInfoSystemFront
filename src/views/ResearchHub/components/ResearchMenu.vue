@@ -48,12 +48,12 @@ const teacherMenus = [
     path: "/research/applications",
     badge: { color: "error", content: researchStore.pendingApplicationsCount.toString() }
   },
-  {
-    icon: "mdi-chart-line",
-    title: "项目统计",
-    subtitle: "查看项目数据",
-    path: "/research/statistics"
-  }
+  // {
+  //   icon: "mdi-chart-line",
+  //   title: "项目统计",
+  //   subtitle: "查看项目数据",
+  //   path: "/research/statistics"
+  // }
 ];
 
 // 🔥 学生专用菜单  
@@ -85,12 +85,12 @@ const studentMenus = [
     subtitle: "查看申请状态",
     path: "/research/applications"
   },
-  {
-    icon: "mdi-chart-donut",
-    title: "学习进度",
-    subtitle: "查看个人统计", 
-    path: "/research/statistics"
-  }
+  // {
+  //   icon: "mdi-chart-donut",
+  //   title: "学习进度",
+  //   subtitle: "查看个人统计", 
+  //   path: "/research/statistics"
+  // }
 ];
 
 const currentMenus = computed(() => {
@@ -204,8 +204,8 @@ onMounted(async () => {
 
     <div class="pa-1 mt-2 text-overline text-grey">快捷操作</div>
     <v-list nav class="mt-2 pa-0">
-      <v-list-item prepend-icon="mdi-cloud-upload" to="/research/upload" link title="文件上传">
-      </v-list-item>
+      <!-- <v-list-item prepend-icon="mdi-cloud-upload" to="/research/upload" link title="文件上传">
+      </v-list-item> -->
       <v-list-item prepend-icon="mdi-cog" to="/research/settings" link title="系统设置">
       </v-list-item>
     </v-list>

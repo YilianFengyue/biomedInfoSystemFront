@@ -24,25 +24,29 @@ const reviewDialog = ref(false);
 const selectedApplication = ref<any>(null);
 const reviewAction = ref<'approve' | 'reject'>('approve');
 const reviewComment = ref('');
-
+//加载进度条
+const reviewLoading = ref(false);
 // 筛选条件
 const filterProjectId = ref<number | null>(null);
 
 // 加载申请列表
 const loadApplications = async () => {
   try {
-    researchStore.setUserRole('teacher');
-    
-    const params: any = {
-      page: 1,
-      size: 10
-    };
-    
-    if (filterProjectId.value) {
-      params.projectId = filterProjectId.value;
+    if (userRole.value === 'teacher') {
+      researchStore.setUserRole('teacher');
+      const params: any = {
+        page: 1,
+        size: 10
+      };
+      if (filterProjectId.value) {
+        params.projectId = filterProjectId.value;
+      }
+      await researchStore.fetchPendingApplications(params);
+    } else {
+      // 学生端加载自己的申请
+      researchStore.setUserRole('student');
+      await researchStore.fetchMyApplications();
     }
-    
-    await researchStore.fetchPendingApplications(params);
   } catch (error) {
     console.error('Failed to load applications:', error);
   }
@@ -62,7 +66,7 @@ const submitReview = async () => {
     snackbarStore.showErrorMessage('请填写审核意见');
     return;
   }
-  
+  reviewLoading.value = true;  // 添加这行
   try {
     await researchStore.reviewApplication(
       selectedApplication.value.id,
@@ -78,7 +82,9 @@ const submitReview = async () => {
     await loadApplications();
   } catch (error) {
     console.error('Failed to review application:', error);
-  }
+  }finally{
+    reviewLoading.value = false;  // 添加这行
+  };
 };
 
 // 获取状态颜色
@@ -277,6 +283,8 @@ onMounted(() => {
             :color="reviewAction === 'approve' ? 'success' : 'error'"
             variant="elevated"
             @click="submitReview"
+            :loading="reviewLoading"
+  
             :disabled="!reviewComment"
           >
             确认{{ reviewAction === 'approve' ? '通过' : '拒绝' }}

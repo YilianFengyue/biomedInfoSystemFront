@@ -262,26 +262,38 @@ export const useResearchStore = defineStore('research', {
     
     // 审核申请（教师）
     async reviewApplication(applicationId: number, action: 'approve' | 'reject', comment: string) {
-      try {
-        const { data } = await teacherApi.applications.review({
-          applicationId,
-          action,
-          reviewComment: comment
-        });
-        
-        if (data.code === 20000) {
-          // 更新申请状态
-          const application = this.applications.find(a => a.id === applicationId);
-          if (application) {
-            application.status = action === 'approve' ? 'approved' : 'rejected';
-            application.reviewComment = comment;
+    try {
+      const { data } = await teacherApi.applications.review({
+        applicationId,
+        action,
+        reviewComment: comment
+      });
+      
+      if (data.code === 20000) {
+        // 更新申请状态
+        const application = this.applications.find(a => a.id === applicationId);
+        if (application) {
+          application.status = action === 'approve' ? 'approved' : 'rejected';
+          application.reviewComment = comment;
+          
+          // 如果是通过申请，更新项目成员数量
+          if (action === 'approve') {
+            const project = this.projects.find(p => p.id === application.projectId);
+            if (project) {
+              project.memberCount += 1;
+            }
+            if (this.currentProject?.id === application.projectId) {
+              this.currentProject.memberCount += 1;
+            }
           }
         }
-      } catch (error) {
-        console.error('Failed to review application:', error);
-        throw error;
+        return true;
       }
-    },
+    } catch (error) {
+      console.error('Failed to review application:', error);
+      throw error;
+    }
+  },
     
     // ========== 任务相关 ==========
     

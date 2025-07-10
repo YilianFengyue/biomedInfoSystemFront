@@ -130,6 +130,7 @@ const loadProjects = async () => {
 
     // 调用 store action (这部分逻辑不变)
     await researchStore.fetchProjects(params);
+     console.log('Projects loaded:', researchStore.projects);
   } catch (error) {
     console.error('Failed to load projects:', error);
   }
