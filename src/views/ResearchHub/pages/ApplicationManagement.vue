@@ -5,7 +5,14 @@
 <script setup lang="ts">
 import { useResearchStore } from "../researchStore";
 import { useSnackbarStore } from "@/stores/snackbarStore";
+// 🔥 在 script setup 顶部添加：
+import { useProfileStore } from "@/stores/profileStore";
 
+const profile = useProfileStore(); 
+const userRole = computed(() => {
+  const roleVal = profile.user?.role;
+  return roleVal === 2 ? 'teacher' : 'student';
+});
 const researchStore = useResearchStore();
 const snackbarStore = useSnackbarStore();
 
@@ -195,7 +202,7 @@ onMounted(() => {
                 </div>
               </v-card-text>
               
-              <v-card-actions v-if="application.status === 'pending'">
+              <v-card-actions v-if="application.status === 'pending' && userRole === 'teacher'">
                 <v-spacer></v-spacer>
                 <v-btn
                   color="error"

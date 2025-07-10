@@ -35,6 +35,17 @@ export const routes = [
     children: [...researchRoutes],
   },
   {
+    path: "/board",
+    component: () => import("@/views/pages/BoardPage.vue"),
+    meta: {
+      layout: "ui",
+      title: "协作整理板",
+      requiresAuth: true,
+      hidePageHeader: true,
+      transition: "slide-fade",
+    },
+  },
+  {
     path: "/dataCenter",
     component: () => import("@/views/pages/biomedicine/DataCenter.vue"),
     meta: {

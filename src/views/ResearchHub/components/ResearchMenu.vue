@@ -122,7 +122,7 @@ const currentMenus = computed(() => {
       density="compact"
       class="mb-3"
     >
-      💡 浏览课题并申请加入项目
+      浏览课题并申请加入项目
     </v-alert>
 
     <!-- 🔥 根据角色显示不同菜单 -->
