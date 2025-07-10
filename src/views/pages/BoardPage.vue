@@ -31,7 +31,7 @@
     <v-row style="min-width: 800px">
       <v-col
         cols="3"
-        v-for="column in columns"
+        v-for="(column, colIndex) in columns"
         :key="column.key"
         class="pa-4 flex-fill"
       >
@@ -98,7 +98,7 @@
           v-model="column.cards"
           v-bind="dragOptions"
           class="list-group"
-          @change="changeState($event, column)"
+          @change="(e) => changeState(e, colIndex)"
           itemKey="id"
         >
           <template #item="{ element }">
@@ -225,61 +225,6 @@ const dragOptions = computed(() => {
 // board states
 const states = ref(["TODO", "INPROGRESS", "TESTING", "DONE"]);
 
-// 初始化数据 - 直接放入各列中，不再维护单独的 cards 数组
-const initialCards = [
-  {
-    id: 1,
-    title: "fix: 💭 channel label on chat app",
-    description: "we need it bolder",
-    order: 1,
-    state: "TODO",
-  },
-  {
-    id: 2,
-    title: "feature: new emojis on board 🤘",
-    description: "we need it for reasons 🤤",
-    order: 0,
-    state: "TODO",
-    imageUrl: "https://i.pinimg.com/1200x/f8/e5/45/f8e54532af278bf453cc4825659905cc.jpg",
-  },
-  {
-    id: 3,
-    title: "feature: add stripe account on signup",
-    description: "",
-    order: 1,
-    state: "TESTING",
-    pdfInfo: { name: "设计文档.pdf", url: "/api/files/123.pdf" },
-  },
-  {
-    id: 4,
-    title: "refactor: scroll 📜 directive on big pages",
-    description: "remember to check the scroll",
-    order: 0,
-    state: "INPROGRESS",
-  },
-  {
-    id: 5,
-    title: "feature: add big cards on dashboard",
-    description: "everyone loves cards",
-    order: 3,
-    state: "TODO",
-  },
-  {
-    id: 6,
-    title: "feature: add big cards on dashboard",
-    description: "everyone loves cards",
-    order: 3,
-    state: "TESTING",
-  },
-  {
-    id: 7,
-    title: "feature: add big cards on dashboard",
-    description: "everyone loves cards",
-    order: 3,
-    state: "DONE",
-  },
-];
-
 const columns = ref([]);
 const onlineUsers = ref([
   { id: 1, name: "张三" },
@@ -299,26 +244,70 @@ const editFile = ref(null);
 
 onMounted(() => {
   initColumns();
-  distributeInitialCards();
 });
 
-// 初始化列
+// 初始化列 - 完全按照原作者思路
 const initColumns = () => {
-  states.value.forEach((state) => {
+  states.value.forEach((state, index) => {
     columns.value.push({
       key: state,
       cards: [],
       isAddVisible: false,
       addTitle: "",
       addFile: null,
+      callback: (e) => changeState(e, index), // 保持原作者的回调方式
     });
   });
+  
+  // 初始化一些测试数据
+  initTestData();
 };
 
-// 分发初始卡片到各列
-const distributeInitialCards = () => {
+// 初始化测试数据
+const initTestData = () => {
+  const testCards = [
+    {
+      id: 1,
+      title: "fix: 💭 channel label on chat app",
+      description: "we need it bolder",
+      order: 1,
+      state: "TODO",
+    },
+    {
+      id: 2,
+      title: "feature: new emojis on board 🤘",
+      description: "we need it for reasons 🤤",
+      order: 0,
+      state: "TODO",
+      imageUrl: "https://i.pinimg.com/1200x/f8/e5/45/f8e54532af278bf453cc4825659905cc.jpg",
+    },
+    {
+      id: 3,
+      title: "feature: add stripe account on signup",
+      description: "",
+      order: 1,
+      state: "TESTING",
+      pdfInfo: { name: "设计文档.pdf", url: "/api/files/123.pdf" },
+    },
+    {
+      id: 4,
+      title: "refactor: scroll 📜 directive on big pages",
+      description: "remember to check the scroll",
+      order: 0,
+      state: "INPROGRESS",
+    },
+    {
+      id: 5,
+      title: "feature: add big cards on dashboard",
+      description: "everyone loves cards",
+      order: 3,
+      state: "DONE",
+    },
+  ];
+
+  // 分发到各列
   columns.value.forEach((column) => {
-    column.cards = initialCards
+    column.cards = testCards
       .filter((card) => card.state === column.key)
       .sort((a, b) => (a.order < b.order ? -1 : 0));
   });
@@ -334,7 +323,7 @@ const addCard = async (column) => {
     state: key,
     title: addTitle,
     description: "",
-    order: 0, // 新卡片放在最前面
+    order: -1,
   };
 
   // 处理文件上传
@@ -355,11 +344,11 @@ const addCard = async (column) => {
   column.isAddVisible = false;
 };
 
-// 拖拽状态改变 - 简化逻辑，只更新当前列的数据
-const changeState = (e, column) => {
+// 完全按照原作者的拖拽逻辑
+const changeState = (e, colIndex) => {
   if (e.added || e.moved) {
+    const column = columns.value[colIndex];
     const state = column.key;
-    // 更新该列所有卡片的状态和顺序
     for (let i = 0; i < column.cards.length; i++) {
       column.cards[i].order = i;
       column.cards[i].state = state;
@@ -398,7 +387,7 @@ const saveCard = async () => {
   }
 };
 
-// 删除卡片 - 简化逻辑，只从对应列中删除
+// 删除卡片
 const showDelete = (card) => {
   cardToDelete.value = card;
   deleteDialog.value = true;
@@ -432,7 +421,7 @@ const pasteFromDataCenter = () => {
       state: 'TODO',
       title: `数据中心导入 - ${new Date().toLocaleString()}`,
       description: "从数据中心导入的观测数据",
-      order: 0,
+      order: -1,
     };
     todoColumn.cards.unshift(newCard);
   }
@@ -454,6 +443,8 @@ const uploadFile = async (file) => {
     return file.type.startsWith('image/') ? URL.createObjectURL(file) : '/placeholder.pdf';
   }
 };
+
+// 删除了所有 watch 监听器 - 这是关键！
 </script>
 
 <style lang="scss" scoped>
@@ -464,6 +455,7 @@ const uploadFile = async (file) => {
 
 .board-item {
   transition: transform 0.2s;
+  user-select: none; /* 防止文字选择干扰拖拽 */
   &:hover {
     transition: transform 0.2s;
     transform: translateY(-3px);

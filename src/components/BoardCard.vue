@@ -104,7 +104,7 @@ const showImagePreview = () => {
 <style scoped>
 .card-shadow {
   box-shadow: 0 2px 8px rgba(99, 99, 99, .2) !important;
-  user-select: none;
+  user-select: none; /* 防止文字选择干扰拖拽 */
 }
 
 .cursor-pointer {
