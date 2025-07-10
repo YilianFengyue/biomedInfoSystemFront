@@ -1,30 +1,49 @@
 <template>
   <v-container>
     <!-- 简单的在线用户显示 -->
-    <v-card class="mb-4 pa-3">
-      <div class="d-flex align-center">
-        <v-icon icon="mdi-account-group" color="primary" class="mr-2"></v-icon>
+    <v-card class="mb-4 ">
+      <v-img
+        :aspect-ratio="1"
+        class="bg-white"
+        src="https://biomedinfo.oss-cn-beijing.aliyuncs.com/user-uploads/4b7857b1-63cc-48b2-a420-bc85d07d1302_AppBarBackground1.png"
+        max-height="100px"
+        cover
+      >
+      <div class="d-flex align-center mt-5 ml-2 mr-2 text-white">
+        <v-icon icon="mdi-account-group" color="white" class="mr-2"></v-icon>
         <span class="text-subtitle-2 mr-3">在线:</span>
         <v-chip-group>
           <v-chip
             v-for="user in onlineUsers"
             :key="user.id"
             size="small"
-            color="primary"
+            color="white"
+            label
           >
             {{ user.name }}
           </v-chip>
         </v-chip-group>
         <v-spacer></v-spacer>
         <v-btn
-          color="primary"
+          color="white"
           prepend-icon="mdi-database"
           variant="outlined"
           @click="pasteFromDataCenter"
         >
           从数据中心粘贴
         </v-btn>
+            <v-btn
+              color="white"
+              prepend-icon="mdi-lightbulb-import-outline"
+              variant="outlined"
+              @click="importFromInspiration"
+              class="mr-2 ml-2 "
+            >
+              从灵感板导入 ({{ inspirationStore.items.length }})
+            </v-btn>
       </div>
+    </v-img>
+      
     </v-card>
 
     <!-- board column -->
@@ -228,6 +247,12 @@
 import draggable from 'vuedraggable'
 import BoardCard from "@/components/BoardCard.vue"
 import { ref, onMounted, nextTick } from 'vue'
+import { useInspirationStore } from "@/stores/inspirationStore"
+//消息条
+import { useSnackbarStore } from "@/stores/snackbarStore";
+const snackbarStore = useSnackbarStore();
+// 在现有的 ref 定义附近添加
+const inspirationStore = useInspirationStore()
 
 // board states
 const states = ref(["TODO", "INPROGRESS", "TESTING", "DONE"])
@@ -239,6 +264,74 @@ const onlineUsers = ref([
   { id: 2, name: "李四" },
 ])
 
+
+//灵感板
+const getTypeIcon = (type) => {
+  const icons = {
+    herb: 'mdi-leaf',
+    paper: 'mdi-file-document',
+    chart: 'mdi-chart-scatter-plot',
+    text: 'mdi-text',
+    video: 'mdi-play-circle'
+  }
+  return icons[type] || 'mdi-lightbulb'
+}
+const importFromInspiration = () => {
+  const inspirationItems = inspirationStore.items
+  
+  if (inspirationItems.length === 0) {
+    snackbarStore.showErrorMessage("灵感板暂无内容");
+    return
+  }
+
+  const todoColumn = columns.value.find(col => col.key === 'TODO')
+  if (!todoColumn) return
+
+  let importCount = 0
+  
+  inspirationItems.forEach(item => {
+    const newCard = {
+      id: generateId(),
+      title: `[${getTypeLabel(item.type)}] ${item.title}`, // 用文字标签而不是图标
+      description: item.content + (item.subtitle ? `\n\n${item.subtitle}` : ''),
+      order: importCount,
+      // 添加元数据，方便后续识别
+      metadata: {
+        fromInspiration: true,
+        inspirationId: item.id,
+        inspirationType: item.type,
+        inspirationIcon: getTypeIcon(item.type)
+      }
+    }
+
+    // 如果有图片，添加图片
+    if (item.image && item.image.trim()) {
+      newCard.imageUrl = item.image
+    }
+
+    todoColumn.cards.unshift(newCard)
+    importCount++
+  })
+
+  // 更新所有卡片的order
+  todoColumn.cards.forEach((card, index) => {
+    card.order = index
+  })
+   snackbarStore.showSuccessMessage(`成功导入 ${importCount} 个灵感项目到 TODO 列`);
+  
+}
+
+// 获取类型对应的文字标签
+const getTypeLabel = (type) => {
+  const labels = {
+    herb: '药材',
+    paper: '文献',
+    chart: '图表', 
+    text: '笔记',
+    video: '视频'
+  }
+  return labels[type] || '灵感'
+}
 // 对话框状态
 const editDialog = ref(false)
 const deleteDialog = ref(false)
@@ -292,6 +385,13 @@ const initTestData = () => {
         description: "we need it for reasons 🤤",
         order: 1,
         imageUrl: "https://i.pinimg.com/1200x/f8/e5/45/f8e54532af278bf453cc4825659905cc.jpg",
+      },
+      {
+        id: generateId(),
+        title: "feature: new emojis on board ",
+        description: "Good Landscape",
+        order: 2,
+        imageUrl: "https://i.pinimg.com/736x/e7/4b/04/e74b043adfbc9f212d6d9af45c208851.jpg",
       },
     ],
     INPROGRESS: [
