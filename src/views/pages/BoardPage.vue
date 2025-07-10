@@ -250,6 +250,8 @@ import { ref, onMounted, nextTick } from 'vue'
 import { useInspirationStore } from "@/stores/inspirationStore"
 //消息条
 import { useSnackbarStore } from "@/stores/snackbarStore";
+//取消挂载
+import { onUnmounted } from 'vue';
 const snackbarStore = useSnackbarStore();
 // 在现有的 ref 定义附近添加
 const inspirationStore = useInspirationStore()
@@ -263,6 +265,11 @@ const onlineUsers = ref([
   { id: 1, name: "张三" },
   { id: 2, name: "李四" },
 ])
+
+// WebSocket相关
+let websocket = null
+const currentUserId = ref('user_' + Math.random().toString(36).substr(2, 9))
+const isWebSocketConnected = ref(false)
 
 
 //灵感板
@@ -319,6 +326,8 @@ const importFromInspiration = () => {
   })
    snackbarStore.showSuccessMessage(`成功导入 ${importCount} 个灵感项目到 TODO 列`);
   
+    // 【新增】发送WebSocket通知
+  sendBoardOperation('import_inspiration')
 }
 
 // 获取类型对应的文字标签
@@ -353,6 +362,7 @@ onMounted(() => {
   // 延迟初始化数据，确保DOM已经准备好
   nextTick(() => {
     initTestData()
+    connectWebSocket()
   })
 })
 
@@ -369,6 +379,75 @@ const initColumns = () => {
   })
 }
 
+// WebSocket连接
+const connectWebSocket = () => {
+  const roomId = 'board_default'
+  
+  websocket = new WebSocket(`ws://localhost:81/api/ws?uid=${currentUserId.value}&roomId=${roomId}`)
+  
+  websocket.onopen = () => {
+    console.log('看板WebSocket连接成功')
+    isWebSocketConnected.value = true
+  }
+  
+  websocket.onmessage = (event) => {
+    try {
+      const message = JSON.parse(event.data)
+      handleWebSocketMessage(message)
+    } catch (error) {
+      console.error('解析WebSocket消息失败:', error)
+    }
+  }
+  
+  websocket.onclose = () => {
+    console.log('看板WebSocket连接关闭')
+    isWebSocketConnected.value = false
+  }
+  
+  websocket.onerror = (error) => {
+    console.error('看板WebSocket错误:', error)
+    isWebSocketConnected.value = false
+  }
+}
+
+// 处理WebSocket消息
+const handleWebSocketMessage = (message) => {
+  console.log('收到WebSocket消息:', message)
+  
+  switch (message.type) {
+    case 'user_join':
+    case 'user_leave':
+      if (message.onlineUsers) {
+        onlineUsers.value = Array.from(message.onlineUsers).map(id => ({ 
+          id, 
+          name: id.startsWith('user_') ? id.substring(5, 10) : id 
+        }))
+      }
+      break
+    case 'board_operation':
+      if (message.data && message.data.columns && message.fromUser !== currentUserId.value) {
+        columns.value = message.data.columns
+        snackbarStore.showInfoMessage(`用户 ${message.fromUser.substring(5, 10)} 更新了看板`)
+      }
+      break
+    case 'board_sync':
+      if (message.data && message.data.columns) {
+        columns.value = message.data.columns
+      }
+      break
+  }
+}
+
+// 发送看板操作
+const sendBoardOperation = (operation) => {
+  if (websocket && websocket.readyState === WebSocket.OPEN) {
+    websocket.send(JSON.stringify({
+      type: 'board_operation',
+      operation: operation,
+      data: { columns: columns.value }
+    }))
+  }
+}
 // 初始化测试数据
 const initTestData = () => {
   const testData = {
@@ -468,6 +547,9 @@ const addCard = async (column) => {
   column.addTitle = ""
   column.addFile = null
   column.isAddVisible = false
+
+  // 【新增】发送WebSocket通知
+  sendBoardOperation('add_card')
 }
 
 // 处理拖拽变化
@@ -483,6 +565,9 @@ const handleDragChange = (evt, colIndex) => {
   if (evt.added) {
     console.log('Card moved to:', column.key)
   }
+
+  // 【新增】发送WebSocket通知
+  sendBoardOperation('move_card')
 }
 
 // 编辑卡片
@@ -515,6 +600,8 @@ const saveCard = async () => {
     
     editDialog.value = false
     editFile.value = null
+    // 【新增】发送WebSocket通知
+    sendBoardOperation('edit_card')
   }
 }
 
@@ -537,10 +624,14 @@ const deleteCard = () => {
         })
       }
     })
+
   }
   
   deleteDialog.value = false
   cardToDelete.value = null
+
+  // 【新增】发送WebSocket通知
+  sendBoardOperation('delete_card')
 }
 
 // PDF预览
@@ -590,6 +681,13 @@ const uploadFile = async (file) => {
     return file.type.startsWith('image/') ? URL.createObjectURL(file) : '/placeholder.pdf'
   }
 }
+
+// 组件销毁时清理WebSocket连接
+onUnmounted(() => {
+  if (websocket) {
+    websocket.close()
+  }
+})
 </script>
 
 <style lang="scss" scoped>
