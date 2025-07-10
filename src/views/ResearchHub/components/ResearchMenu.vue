@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import CreateProjectDialog from "./CreateProjectDialog.vue"; // 建议将 CreateProject.vue 重命名为 CreateProjectDialog.vue
 import { useProfileStore } from "@/stores/profileStore";
+import { useResearchStore } from "../researchStore";
 
+const researchStore = useResearchStore();
 const profile = useProfileStore();
 
 // 从 profileStore 获取用户角色，功能保持不变
@@ -16,35 +18,35 @@ const userRole = computed<'admin' | 'student' | 'teacher'>(() => {
       return "student";
   }
 });
-// 🔥 教师专用菜单
+//  教师专用菜单
 const teacherMenus = [
   {
     icon: "mdi-folder-plus",
     title: "我的课题", 
     subtitle: "创建和管理课题",
     path: "/research/projects",
-    badge: { color: "primary", content: "12" }
+   badge: { color: "primary", content: researchStore.totalProjectsCount.toString() }
   },
   {
     icon: "mdi-clipboard-plus",
     title: "任务发布",
     subtitle: "分配研究任务", 
     path: "/research/tasks",
-    badge: { color: "warning", content: "5" }
+     badge: { color: "warning", content: researchStore.totalTasksCount.toString() }
   },
   {
     icon: "mdi-file-check",
     title: "论文评审",
     subtitle: "评审学生论文",
     path: "/research/papers", 
-    badge: { color: "success", content: "3" }
+    badge: { color: "success", content: researchStore.pendingSubmissionsCount.toString() }
   },
   {
     icon: "mdi-account-check",
     title: "申请审核",
     subtitle: "审核学生申请",
     path: "/research/applications",
-    badge: { color: "error", content: "8" }
+    badge: { color: "error", content: researchStore.pendingApplicationsCount.toString() }
   },
   {
     icon: "mdi-chart-line",
@@ -61,21 +63,21 @@ const studentMenus = [
     title: "浏览课题",
     subtitle: "查找感兴趣的课题",
     path: "/research/projects",
-    badge: { color: "info", content: "15" }
+    badge: { color: "info", content: researchStore.availableProjectsCount.toString() }
   },
   {
     icon: "mdi-clipboard-text",
     title: "我的任务", 
     subtitle: "查看分配的任务",
     path: "/research/tasks",
-    badge: { color: "warning", content: "3" }
+     badge: { color: "warning", content: researchStore.myTasksCount.toString() }
   },
   {
     icon: "mdi-file-upload",
     title: "论文提交",
     subtitle: "提交研究成果",
     path: "/research/papers",
-    badge: { color: "primary", content: "2" }
+    badge: { color: "primary", content: researchStore.mySubmissionsCount.toString() }
   },
   {
     icon: "mdi-account-clock",
@@ -94,7 +96,34 @@ const studentMenus = [
 const currentMenus = computed(() => {
   return userRole.value === 'teacher' ? teacherMenus : studentMenus;
 });
-
+onMounted(async () => {
+  if (userRole.value === 'teacher') {
+    researchStore.setUserRole('teacher');
+    await Promise.all([
+      researchStore.fetchProjects({ page: 1, size: 100 }),
+      researchStore.fetchPendingApplications({ page: 1, size: 100 }),
+      researchStore.fetchPendingSubmissions({ page: 1, size: 100 }),
+      researchStore.fetchTasks({ page: 1, size: 100 })
+    ]);
+  } else {
+    // 学生端数据加载
+    researchStore.setUserRole('student');
+    await Promise.all([
+      researchStore.fetchProjects({ page: 1, size: 100 }),
+      researchStore.fetchTasks({ page: 1, size: 100 }),
+      researchStore.fetchMyApplications()
+    ]);
+    // 加载学生的论文提交记录
+    try {
+      const { data } = await researchStore.studentApi.submissions.list();
+      if (data.code === 20000) {
+        researchStore.submissions = data.data;
+      }
+    } catch (error) {
+      console.error('Failed to load student submissions:', error);
+    }
+  }
+});
 </script>
 
 <template>

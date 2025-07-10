@@ -10,7 +10,7 @@
         src="/public/images/authbackground.png"
         cover
       ><div class="mt-3 mt-md-10 pa-2">
-        <div class="text-primary text-h4 font-weight-bold">
+        <div class=" text-h3  text-white font-weight-bold mt-10">
           岐云笺
         </div>
         <div class="title my-2">

@@ -14,7 +14,7 @@ export const routes = [
   } as any,
   {
     path: "/dashboard",
-    component: () => import("@/views/pages/DashBoard.vue"),
+    component: () => import("@/views/pages/DashBoardcopy.vue"),
     meta: {
       requiresAuth: true,
       layout: "ui",

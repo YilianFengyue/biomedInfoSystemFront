@@ -83,7 +83,26 @@ export const useResearchStore = defineStore('research', {
       
     // 获取待评审的论文
     pendingSubmissions: (state) =>
-      state.submissions.filter(s => s.status === 'pending')
+      state.submissions.filter(s => s.status === 'pending'),
+    // 统计数据 - 用于菜单badge
+    pendingApplicationsCount: (state) => 
+      state.applications.filter(a => a.status === 'pending').length,
+      
+    pendingSubmissionsCount: (state) =>
+      state.submissions.filter(s => s.status === 'submitted' || s.status === 'reviewing').length,
+      
+    totalProjectsCount: (state) => state.projects.length,
+    
+    totalTasksCount: (state) => state.tasks.length,
+     // 学生端统计
+    availableProjectsCount: (state) => 
+      state.projects.filter(p => p.status === 'active').length,
+      
+    myTasksCount: (state) => 
+      state.tasks.filter(t => t.status !== 'completed').length,
+      
+    mySubmissionsCount: (state) => 
+      state.submissions.filter(s => s.status === 'submitted' || s.status === 'reviewing').length,
   },
   
   actions: {
