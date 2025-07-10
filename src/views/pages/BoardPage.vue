@@ -93,25 +93,30 @@
           </div>
         </v-card>
 
-        <!-- draggable cards -->
-        <vue-draggable
-          v-model="column.cards"
-          v-bind="dragOptions"
+        <!-- 关键修改：使用 :list 而不是 v-model -->
+        <draggable
+          :list="column.cards"
+          :group="'task'"
+          :animation="200"
+          ghost-class="ghost"
           class="list-group"
-          @change="(e) => changeState(e, colIndex)"
-          itemKey="id"
+          @change="(evt) => handleDragChange(evt, colIndex)"
+          item-key="id"
+          handle=".drag-handle"
         >
           <template #item="{ element }">
+            <div>
             <board-card
-              :key="element.id"
+              :key="`card-${element.id}`"
               :card="element"
-              class="board-item my-2 pa-2"
+              class="board-item my-2 pa-2 drag-handle"
               @edit="showEdit(element)"
               @delete="showDelete(element)"
               @showPdf="showPdfPreview"
             />
+            </div>
           </template>
-        </vue-draggable>
+        </draggable>
       </v-col>
     </v-row>
   </v-container>
@@ -209,242 +214,263 @@
   </v-dialog>
 </template>
 
-<script setup lang="ts">
-import VueDraggable from "vuedraggable";
-import BoardCard from "@/components/BoardCard.vue";
-
-const dragOptions = computed(() => {
-  return {
-    animation: 200,
-    group: "task",
-    disabled: false,
-    ghostClass: "ghost",
-  };
-});
+<script setup>
+// 正确的导入方式 for Vue 3 + Vuedraggable 4
+import draggable from 'vuedraggable'
+import BoardCard from "@/components/BoardCard.vue"
+import { ref, onMounted, nextTick } from 'vue'
 
 // board states
-const states = ref(["TODO", "INPROGRESS", "TESTING", "DONE"]);
+const states = ref(["TODO", "INPROGRESS", "TESTING", "DONE"])
 
-const columns = ref([]);
+// 数据
+const columns = ref([])
 const onlineUsers = ref([
   { id: 1, name: "张三" },
   { id: 2, name: "李四" },
-]);
+])
 
 // 对话框状态
-const editDialog = ref(false);
-const deleteDialog = ref(false);
-const pdfDialog = ref(false);
-const cardToEdit = ref(null);
-const cardToDelete = ref(null);
-const currentPdf = ref(null);
-const title = ref("");
-const description = ref("");
-const editFile = ref(null);
+const editDialog = ref(false)
+const deleteDialog = ref(false)
+const pdfDialog = ref(false)
+const cardToEdit = ref(null)
+const cardToDelete = ref(null)
+const currentPdf = ref(null)
+const title = ref("")
+const description = ref("")
+const editFile = ref(null)
+
+// 生成唯一ID的函数
+const generateId = () => {
+  return `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
 
 onMounted(() => {
-  initColumns();
-});
+  initColumns()
+  // 延迟初始化数据，确保DOM已经准备好
+  nextTick(() => {
+    initTestData()
+  })
+})
 
-// 初始化列 - 完全按照原作者思路
+// 初始化列
 const initColumns = () => {
-  states.value.forEach((state, index) => {
+  states.value.forEach((state) => {
     columns.value.push({
       key: state,
       cards: [],
       isAddVisible: false,
       addTitle: "",
       addFile: null,
-      callback: (e) => changeState(e, index), // 保持原作者的回调方式
-    });
-  });
-  
-  // 初始化一些测试数据
-  initTestData();
-};
+    })
+  })
+}
 
 // 初始化测试数据
 const initTestData = () => {
-  const testCards = [
-    {
-      id: 1,
-      title: "fix: 💭 channel label on chat app",
-      description: "we need it bolder",
-      order: 1,
-      state: "TODO",
-    },
-    {
-      id: 2,
-      title: "feature: new emojis on board 🤘",
-      description: "we need it for reasons 🤤",
-      order: 0,
-      state: "TODO",
-      imageUrl: "https://i.pinimg.com/1200x/f8/e5/45/f8e54532af278bf453cc4825659905cc.jpg",
-    },
-    {
-      id: 3,
-      title: "feature: add stripe account on signup",
-      description: "",
-      order: 1,
-      state: "TESTING",
-      pdfInfo: { name: "设计文档.pdf", url: "/api/files/123.pdf" },
-    },
-    {
-      id: 4,
-      title: "refactor: scroll 📜 directive on big pages",
-      description: "remember to check the scroll",
-      order: 0,
-      state: "INPROGRESS",
-    },
-    {
-      id: 5,
-      title: "feature: add big cards on dashboard",
-      description: "everyone loves cards",
-      order: 3,
-      state: "DONE",
-    },
-  ];
+  const testData = {
+    TODO: [
+      {
+        id: generateId(),
+        title: "fix: 💭 channel label on chat app",
+        description: "we need it bolder",
+        order: 0,
+      },
+      {
+        id: generateId(),
+        title: "feature: new emojis on board 🤘",
+        description: "we need it for reasons 🤤",
+        order: 1,
+        imageUrl: "https://i.pinimg.com/1200x/f8/e5/45/f8e54532af278bf453cc4825659905cc.jpg",
+      },
+    ],
+    INPROGRESS: [
+      {
+        id: generateId(),
+        title: "refactor: scroll 📜 directive on big pages",
+        description: "remember to check the scroll",
+        order: 0,
+      },
+    ],
+    TESTING: [
+      {
+        id: generateId(),
+        title: "feature: add stripe account on signup",
+        description: "",
+        order: 0,
+        pdfInfo: { name: "设计文档.pdf", url: "/api/files/123.pdf" },
+      },
+    ],
+    DONE: [
+      {
+        id: generateId(),
+        title: "feature: add big cards on dashboard",
+        description: "everyone loves cards",
+        order: 0,
+      },
+    ],
+  }
 
-  // 分发到各列
-  columns.value.forEach((column) => {
-    column.cards = testCards
-      .filter((card) => card.state === column.key)
-      .sort((a, b) => (a.order < b.order ? -1 : 0));
-  });
-};
+  // 分配数据到各列
+  columns.value.forEach(column => {
+    if (testData[column.key]) {
+      column.cards = testData[column.key]
+    }
+  })
+}
 
 // 添加卡片
 const addCard = async (column) => {
-  const { addTitle, key, addFile } = column;
-  if (!addTitle) return;
+  const { addTitle, addFile } = column
+  if (!addTitle) return
   
-  let newCard = {
-    id: "_" + Math.random().toString(36).substring(2, 11),
-    state: key,
+  const newCard = {
+    id: generateId(),
     title: addTitle,
     description: "",
-    order: -1,
-  };
+    order: 0,
+  }
 
   // 处理文件上传
   if (addFile && addFile.type) {
     if (addFile.type.startsWith('image/')) {
-      newCard.imageUrl = await uploadFile(addFile);
+      newCard.imageUrl = await uploadFile(addFile)
     } else if (addFile.type === 'application/pdf') {
       newCard.pdfInfo = {
         name: addFile.name,
         url: await uploadFile(addFile)
-      };
+      }
     }
   }
 
-  column.cards.unshift(newCard);
-  column.addTitle = "";
-  column.addFile = null;
-  column.isAddVisible = false;
-};
+  // 添加到列的开头
+  column.cards.unshift(newCard)
+  
+  // 更新所有卡片的order
+  column.cards.forEach((card, index) => {
+    card.order = index
+  })
+  
+  // 重置表单
+  column.addTitle = ""
+  column.addFile = null
+  column.isAddVisible = false
+}
 
-// 完全按照原作者的拖拽逻辑
-const changeState = (e, colIndex) => {
-  if (e.added || e.moved) {
-    const column = columns.value[colIndex];
-    const state = column.key;
-    for (let i = 0; i < column.cards.length; i++) {
-      column.cards[i].order = i;
-      column.cards[i].state = state;
-    }
+// 处理拖拽变化
+const handleDragChange = (evt, colIndex) => {
+  const column = columns.value[colIndex]
+  
+  // 更新该列中所有卡片的order
+  column.cards.forEach((card, index) => {
+    card.order = index
+  })
+  
+  // 如果有新增的元素，记录日志
+  if (evt.added) {
+    console.log('Card moved to:', column.key)
   }
-};
+}
 
 // 编辑卡片
 const showEdit = (card) => {
-  cardToEdit.value = card;
-  title.value = card.title;
-  description.value = card.description;
-  editDialog.value = true;
-};
+  cardToEdit.value = card
+  title.value = card.title
+  description.value = card.description || ""
+  editDialog.value = true
+}
 
 const saveCard = async () => {
   if (cardToEdit.value) {
-    cardToEdit.value.title = title.value;
-    cardToEdit.value.description = description.value;
+    cardToEdit.value.title = title.value
+    cardToEdit.value.description = description.value
     
     if (editFile.value && editFile.value.type) {
       if (editFile.value.type.startsWith('image/')) {
-        cardToEdit.value.imageUrl = await uploadFile(editFile.value);
-        delete cardToEdit.value.pdfInfo;
+        cardToEdit.value.imageUrl = await uploadFile(editFile.value)
+        delete cardToEdit.value.pdfInfo
       } else if (editFile.value.type === 'application/pdf') {
         cardToEdit.value.pdfInfo = {
           name: editFile.value.name,
           url: await uploadFile(editFile.value)
-        };
-        delete cardToEdit.value.imageUrl;
+        }
+        delete cardToEdit.value.imageUrl
       }
     }
     
-    editDialog.value = false;
-    editFile.value = null;
+    editDialog.value = false
+    editFile.value = null
   }
-};
+}
 
 // 删除卡片
 const showDelete = (card) => {
-  cardToDelete.value = card;
-  deleteDialog.value = true;
-};
+  cardToDelete.value = card
+  deleteDialog.value = true
+}
 
 const deleteCard = () => {
-  deleteDialog.value = false;
-  
-  // 从对应的列中删除卡片
-  for (const column of columns.value) {
-    const cardIndex = column.cards.findIndex((card) => card.id === cardToDelete.value.id);
-    if (cardIndex !== -1) {
-      column.cards.splice(cardIndex, 1);
-      break;
-    }
+  if (cardToDelete.value) {
+    // 在所有列中查找并删除
+    columns.value.forEach(column => {
+      const index = column.cards.findIndex(c => c.id === cardToDelete.value.id)
+      if (index !== -1) {
+        column.cards.splice(index, 1)
+        // 更新剩余卡片的order
+        column.cards.forEach((card, i) => {
+          card.order = i
+        })
+      }
+    })
   }
-};
+  
+  deleteDialog.value = false
+  cardToDelete.value = null
+}
 
 // PDF预览
 const showPdfPreview = (pdfInfo) => {
-  currentPdf.value = pdfInfo;
-  pdfDialog.value = true;
-};
+  currentPdf.value = pdfInfo
+  pdfDialog.value = true
+}
 
 // 从数据中心粘贴
 const pasteFromDataCenter = () => {
-  const todoColumn = columns.value.find(col => col.key === 'TODO');
+  const todoColumn = columns.value.find(col => col.key === 'TODO')
   if (todoColumn) {
     const newCard = {
-      id: "_" + Math.random().toString(36).substring(2, 11),
-      state: 'TODO',
+      id: generateId(),
       title: `数据中心导入 - ${new Date().toLocaleString()}`,
       description: "从数据中心导入的观测数据",
-      order: -1,
-    };
-    todoColumn.cards.unshift(newCard);
+      order: 0,
+    }
+    
+    todoColumn.cards.unshift(newCard)
+    
+    // 更新order
+    todoColumn.cards.forEach((card, index) => {
+      card.order = index
+    })
   }
-};
+}
 
 // 文件上传
 const uploadFile = async (file) => {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
+    const formData = new FormData()
+    formData.append('file', file)
     const response = await fetch('/api/files/upload', {
       method: 'POST',
       body: formData
-    });
-    const result = await response.json();
-    return result.data.url;
+    })
+    const result = await response.json()
+    return result.data.url
   } catch (error) {
-    console.error('文件上传失败:', error);
-    return file.type.startsWith('image/') ? URL.createObjectURL(file) : '/placeholder.pdf';
+    console.error('文件上传失败:', error)
+    return file.type.startsWith('image/') ? URL.createObjectURL(file) : '/placeholder.pdf'
   }
-};
-
-// 删除了所有 watch 监听器 - 这是关键！
+}
 </script>
 
 <style lang="scss" scoped>
@@ -455,7 +481,7 @@ const uploadFile = async (file) => {
 
 .board-item {
   transition: transform 0.2s;
-  user-select: none; /* 防止文字选择干扰拖拽 */
+  user-select: none;
   &:hover {
     transition: transform 0.2s;
     transform: translateY(-3px);
@@ -463,6 +489,11 @@ const uploadFile = async (file) => {
 }
 
 .list-group {
-  min-height: 100%;
+  min-height: 100px;
+  padding-bottom: 20px;
+}
+
+.drag-handle {
+  cursor: move;
 }
 </style>

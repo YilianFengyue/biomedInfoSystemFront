@@ -1,14 +1,17 @@
 <template>
-  <!-- 整张卡片可拖拽，但特定元素阻止事件冒泡 -->
+  <!-- 移除根元素的click事件，避免与拖拽冲突 -->
   <v-card class="pa-5 mt-4 card-shadow">
     <div class="d-flex align-start font-weight-bold text-title">
       <span class="flex-fill">{{ card.title }}</span>
-      <!-- 更多菜单 - 阻止点击事件冒泡到拖拽 -->
-      <v-menu location="bottom end" transition="slide-x-transition">
+      <!-- 更多菜单 -->
+      <v-menu 
+        location="bottom end" 
+        transition="slide-x-transition"
+        @click.stop
+      >
         <template #activator="{ props }">
           <v-btn
             v-bind="props"
-            @click.stop
             size="small"
             icon="mdi-dots-vertical"
             variant="text"
@@ -18,13 +21,13 @@
           />
         </template>
         <v-list density="compact">
-          <v-list-item @click="$emit('edit')">
+          <v-list-item @click.stop="$emit('edit')">
             <v-list-item-title>
               <v-icon icon="mdi-pencil" size="16" class="mr-1" />
               Edit
             </v-list-item-title>
           </v-list-item>
-          <v-list-item @click="$emit('delete')">
+          <v-list-item @click.stop="$emit('delete')">
             <v-list-item-title>
               <v-icon icon="mdi-delete" size="16" class="mr-1" />
               Delete
@@ -34,7 +37,7 @@
       </v-menu>
     </div>
 
-    <!-- 图片 - 阻止点击事件冒泡 -->
+    <!-- 图片 -->
     <div v-if="card.imageUrl" class="mt-3">
       <v-img
         :src="card.imageUrl"
@@ -52,7 +55,7 @@
       </v-img>
     </div>
 
-    <!-- PDF - 阻止点击事件冒泡 -->
+    <!-- PDF -->
     <div v-if="card.pdfInfo" class="mt-3">
       <v-card
         variant="outlined"
@@ -104,10 +107,34 @@ const showImagePreview = () => {
 <style scoped>
 .card-shadow {
   box-shadow: 0 2px 8px rgba(99, 99, 99, .2) !important;
-  user-select: none; /* 防止文字选择干扰拖拽 */
+  user-select: none;
+  cursor: move; /* 添加拖拽手势 */
+}
+
+/* 悬浮时显示可拖拽 */
+.card-shadow:hover {
+  box-shadow: 0 4px 12px rgba(99, 99, 99, .3) !important;
+}
+
+/* 正在拖拽时的样式 */
+.sortable-drag .card-shadow {
+  cursor: grabbing !important;
 }
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* 防止内部元素干扰拖拽 */
+.v-card__text,
+.text-content {
+  pointer-events: none;
+}
+
+/* 允许特定元素交互 */
+.v-btn,
+.v-img,
+.v-card[variant="outlined"] {
+  pointer-events: auto;
 }
 </style>
