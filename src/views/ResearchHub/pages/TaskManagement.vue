@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { useResearchStore } from "../researchStore";
 import { useSnackbarStore } from "@/stores/snackbarStore";
-
+import {watch} from "vue";
 import { useProfileStore } from "@/stores/profileStore";   
 const profile = useProfileStore();
 const researchStore = useResearchStore();
@@ -25,6 +25,40 @@ const userRole = computed<'admin' | 'student' | 'teacher'>(() => {
       return "student";
   }
 });
+//
+const projects = computed(() => researchStore.projects);
+import { teacherApi } from "../researchApi";  // 添加这行导入
+// 修改这行，给明确的类型定义
+const availableStudents = ref<{value: number, title: string}[]>([]);
+// 加载可选学生列表（基于项目申请）
+const loadAvailableStudents = async (projectId) => {
+  console.log('🔍 开始加载学生列表，项目ID:', projectId); // 调试1
+  if (!projectId) {
+    availableStudents.value = [];
+    return;
+  }
+  
+  try {
+    const { data } = await teacherApi.applications.getByProject(projectId);
+    console.log('🔍 API返回数据:', data); // 调试2
+    if (data.code === 20000) {
+       console.log('🔍 申请列表:', data.data); // 调试3
+      // 获取已通过申请的学生
+      const approvedStudents = data.data
+        .filter(app => app.status === 'approved')
+        .map(app => ({
+          value: app.studentId,
+          title: `学生ID: ${app.studentId}`
+        }));
+      console.log('🔍 已通过的学生:', approvedStudents); // 调试4
+      availableStudents.value = approvedStudents;
+    }
+  } catch (error) {
+    console.error('Failed to load students:', error);
+    availableStudents.value = [];
+  }
+};
+
 
 // 创建任务对话框
 const createDialog = ref(false);
@@ -42,7 +76,8 @@ const taskForm = reactive({
 const progressDialog = ref(false);
 const selectedTaskId = ref<number | null>(null);
 const progressContent = ref('');
-
+const createLoading = ref(false);
+const statusUpdateLoading = ref(false);
 // 状态和优先级选项
 const priorityOptions = [
   { value: 'low', text: '低', color: 'success' },
@@ -51,10 +86,10 @@ const priorityOptions = [
 ];
 
 const statusOptions = [
-  { value: 'assigned', text: '已分配', color: 'grey' },
+  // { value: 'assigned', text: '已分配', color: 'grey' },
   { value: 'in_progress', text: '进行中', color: 'info' },
   { value: 'submitted', text: '已提交', color: 'success' },
-  { value: 'completed', text: '已完成', color: 'primary' }
+  // { value: 'completed', text: '已完成', color: 'primary' }
 ];
 
 // 获取状态颜色
@@ -86,6 +121,7 @@ const loadTasks = async () => {
 
 // 创建任务（教师）
 const createTask = async () => {
+  createLoading.value = true;
   try {
     await researchStore.createTask(taskForm);
     snackbarStore.showSuccessMessage('任务创建成功');
@@ -94,17 +130,38 @@ const createTask = async () => {
     await loadTasks();
   } catch (error) {
     console.error('Failed to create task:', error);
+  }finally {
+    createLoading.value = false;
   }
+};
+// 添加进度计算函数
+const getProgressByStatus = (status) => {
+  const progressMap = {
+    'assigned': 0,
+    'in_progress': 50,
+    'submitted': 90,
+    'completed': 100
+  };
+  return progressMap[status] || 0;
+};
+
+// 修改任务卡片中的进度显示
+const getTaskProgress = (task) => {
+  // 如果有手动设置的进度就用手动的，否则根据状态计算
+  return task.progress > 0 ? task.progress : getProgressByStatus(task.status);
 };
 
 // 更新任务状态（学生）
 const updateTaskStatus = async (taskId: number, status: string) => {
+  statusUpdateLoading.value = true;
   try {
     await researchStore.updateTaskStatus(taskId, status);
     snackbarStore.showSuccessMessage('任务状态更新成功');
     await loadTasks();
   } catch (error) {
     console.error('Failed to update task status:', error);
+  }finally {
+    statusUpdateLoading.value = false;
   }
 };
 
@@ -141,8 +198,20 @@ const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('zh-CN');
 };
 
-onMounted(() => {
-  loadTasks();
+onMounted(async () => {
+  // 确保先加载项目数据，再加载任务
+  if (userRole.value === 'teacher') {
+    researchStore.setUserRole('teacher');
+    await researchStore.fetchProjects({ page: 1, size: 100 });
+  }
+  await loadTasks();
+});
+// 监听项目选择变化
+watch(() => taskForm.projectId, (newProjectId) => {
+  if (newProjectId) {
+    loadAvailableStudents(newProjectId);
+  }
+  taskForm.studentId = null; // 重置学生选择
 });
 </script>
 
@@ -162,6 +231,7 @@ onMounted(() => {
         color="primary"
         prepend-icon="mdi-plus"
         @click="createDialog = true"
+         :loading="createLoading"
       >
         创建任务
       </v-btn>
@@ -205,6 +275,8 @@ onMounted(() => {
                     :color="getPriorityColor(task.priority)"
                     size="small"
                     variant="outlined"
+                    label
+                    class="ml-2"
                   >
                     {{ priorityOptions.find(p => p.value === task.priority)?.text }}优先级
                   </v-chip>
@@ -233,17 +305,17 @@ onMounted(() => {
                   
                   <div class="info-item">
                     <v-icon size="small" color="grey">mdi-progress-check</v-icon>
-                    <span>进度：{{ task.progress }}%</span>
+                    <span>进度：{{ getTaskProgress(task) }}%</span>
                   </div>
                 </div>
                 
                 <!-- 进度条 -->
                 <v-progress-linear
-                  :model-value="task.progress"
+                  :model-value="getTaskProgress(task)"
                   height="6"
                   rounded
                   class="mt-3"
-                  :color="task.progress === 100 ? 'success' : 'primary'"
+                  :color="getTaskProgress(task) === 100 ? 'success' : 'primary'"
                 ></v-progress-linear>
               </v-card-text>
               
@@ -258,6 +330,7 @@ onMounted(() => {
                         size="small"
                         variant="text"
                         v-bind="props"
+                        :loading="statusUpdateLoading"
                       >
                         更新状态
                         <v-icon end>mdi-menu-down</v-icon>
@@ -349,23 +422,30 @@ onMounted(() => {
             
             <v-row>
               <v-col cols="12" md="6">
-                <v-text-field
+                <v-select
                   v-model="taskForm.projectId"
-                  label="项目ID"
+                  :items="projects"
+                  item-title="projectName"
+                  item-value="id"
+                  label="选择项目"
                   variant="outlined"
                   density="comfortable"
-                  type="number"
-                ></v-text-field>
+                  required
+                ></v-select>
               </v-col>
               
               <v-col cols="12" md="6">
-                <v-text-field
+                <v-select
                   v-model="taskForm.studentId"
-                  label="学生ID"
+                  :items="availableStudents"
+                  item-title="title"
+                  item-value="value"
+                  label="选择学生"
                   variant="outlined"
                   density="comfortable"
-                  type="number"
-                ></v-text-field>
+                  :disabled="!taskForm.projectId"
+                  required
+                ></v-select>
               </v-col>
               
               <v-col cols="12" md="6">
@@ -375,6 +455,7 @@ onMounted(() => {
                   variant="outlined"
                   density="comfortable"
                   type="date"
+                  required
                 ></v-text-field>
               </v-col>
               
