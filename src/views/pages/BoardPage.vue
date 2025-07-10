@@ -202,13 +202,22 @@
         <v-btn icon="mdi-close" variant="text" @click="pdfDialog = false"></v-btn>
       </v-card-title>
       <v-card-text class="pa-0" style="height: 500px;">
-        <div class="d-flex align-center justify-center fill-height">
-          <div class="text-center">
-            <v-icon icon="mdi-file-pdf-box" size="64" color="red"></v-icon>
-            <div class="mt-2">PDF预览组件</div>
-            <div class="text-caption text-grey">{{ currentPdf?.name }}</div>
+        <v-card-text class="pa-0" style="height: 500px;">
+          <iframe 
+              v-if="currentPdf?.url"
+              :src="`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(currentPdf.url)}`"
+              width="100%" 
+              height="100%"
+              style="border: none;"
+            />
+          <div v-else class="d-flex align-center justify-center fill-height">
+            <div class="text-center">
+              <v-icon icon="mdi-file-pdf-box" size="64" color="red"></v-icon>
+              <div class="mt-2">PDF预览</div>
+              <div class="text-caption text-grey">{{ currentPdf?.name }}</div>
+            </div>
           </div>
-        </div>
+        </v-card-text>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -299,7 +308,7 @@ const initTestData = () => {
         title: "feature: add stripe account on signup",
         description: "",
         order: 0,
-        pdfInfo: { name: "设计文档.pdf", url: "/api/files/123.pdf" },
+        pdfInfo: { name: "设计文档.pdf", url: "https://biomedinfo.oss-cn-beijing.aliyuncs.com/user-uploads/4fbd52a1-ffb1-4124-b606-fa68c2156210_PixivAI 最简部署方案.pdf" },
       },
     ],
     DONE: [
@@ -333,16 +342,19 @@ const addCard = async (column) => {
   }
 
   // 处理文件上传
-  if (addFile && addFile.type) {
-    if (addFile.type.startsWith('image/')) {
-      newCard.imageUrl = await uploadFile(addFile)
-    } else if (addFile.type === 'application/pdf') {
-      newCard.pdfInfo = {
-        name: addFile.name,
-        url: await uploadFile(addFile)
+    if (addFile && addFile.length > 0) {
+      const file = addFile[0] // v-file-input 返回的是数组，取第一个文件
+      console.log('Processing file:', file) // 调试用
+
+      if (file.type.startsWith('image/')) {
+        newCard.imageUrl = await uploadFile(file)
+      } else if (file.type === 'application/pdf') {
+        newCard.pdfInfo = {
+          name: file.name,
+          url: await uploadFile(file)
+        }
       }
     }
-  }
 
   // 添加到列的开头
   column.cards.unshift(newCard)
@@ -385,15 +397,17 @@ const saveCard = async () => {
   if (cardToEdit.value) {
     cardToEdit.value.title = title.value
     cardToEdit.value.description = description.value
-    
-    if (editFile.value && editFile.value.type) {
-      if (editFile.value.type.startsWith('image/')) {
-        cardToEdit.value.imageUrl = await uploadFile(editFile.value)
+    if (editFile.value && editFile.value.length > 0) {
+      const file = editFile.value[0] // v-file-input 返回的是数组，取第一个文件
+      console.log('Processing edit file:', file) // 调试用
+      
+      if (file.type.startsWith('image/')) {
+        cardToEdit.value.imageUrl = await uploadFile(file)
         delete cardToEdit.value.pdfInfo
-      } else if (editFile.value.type === 'application/pdf') {
+      } else if (file.type === 'application/pdf') {
         cardToEdit.value.pdfInfo = {
-          name: editFile.value.name,
-          url: await uploadFile(editFile.value)
+          name: file.name,
+          url: await uploadFile(file)
         }
         delete cardToEdit.value.imageUrl
       }
@@ -460,14 +474,19 @@ const uploadFile = async (file) => {
   try {
     const formData = new FormData()
     formData.append('file', file)
-    const response = await fetch('/api/files/upload', {
+    const response = await fetch('/api/oss/upload_general_file', {
       method: 'POST',
       body: formData
     })
     const result = await response.json()
-    return result.data.url
+    if (result.code === 20000) {
+      return result.data
+    } else {
+      throw new Error(result.msg || '上传失败')
+    }
   } catch (error) {
     console.error('文件上传失败:', error)
+    // 降级处理
     return file.type.startsWith('image/') ? URL.createObjectURL(file) : '/placeholder.pdf'
   }
 }
