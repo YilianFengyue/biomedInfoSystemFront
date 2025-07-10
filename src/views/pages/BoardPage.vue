@@ -98,12 +98,12 @@
           v-model="column.cards"
           v-bind="dragOptions"
           class="list-group"
-          @change="column.callback"
+          @change="changeState($event, column)"
           itemKey="id"
         >
-          <template #item="{ element, index }">
+          <template #item="{ element }">
             <board-card
-              :key="index"
+              :key="element.id"
               :card="element"
               class="board-item my-2 pa-2"
               @edit="showEdit(element)"
@@ -178,7 +178,7 @@
   <v-dialog v-model="deleteDialog" max-width="300">
     <v-card>
       <v-card-title class="text-headline">Delete</v-card-title>
-      <v-card-text>DeleteDescription</v-card-text>
+      <v-card-text>确定要删除这张卡片吗？</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn variant="plain" color="primary" @click="deleteDialog = false"
@@ -219,13 +219,14 @@ const dragOptions = computed(() => {
     group: "task",
     disabled: false,
     ghostClass: "ghost",
-    handle: ".drag-handle", // 关键：只有拖拽手柄可以拖拽
   };
 });
 
 // board states
 const states = ref(["TODO", "INPROGRESS", "TESTING", "DONE"]);
-const cards = ref([
+
+// 初始化数据 - 直接放入各列中，不再维护单独的 cards 数组
+const initialCards = [
   {
     id: 1,
     title: "fix: 💭 channel label on chat app",
@@ -277,7 +278,7 @@ const cards = ref([
     order: 3,
     state: "DONE",
   },
-]);
+];
 
 const columns = ref([]);
 const onlineUsers = ref([
@@ -298,33 +299,32 @@ const editFile = ref(null);
 
 onMounted(() => {
   initColumns();
-  parseCards(cards.value);
+  distributeInitialCards();
 });
 
-// Init
+// 初始化列
 const initColumns = () => {
-  states.value.forEach((state, index) => {
+  states.value.forEach((state) => {
     columns.value.push({
       key: state,
       cards: [],
       isAddVisible: false,
       addTitle: "",
       addFile: null,
-      callback: (e) => changeState(e, index),
     });
   });
 };
 
-const parseCards = (cards) => {
-  if (!cards) return columns.value.map((column) => (column.cards = []));
+// 分发初始卡片到各列
+const distributeInitialCards = () => {
   columns.value.forEach((column) => {
-    column.cards = cards
+    column.cards = initialCards
       .filter((card) => card.state === column.key)
       .sort((a, b) => (a.order < b.order ? -1 : 0));
   });
 };
 
-// Add
+// 添加卡片
 const addCard = async (column) => {
   const { addTitle, key, addFile } = column;
   if (!addTitle) return;
@@ -334,7 +334,7 @@ const addCard = async (column) => {
     state: key,
     title: addTitle,
     description: "",
-    order: -1,
+    order: 0, // 新卡片放在最前面
   };
 
   // 处理文件上传
@@ -355,10 +355,11 @@ const addCard = async (column) => {
   column.isAddVisible = false;
 };
 
-const changeState = (e, colIndex) => {
+// 拖拽状态改变 - 简化逻辑，只更新当前列的数据
+const changeState = (e, column) => {
   if (e.added || e.moved) {
-    const column = columns.value[colIndex];
     const state = column.key;
+    // 更新该列所有卡片的状态和顺序
     for (let i = 0; i < column.cards.length; i++) {
       column.cards[i].order = i;
       column.cards[i].state = state;
@@ -366,7 +367,7 @@ const changeState = (e, colIndex) => {
   }
 };
 
-// Edit
+// 编辑卡片
 const showEdit = (card) => {
   cardToEdit.value = card;
   title.value = card.title;
@@ -375,28 +376,20 @@ const showEdit = (card) => {
 };
 
 const saveCard = async () => {
-  let targetCard = cards.value.find((card) => card.id === cardToEdit.value.id);
-  if (!targetCard) {
-    for (const column of columns.value) {
-      targetCard = column.cards.find((card) => card.id === cardToEdit.value.id);
-      if (targetCard) break;
-    }
-  }
-  
-  if (targetCard) {
-    targetCard.title = title.value;
-    targetCard.description = description.value;
+  if (cardToEdit.value) {
+    cardToEdit.value.title = title.value;
+    cardToEdit.value.description = description.value;
     
     if (editFile.value && editFile.value.type) {
       if (editFile.value.type.startsWith('image/')) {
-        targetCard.imageUrl = await uploadFile(editFile.value);
-        delete targetCard.pdfInfo;
+        cardToEdit.value.imageUrl = await uploadFile(editFile.value);
+        delete cardToEdit.value.pdfInfo;
       } else if (editFile.value.type === 'application/pdf') {
-        targetCard.pdfInfo = {
+        cardToEdit.value.pdfInfo = {
           name: editFile.value.name,
           url: await uploadFile(editFile.value)
         };
-        delete targetCard.imageUrl;
+        delete cardToEdit.value.imageUrl;
       }
     }
     
@@ -405,7 +398,7 @@ const saveCard = async () => {
   }
 };
 
-// Delete
+// 删除卡片 - 简化逻辑，只从对应列中删除
 const showDelete = (card) => {
   cardToDelete.value = card;
   deleteDialog.value = true;
@@ -413,14 +406,12 @@ const showDelete = (card) => {
 
 const deleteCard = () => {
   deleteDialog.value = false;
-  const cardIndex = cards.value.findIndex((card) => card.id === cardToDelete.value.id);
-  if (cardIndex !== -1) {
-    cards.value.splice(cardIndex, 1);
-  }
+  
+  // 从对应的列中删除卡片
   for (const column of columns.value) {
-    const colCardIndex = column.cards.findIndex((card) => card.id === cardToDelete.value.id);
-    if (colCardIndex !== -1) {
-      column.cards.splice(colCardIndex, 1);
+    const cardIndex = column.cards.findIndex((card) => card.id === cardToDelete.value.id);
+    if (cardIndex !== -1) {
+      column.cards.splice(cardIndex, 1);
       break;
     }
   }
@@ -441,7 +432,7 @@ const pasteFromDataCenter = () => {
       state: 'TODO',
       title: `数据中心导入 - ${new Date().toLocaleString()}`,
       description: "从数据中心导入的观测数据",
-      order: -1,
+      order: 0,
     };
     todoColumn.cards.unshift(newCard);
   }
@@ -463,10 +454,6 @@ const uploadFile = async (file) => {
     return file.type.startsWith('image/') ? URL.createObjectURL(file) : '/placeholder.pdf';
   }
 };
-
-watch(cards.value, (newCards) => {
-  parseCards(newCards);
-});
 </script>
 
 <style lang="scss" scoped>
