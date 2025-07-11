@@ -265,12 +265,12 @@ onMounted(() => {
   <div class="pa-5">
     <!-- 统计卡片 -->
     <v-row class="flex-0" dense>
-      <v-col cols="12" md="6">
-        <SalesCard :value="1837.32" class="h-100" :percentage="3.2" style="min-height: 380px" :percentage-label="$t('dashboard.lastweek')" :action-label="$t('dashboard.viewReport')" />
+      <v-col cols="12" md="12">
+        <SalesCard :value="1837.32" class="h-100" :percentage="3.2" style="min-height: 420px" :percentage-label="$t('dashboard.lastweek')" :action-label="$t('dashboard.viewReport')" />
       </v-col>
-      <v-col cols="12" md="6">
+      <!-- <v-col cols="12" md="6">
         <ActivityCard />
-      </v-col>
+      </v-col> -->
     </v-row>
 
     <!-- 用户总览 -->

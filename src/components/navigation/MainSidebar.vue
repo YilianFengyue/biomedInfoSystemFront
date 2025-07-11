@@ -76,6 +76,7 @@ const scrollToBottom = () => {
     elevation="1"
     v-model="customizeTheme.mainSidebar"
     temporary
+   
     id="mainMenu"
   >
     <!-- ---------------------------------------------- -->
@@ -90,7 +91,7 @@ const scrollToBottom = () => {
         <h1 class="logo-text h-full">
           <!-- <Icon class="mr-2" width="40" icon="solar:plain-bold-duotone" /> -->
           <img src="@/assets/logo.png" alt="Logo" width="30" height="30" style="margin-right:10px" />
-          <span>维诺思</span>
+          <span>岐云笺</span>
         </h1>
       </v-card>
     </template>
@@ -108,16 +109,22 @@ const scrollToBottom = () => {
       <v-card
         theme="dark"
         height="225"
-        class="pa-3"
+        class="pa-3 "
         variant="text"
         style="box-shadow: rgba(0, 0, 0, 0.05) 0px -25px 15px -20px"
       >
         <v-card
-          class="d-flex flex-column gradient pa-2"
+          class="d-flex flex-column gradient "
           :class="customizeTheme.primaryColor.colorName"
           height="200"
         >
-          <v-card-title>
+          <v-img
+          :aspect-ratio="1"
+          class="bg-white"
+          src="https://flaskhousesystem.oss-cn-hangzhou.aliyuncs.com/SideBar%E8%83%8C%E6%99%AF.jpg"
+          
+          cover
+        ><v-card-title class="text-white">
             <v-btn
               class="mr-2"
               size="40"
@@ -127,7 +134,7 @@ const scrollToBottom = () => {
             >
               <Icon width="30" icon="line-md:github-loop" />
             </v-btn>
-            Yang J.K.
+            Ylfmoonn
           </v-card-title>
           <v-card-subtitle> </v-card-subtitle>
           <v-card-text>
@@ -145,6 +152,8 @@ const scrollToBottom = () => {
               给我点个赞吧
             </v-btn>
           </v-card-actions>
+        </v-img>
+          
         </v-card>
       </v-card>
     </template>

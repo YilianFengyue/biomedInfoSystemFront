@@ -1,7 +1,7 @@
 <!--
-* @Component:
+* @Component: 
 * @Maintainer: J.K. Yang
-* @Description:
+* @Description: 
 -->
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
@@ -87,7 +87,11 @@ const navs = [
 </script>
 
 <template>
-  
+  <v-toolbar height="60">
+    <v-toolbar-title class="text-h6 font-weight-bold">
+      <span>Footer1</span>
+    </v-toolbar-title>
+  </v-toolbar>
 
   <v-sheet
     elevation="0"
@@ -95,19 +99,12 @@ const navs = [
     color="#F2F5F8"
     rounded
   >
-    <v-container class="text-left ">
-       <v-img
-       
-        class="bg-white"
-        src="/images/AppBarBackGround.png"
-        height="200"
-        cover
-      >
+    <v-container class="text-left pa-10">
       <v-sheet
         class="mx-auto"
-        color="transparent"
+        color="primary"
         elevation="0"
-        
+        max-width="1600"
       >
         <v-row>
           <v-col cols="12" md="8">
@@ -134,11 +131,8 @@ const navs = [
           </v-col>
         </v-row>
       </v-sheet>
-      </v-img>
     </v-container>
   </v-sheet>
 </template>
 
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

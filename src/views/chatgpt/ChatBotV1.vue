@@ -15,7 +15,10 @@ import { MdPreview } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 import ApiKeyDialog from "@/components/ApiKeyDialog.vue";
 import FileUploadDialog from './FileUploadDialog.vue';
+//导入灵感板
 
+import { useInspirationStore } from "@/stores/inspirationStore";
+const inspirationStore = useInspirationStore();
 // --- 1. 定义适配 Gemini 的数据结构 ---
 type MessagePart = {
   type: 'text';
@@ -80,6 +83,35 @@ const sendMessage = async () => {
   await createCompletion();
 };
 
+const generateResearchReport = async () => {
+  const items = inspirationStore.items;
+  if (items.length === 0) {
+    snackbarStore.showWarningMessage('请先收藏一些灵感内容');
+    return;
+  }
+  
+  const prompt = `基于以下收藏的研究资料，请生成一份完整的研究开题报告：
+
+收藏资料：
+${items.map(item => `
+【${item.type}】${item.title}
+内容：${item.content}
+标签：${item.tags.join(', ')}
+`).join('\n')}
+
+请生成包含以下部分的开题报告：
+1. 研究背景与意义
+2. 文献综述
+3. 研究目标与问题
+4. 研究方法
+5. 预期成果
+6. 研究计划
+
+要求：结构清晰，逻辑严谨，符合学术规范。`;
+
+  userMessage.value = prompt;
+  await sendMessage();
+};
 
 // 调用 API
 const createCompletion = async () => {
@@ -268,6 +300,10 @@ watch(messages, () => {
         <!-- 发送按钮 -->
         <v-btn class="mb-1" color="primary" variant="elevated" icon @click="sendMessage" :disabled="isLoading">
           <v-icon>mdi-send</v-icon>
+        </v-btn>
+        <v-btn class="mb-1 ml-1" color="secondary" variant="elevated" icon @click="generateResearchReport" :disabled="isLoading">
+          <v-icon>mdi-file-document-plus</v-icon>
+            <v-tooltip activator="parent" location="top">一键开题</v-tooltip>
         </v-btn>
       </v-sheet>
       <ApiKeyDialog />

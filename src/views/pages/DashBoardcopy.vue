@@ -189,8 +189,8 @@ const onIntersectHealth = (isIntersecting: boolean) => {
 
 const carouselItems = ref([
   { src: "https://flaskhousesystem.oss-cn-hangzhou.aliyuncs.com/banner.jpg" },
-  { src: main2 },
-  { src: main3 },
+  { src: "https://flaskhousesystem.oss-cn-hangzhou.aliyuncs.com/%E6%80%80%E9%BB%8D%E7%A6%BB.png" },
+  { src: "https://flaskhousesystem.oss-cn-hangzhou.aliyuncs.com/fd2c713b698902d0ea50001bb8ac0b0e_720.jpg" },
 ]);
 
 const features = ref([

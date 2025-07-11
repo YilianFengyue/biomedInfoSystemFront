@@ -18,6 +18,16 @@ export default {
           icon: "mdi-school-outline",
         },
         {
+          text: "研究平台",
+          link: "/research",
+          icon: "mdi-school-outline",
+        },
+        {
+          text: "多人协作板",
+          link: "/board",
+          icon: "mdi-draw",
+        },
+        {
           text: "menu.herb_search",
           link: "/herb-search",
           icon: "mdi-school-outline",
