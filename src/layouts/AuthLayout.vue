@@ -7,7 +7,7 @@
     <v-img
         :aspect-ratio="1"
         class="bg-white"
-        src="/public/images/authbackground.png"
+        src="https://flaskhousesystem.oss-cn-hangzhou.aliyuncs.com/authbackground.png"
         cover
       ><div class="mt-3 mt-md-10 pa-2">
         <div class=" text-h3  text-white font-weight-bold mt-10">
