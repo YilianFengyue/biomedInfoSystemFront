@@ -243,6 +243,12 @@ jre\bin\java.exe -jar BiomedInfoSystem-0.0.1-SNAPSHOT.jar来测试是否打包�
       "electron/**/*", // 只需要打包包含 main.js 和 dist 的 electron 文件夹
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "./backend/BiomedInfoSystem-0.0.1-SNAPSHOT.jar",
+        "to": "backend.jar"
+      }
+    ],
     "win": {
       "target": "nsis",
       "icon": "electron/icons/icon.ico"
@@ -253,6 +259,8 @@ jre\bin\java.exe -jar BiomedInfoSystem-0.0.1-SNAPSHOT.jar来测试是否打包�
     }
   }
 ````
+>
+>4.记得在bite.config.ts里放开build
 
 ```
 biomedInfoSystemFront
