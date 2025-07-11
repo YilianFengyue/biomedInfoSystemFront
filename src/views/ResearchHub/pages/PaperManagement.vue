@@ -6,8 +6,8 @@
 import { useResearchStore } from "../researchStore";
 import { useSnackbarStore } from "@/stores/snackbarStore";
 import { useProfileStore } from "@/stores/profileStore";   // ← 路径按你项目实际调整
-
-
+import axios from "axios";
+import http from "@/api/http";
 const researchStore = useResearchStore();
 const snackbarStore = useSnackbarStore();
 const profile = useProfileStore();
@@ -65,6 +65,54 @@ const reviewResults = [
   { value: 'reject', text: '拒绝', color: 'error' }
 ];
 
+
+// 在现有响应式数据后添加：
+const uploading = ref(false);
+const submitting = ref(false);
+const myTasks = ref([]);
+const reviewViewDialog = ref(false);
+const currentReviews = ref([]);
+
+
+// 文件上传处理
+const handleFileUpload = async (event: any) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  
+  uploading.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const { data } = await axios.post('/api/oss/upload_general_file', formData);
+    
+    if (data.code === 20000) {
+      paperForm.fileUrl = data.data;
+      paperForm.fileName = file.name;
+      snackbarStore.showSuccessMessage('文件上传成功');
+    }
+  } catch (error) {
+    snackbarStore.showErrorMessage('文件上传失败');
+  } finally {
+    uploading.value = false;
+  }
+};
+
+// 加载我的任务
+const loadMyTasks = async () => {
+  try {
+    // 🔥 添加：设置用户角色
+    researchStore.setUserRole('student');
+    
+    const { data } = await researchStore.studentApi.tasks.list();
+    if (data.code === 20000) {
+      myTasks.value = data.data.records;
+      console.log('Tasks loaded:', myTasks.value); // 🔥 添加调试
+    }
+  } catch (error) {
+    console.error('Failed to load tasks:', error);
+  }
+};
 // 加载论文列表
 const loadSubmissions = async () => {
   try {
@@ -74,24 +122,31 @@ const loadSubmissions = async () => {
     if (role === 'teacher') {
       await researchStore.fetchPendingSubmissions({ page: 1, size: 10 });
     } else {
-      // 学生获取自己的提交记录
-      const { data } = await researchStore.studentApi.submissions.list();
+      // 🔥 学生端直接调用axios
+      console.log('Loading student submissions...'); // 调试
+      
+      const { data } = await http.get('/student/research/submissions');
+      
+      console.log('Submissions API response:', data); // 调试
+      
       if (data.code === 20000) {
         researchStore.submissions = data.data;
+      } else {
+        console.error('API returned error:', data);
       }
     }
   } catch (error) {
     console.error('Failed to load submissions:', error);
   }
 };
-
 // 提交论文（学生）
 const submitPaper = async () => {
-  if (!paperForm.taskId) {
-    snackbarStore.showErrorMessage('请选择任务');
+  if (!paperForm.taskId || !paperForm.title || !paperForm.fileUrl) {
+    snackbarStore.showErrorMessage('请填写必填项并上传文件');
     return;
   }
   
+  submitting.value = true;
   try {
     await researchStore.submitPaper(paperForm.taskId, paperForm);
     snackbarStore.showSuccessMessage('论文提交成功');
@@ -100,9 +155,31 @@ const submitPaper = async () => {
     await loadSubmissions();
   } catch (error) {
     console.error('Failed to submit paper:', error);
+  } finally {
+    submitting.value = false;
   }
 };
-
+// 查看评审
+const viewReviews = async (submissionId: number) => {
+  try {
+    console.log('Loading reviews for submission:', submissionId); // 调试
+    
+    // 🔥 直接调用axios而不是通过store
+    const { data } = await http.get(`/student/research/submissions/${submissionId}/reviews`);
+    
+    console.log('Reviews API response:', data); // 调试
+    
+    if (data.code === 20000) {
+      currentReviews.value = data.data;
+      reviewViewDialog.value = true;
+    } else {
+      snackbarStore.showErrorMessage('加载评审失败');
+    }
+  } catch (error) {
+    console.error('Failed to load reviews:', error);
+    snackbarStore.showErrorMessage('加载评审失败');
+  }
+};
 // 提交评审（教师）
 const submitReview = async () => {
   if (!selectedSubmissionId.value) return;
@@ -135,9 +212,14 @@ const openReviewDialog = async (submissionId: number) => {
 
 // 重置表单
 const resetPaperForm = () => {
-  Object.keys(paperForm).forEach(key => {
-    (paperForm as any)[key] = '';
-  });
+  paperForm.taskId = null;
+  paperForm.title = '';
+  paperForm.abstractText = '';
+  paperForm.keywords = '';
+  paperForm.fileUrl = '';
+  paperForm.fileName = '';
+  paperForm.fileSize = 0;
+  paperForm.submissionNotes = '';
 };
 
 const resetReviewForm = () => {
@@ -190,8 +272,9 @@ const formatFileSize = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-onMounted(() => {
-  loadSubmissions();
+onMounted(async () => {
+  await loadSubmissions();
+  
 });
 </script>
 
@@ -284,9 +367,9 @@ onMounted(() => {
             <v-btn
               size="small"
               variant="text"
-              @click="$router.push(`/research/submissions/${item.id}/reviews`)"
+              @click="viewReviews(item.id)"
             >
-              查看评审
+              查看评审 ({{ item.id }})
             </v-btn>
             <v-btn
               size="small"
@@ -311,16 +394,20 @@ onMounted(() => {
       </v-data-table>
     </perfect-scrollbar>
 
+    
     <!-- 提交论文对话框（学生） -->
-    <v-dialog v-model="submitDialog" max-width="1000" persistent>
-      <v-card>
-        <v-toolbar color="primary" dark flat>
-          <v-toolbar-title>提交论文</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn icon="mdi-close" @click="submitDialog = false"></v-btn>
-        </v-toolbar>
-        
-        <v-card-text class="pa-4">
+<v-dialog v-model="submitDialog" max-width="1200" persistent>
+  <v-card>
+    <v-toolbar color="primary" dark flat>
+      <v-toolbar-title>提交论文</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon="mdi-close" @click="submitDialog = false"></v-btn>
+    </v-toolbar>
+    
+    <v-card-text class="pa-4">
+      <v-row>
+        <!-- 左侧：表单区域 -->
+        <v-col cols="4">
           <v-form @submit.prevent="submitPaper">
             <v-text-field
               v-model.number="paperForm.taskId"
@@ -346,7 +433,7 @@ onMounted(() => {
               label="摘要"
               variant="outlined"
               density="comfortable"
-              rows="4"
+              rows="3"
               class="mb-3"
             ></v-textarea>
             
@@ -358,53 +445,64 @@ onMounted(() => {
               class="mb-3"
             ></v-text-field>
             
-            <v-text-field
-              v-model="paperForm.fileUrl"
-              label="文件URL"
+            <!-- 文件上传 -->
+            <v-file-input
+              @change="handleFileUpload"
+              accept=".pdf"
+              label="上传PDF文件"
               variant="outlined"
               density="comfortable"
+              prepend-icon="mdi-paperclip"
               class="mb-3"
-              required
-            ></v-text-field>
-            
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="paperForm.fileName"
-                  label="文件名"
-                  variant="outlined"
-                  density="comfortable"
-                ></v-text-field>
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model.number="paperForm.fileSize"
-                  label="文件大小（字节）"
-                  variant="outlined"
-                  density="comfortable"
-                  type="number"
-                ></v-text-field>
-              </v-col>
-            </v-row>
+              :loading="uploading"
+            ></v-file-input>
             
             <v-textarea
               v-model="paperForm.submissionNotes"
               label="提交说明"
               variant="outlined"
               density="comfortable"
-              rows="3"
+              rows="2"
             ></v-textarea>
           </v-form>
-        </v-card-text>
+        </v-col>
         
-        <v-card-actions class="pa-4">
-          <v-spacer></v-spacer>
-          <v-btn variant="text" @click="submitDialog = false">取消</v-btn>
-          <v-btn color="primary" variant="elevated" @click="submitPaper">提交</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+        <!-- 右侧：PDF预览区域 -->
+        <v-col cols="8">
+          <div style="height: 500px; border: 1px solid #e0e0e0; border-radius: 4px;">
+            <iframe 
+              v-if="paperForm.fileUrl"
+              :src="`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(paperForm.fileUrl)}`"
+              width="100%" 
+              height="100%"
+              style="border: none; border-radius: 4px;"
+            />
+            <div v-else class="d-flex align-center justify-center h-100">
+              <div class="text-center">
+                <v-icon size="64" color="grey-lighten-1">mdi-file-pdf-box</v-icon>
+                <p class="text-grey mt-2">上传PDF文件后可在此预览</p>
+              </div>
+            </div>
+          </div>
+        </v-col>
+      </v-row>
+    </v-card-text>
+    
+    <v-card-actions class="pa-4">
+      <v-spacer></v-spacer>
+      <v-btn variant="text" @click="submitDialog = false">取消</v-btn>
+      <v-btn 
+        color="primary" 
+        variant="elevated" 
+        @click="submitPaper"
+        :disabled="!paperForm.fileUrl || !paperForm.taskId"
+        :loading="submitting"
+      >
+        提交
+      </v-btn>
+    </v-card-actions>
+  </v-card>
+</v-dialog>
 
     <!-- 评审对话框（教师） -->
     <v-dialog v-model="reviewDialog" max-width="1000" persistent>
@@ -537,6 +635,39 @@ onMounted(() => {
       </v-card>
     </v-dialog>
   </v-card>
+  <!-- 查看评审对话框 -->
+<v-dialog v-model="reviewViewDialog" max-width="800">
+  <v-card>
+    <v-toolbar color="primary" dark flat>
+      <v-toolbar-title>评审结果</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon="mdi-close" @click="reviewViewDialog = false"></v-btn>
+    </v-toolbar>
+    
+    <v-card-text class="pa-4">
+      <div v-if="currentReviews.length === 0" class="text-center py-8">
+        <p class="text-grey">暂无评审记录</p>
+      </div>
+      
+      <div v-for="review in currentReviews" :key="review.id" class="mb-4">
+        <v-card elevation="0" class="border">
+          <v-card-text>
+            <div class="d-flex justify-space-between mb-2">
+              <span class="font-weight-bold">总评：{{ review.overallScore }}分</span>
+              <v-chip :color="review.reviewResult === 'accept' ? 'success' : 'warning'" size="small">
+                {{ reviewResults.find(r => r.value === review.reviewResult)?.text }}
+              </v-chip>
+            </div>
+            
+            <p><strong>评审意见：</strong>{{ review.reviewComment }}</p>
+            <p><strong>修改建议：</strong>{{ review.suggestions }}</p>
+            <p class="text-caption text-grey">{{ formatDate(review.reviewTime) }}</p>
+          </v-card-text>
+        </v-card>
+      </div>
+    </v-card-text>
+  </v-card>
+</v-dialog>
 </template>
 
 <script lang="ts">
