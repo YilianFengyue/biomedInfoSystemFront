@@ -20,41 +20,37 @@ const openImageUploadDialog = () => {
 };
 
 // (4) 新的上传处理函数
+// 完整替换 handleImageUploadAndInsert 函数
 const handleImageUploadAndInsert = async () => {
   if (!props.editor) return;
   if (selectedImageFileArray.value.length === 0 || !selectedImageFileArray.value[0]) {
-    alert("请先选择一个图片文件！");
+    snackbarStore.showErrorMessage("请先选择一个图片文件！");
     return;
   }
 
   const fileToUpload = selectedImageFileArray.value[0];
   const formData = new FormData();
-  formData.append('image', fileToUpload, fileToUpload.name); // 'image' 对应后端 request.files['image']
+  formData.append('file', fileToUpload, fileToUpload.name); // 改成 'file'
 
   try {
-    // 显示加载状态 (如果需要，你可以添加一个 isUploading ref)
-    const response = await axios.post('http://localhost:5000/oss/upload_general_image', formData, {
+    const response = await axios.post('/api/oss/upload_general_file', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
-    if (response.data.success && response.data.image_url) {
-      const imageUrl = response.data.image_url;
+    if (response.data.code === 20000 && response.data.data) {
+      const imageUrl = response.data.data;
       props.editor.chain().focus().setImage({ src: imageUrl }).run();
-      isImageUploadDialogVisible.value = false; // 关闭对话框
+      isImageUploadDialogVisible.value = false;
       
       snackbarStore.showSuccessMessage("图片上传成功！");
     } else {
-      
-      snackbarStore.showErrorMessage(`图片上传失败: ${response.data.message || '未知错误'}`);
+      snackbarStore.showErrorMessage(`图片上传失败: ${response.data.msg || '未知错误'}`);
     }
   } catch (error: any) {
     console.error("请求图片上传接口错误:", error);
-    snackbarStore.showErrorMessage(`图片上传请求失败: ${error.response?.data?.message || error.message || '请检查网络或联系管理员。'}`);
-  } finally {
-   
+    snackbarStore.showErrorMessage(`图片上传请求失败: ${error.response?.data?.msg || error.message || '请检查网络或联系管理员。'}`);
   }
 };
-
 
 const items = ref([
   {
