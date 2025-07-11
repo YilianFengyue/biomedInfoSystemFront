@@ -42,25 +42,10 @@ export default {
           link: "/education",
           icon: "mdi-school-outline",
         },
-        /*{
-          text: "业绩展示",
-          link: "/biomedicine/performance",
-          icon: "mdi-view-dashboard-outline",
-        },*/
-        {
-          text: "menu.newsList",
-          link: "/newsList",
-          icon: "mdi-message-text-outline",
-        },
         {
           icon: "mdi-robot-excited-outline",
           text: "menu.chatbot",
           link: "/ai/chatbot_v1",
-        },
-        {
-          icon: "mdi-robot-outline",
-          text: "Image Bot",
-          link: "/image-bot",
         },
         {
           icon: "mdi-robot-outline",

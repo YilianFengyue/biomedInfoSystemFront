@@ -48,19 +48,9 @@ export default {
           icon: "mdi-view-dashboard-outline",
         },
         {
-          text: "menu.newsEditor",
-          link: "/newsEditor",
-          icon: "mdi-file-document-edit-outline",
-        },
-        {
           icon: "mdi-robot-excited-outline",
           text: "menu.chatbot",
           link: "/ai/chatbot_v1",
-        },
-        {
-          icon: "mdi-robot-outline",
-          text: "Image Bot",
-          link: "/image-bot",
         },
         {
           icon: "mdi-robot-outline",
