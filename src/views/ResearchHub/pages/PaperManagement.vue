@@ -53,6 +53,10 @@ const reviewForm = reactive({
   reviewResult: '',
   isFinal: false
 });
+// 在现有响应式数据后添加：
+const currentPdf = ref<{url: string} | null>(null);
+
+// 添加加载PDF预览的方法：
 
 const reviewResults = [
   { value: 'accept', text: '接受', color: 'success' },
@@ -118,8 +122,14 @@ const submitReview = async () => {
 };
 
 // 打开评审对话框
-const openReviewDialog = (submissionId: number) => {
+const openReviewDialog = async (submissionId: number) => {
   selectedSubmissionId.value = submissionId;
+  
+   // 🔥 直接从submissions数组中找到对应的论文
+  const submission = submissions.value.find(s => s.id === submissionId);
+  if (submission && submission.fileUrl) {
+    currentPdf.value = { url: submission.fileUrl };
+  }
   reviewDialog.value = true;
 };
 
@@ -302,7 +312,7 @@ onMounted(() => {
     </perfect-scrollbar>
 
     <!-- 提交论文对话框（学生） -->
-    <v-dialog v-model="submitDialog" max-width="700" persistent>
+    <v-dialog v-model="submitDialog" max-width="1000" persistent>
       <v-card>
         <v-toolbar color="primary" dark flat>
           <v-toolbar-title>提交论文</v-toolbar-title>
@@ -397,18 +407,20 @@ onMounted(() => {
     </v-dialog>
 
     <!-- 评审对话框（教师） -->
-    <v-dialog v-model="reviewDialog" max-width="800" persistent>
+    <v-dialog v-model="reviewDialog" max-width="1000" persistent>
       <v-card>
         <v-toolbar color="primary" dark flat>
           <v-toolbar-title>论文评审</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon="mdi-close" @click="reviewDialog = false"></v-btn>
         </v-toolbar>
-        
+        <v-row>
+        <!-- 左侧：表单区域 -->
+        <v-col cols="4">
         <v-card-text class="pa-4">
           <v-form @submit.prevent="submitReview">
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="12">
                 <v-slider
                   v-model="reviewForm.overallScore"
                   label="总体评分"
@@ -419,7 +431,7 @@ onMounted(() => {
                 ></v-slider>
               </v-col>
               
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="12">
                 <v-slider
                   v-model="reviewForm.contentScore"
                   label="内容质量"
@@ -430,7 +442,7 @@ onMounted(() => {
                 ></v-slider>
               </v-col>
               
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="12">
                 <v-slider
                   v-model="reviewForm.innovationScore"
                   label="创新性"
@@ -441,7 +453,7 @@ onMounted(() => {
                 ></v-slider>
               </v-col>
               
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="12">
                 <v-slider
                   v-model="reviewForm.methodologyScore"
                   label="方法学"
@@ -452,7 +464,7 @@ onMounted(() => {
                 ></v-slider>
               </v-col>
               
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="12">
                 <v-slider
                   v-model="reviewForm.writingScore"
                   label="写作质量"
@@ -463,7 +475,7 @@ onMounted(() => {
                 ></v-slider>
               </v-col>
               
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="12">
                 <v-select
                   v-model="reviewForm.reviewResult"
                   :items="reviewResults"
@@ -501,7 +513,22 @@ onMounted(() => {
             ></v-checkbox>
           </v-form>
         </v-card-text>
-        
+        </v-col>
+        <v-col cols="8">
+          <v-card-text class="pa-0" style="height: 500px;">
+        <iframe 
+          v-if="currentPdf?.url"
+          :src="`https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(currentPdf.url)}`"
+          width="100%" 
+          height="800px"
+          style="border: none;"
+        />
+        <div v-else class="d-flex align-center justify-center h-100">
+          <span class="text-grey">请选择论文进行预览</span>
+        </div>
+      </v-card-text>
+        </v-col>
+        </v-row>
         <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="reviewDialog = false">取消</v-btn>
@@ -519,7 +546,7 @@ const teacherHeaders = [
   { title: '学生', key: 'studentName', sortable: true },
   { title: '状态', key: 'status', sortable: true },
   { title: '版本', key: 'version', sortable: true },
-  { title: '文件大小', key: 'fileSize', sortable: true },
+  // { title: '文件大小', key: 'fileSize', sortable: true },
   { title: '提交时间', key: 'submissionTime', sortable: true },
   { title: '操作', key: 'actions', sortable: false }
 ];
@@ -529,7 +556,7 @@ const studentHeaders = [
   { title: '任务', key: 'taskTitle', sortable: true },
   { title: '状态', key: 'status', sortable: true },
   { title: '版本', key: 'version', sortable: true },
-  { title: '文件大小', key: 'fileSize', sortable: true },
+  // { title: '文件大小', key: 'fileSize', sortable: true },
   { title: '提交时间', key: 'submissionTime', sortable: true },
   { title: '操作', key: 'actions', sortable: false }
 ];
